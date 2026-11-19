@@ -29,6 +29,8 @@ Bara den färdiga stickan ska gå att köra offline, inte byggprocessen.
 ```
 ./build/tests/run.sh                 # 1. snabb kontroll av skripten (offline)
 ./build/build.sh                     # 2. hämta, verifiera, bygg Oden, bygg bilden -> build/out/oden.iso
+# Valfria ISO-varianter för Etcher (kräver ODEN_ASSETS med maps/ och ollama/, och ifylld build/maps.lock för minimal):
+#   ODEN_VARIANTS=minimal,karta,karta-ai ./build/build.sh     # -> build/out/oden-<variant>-<version>.iso + .sha256
 ls build/cache/assets/maps           # 3. lägg assets: maps/ (krävs), ollama/ (bara för --with-ai)
 sudo ./build/scripts/make-stick.sh [--with-ai] build/out/oden.iso /dev/sdX     # 4. skriv stickan
 ```

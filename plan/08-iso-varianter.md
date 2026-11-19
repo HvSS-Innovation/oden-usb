@@ -50,7 +50,7 @@ Etcher skriver bara ISO-storleken; resten av stickan är oallokerad. `oden-first
    `make-stick.sh`. Testat mot fejkad mount; oprovat live (att mediet ligger på `/run/live/medium` i en ISO-hybrid-boot och att enheten körs före användarsessionen).
 4. **Nedladdning i `minimal`** (`oden-fetch-assets`): hämta från S3-URL med SHA256 från en fil i ISO:n, återupptagning (`curl -C -`),
    förloppsvisning, kontroll av ledigt utrymme före start, och hantering av nätfel. Karta 10–25 GB: ge användaren val (hämta nu/senare).
-   **Gjort (kartor):** `oden-fetch-assets` läser `/usr/share/oden/assets.lock` (rader: `sökväg url sha256 byte`; filen läggs bara i
+   **Gjort (kartor):** `oden-fetch-assets` läser `/run/live/medium/oden/assets.lock` (rader: `sökväg url sha256 byte`; filen läggs bara i
    `minimal` av bygget, uppgift 5). Fråga "Hämta nu / Senare", förlopp i zenity, `curl -C -` (återupptar), kontroll av storlek och SHA256,
    `.part`-fil som döps om först när allt stämmer, därefter skrivskyddad montering och omstart av `pmtiles.service`. Autostart först när
    persistensen är klar. **Ordning:** `oden-make-persist` skapar assets-partitionen (`oden-assets`, storlek = summan av byte + 5 % + 256 MiB)
@@ -59,8 +59,15 @@ Etcher skriver bara ISO-storleken; resten av stickan är oallokerad. `oden-first
    Oprovat: riktig nedladdning, `partx`/mkfs/mount på stickan, `x-systemd`-montering av nytillkommen partition (görs i skriptet, inte via fstab).
 5. **Bygget**: `ISO_VARIANT=minimal|karta|karta-ai` i `build.sh` lägger innehåll i ISO-trädet före xorriso. Kartfilen ska ligga
    som vanlig fil, inte i squashfs. Utdata: `oden-<variant>-<version>.iso` och `.sha256`.
+   **Gjort:** `ODEN_VARIANTS=minimal,karta,karta-ai|all ./build/build.sh`. Basbilden byggs som förut (`out/oden.iso`, används av `make-stick.sh`);
+   varje variant härleds efteråt med `xorriso -indev oden.iso -outdev ... -boot_image any replay -file_size_limit off -- -map ...`
+   (inget nytt live-build, så alla varianter har identiskt system). `minimal` lägger `maps.lock` som `/oden/assets.lock` på mediet (listan
+   läses därifrån, inte från chroot). Kontroller före det långa bygget (maps.lock ifylld, katalogerna finns). Utdata `out/oden-<variant>-<version>.iso`
+   + `.sha256`. Kontrollerat i Docker: en 4,3 GB-fil lades in (xorriso kräver `-file_size_limit off --`, med `--`), bilden har fortfarande 2 GPT-partitioner
+   och El Torito/GPT-hybrid. `maps.lock` är en tom mall tills kartan är uppladdad (S3-url, sha256, byte).
 6. **Filer över 4 GiB i ISO 9660**: verifiera att xorriso (multi-extent) och live-boots mount läser dem, annars dela kartan i flera filer
    (t.ex. per landsdel) och låt `pmtiles serve` läsa alla.
+   **Delvis klart:** xorriso skriver en 4,3 GB-fil (multi-extent) och listar den korrekt. Att Linux-kärnan läser den vid boot (mount iso9660) är ej provat.
 7. **Pages**: "Ladda ner" med länk, storlek och SHA256 per variant, plus Etcher-instruktion (`site/`).
 8. Dokumentation: ANVANDARGUIDE (bränn med Etcher, första start, nätbehov i minimal), ADMINGUIDE (bygga varianter, ladda upp, uppdatera Pages), STATUS.
 

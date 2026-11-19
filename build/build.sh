@@ -1,10 +1,25 @@
 #!/usr/bin/env bash
-# fetch -> verify -> live-build (i container) -> build/out/oden.iso
+# fetch -> verify -> live-build (i container) -> build/out/oden.iso (+ valfria varianter, se ODEN_VARIANTS)
 # Bygget kräver nät (docker build, debootstrap/apt i live-build, pip). --no-fetch hoppar bara över fetch.sh:
 # artefakterna måste redan ligga i cache/. Det är stickan som ska gå att köra offline, inte bygget.
 set -euo pipefail
 cd "$(dirname "$0")"
 mkdir -p out
+
+# Varianter ut över basbilden out/oden.iso (den används av make-stick.sh). ODEN_VARIANTS=minimal,karta,karta-ai eller all.
+#   minimal   basbilden + maps.lock (kartor hämtas vid första start)
+#   karta     + $ODEN_ASSETS/maps       karta-ai  + $ODEN_ASSETS/maps och $ODEN_ASSETS/ollama
+assets="${ODEN_ASSETS:-$PWD/cache/assets}"
+variants="${ODEN_VARIANTS:-}"; [[ "$variants" == all ]] && variants=minimal,karta,karta-ai
+nonempty() { [[ -d "$1" && -n "$(ls -A "$1")" ]]; }
+for v in ${variants//,/ }; do   # kontrolleras före det långa bygget
+  case "$v" in
+    minimal) grep -qv '^#' maps.lock 2>/dev/null && ! grep -q PENDING maps.lock || { echo "FEL: minimal kräver ifyllda rader i maps.lock (inga PENDING)" >&2; exit 1; } ;;
+    karta) nonempty "$assets/maps" || { echo "FEL: karta kräver filer i $assets/maps" >&2; exit 1; } ;;
+    karta-ai) nonempty "$assets/maps" && nonempty "$assets/ollama" || { echo "FEL: karta-ai kräver filer i $assets/maps och $assets/ollama" >&2; exit 1; } ;;
+    *) echo "FEL: okänd variant $v (minimal, karta, karta-ai)" >&2; exit 1 ;;
+  esac
+done
 
 [[ "${1:-}" == "--no-fetch" ]] || ./fetch.sh
 # Verifiera artefakterna i cache/ mot låset: bygget ska misslyckas om något avviker.
@@ -56,5 +71,22 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/out/hybrid":/w -w /w oden-bu
     -append_partition 2 0xef efi.img -boot_image any appended_part_as=gpt \
     -boot_image any partition_offset=16 -map efi.img /boot/grub/efi.img -commit'
 [[ $(sfdisk -d out/hybrid/out.iso | grep -c ': start=') -eq 2 ]] || { echo "FEL: hybridbilden har inte exakt 2 partitioner" >&2; exit 1; }
-mv out/hybrid/out.iso out/oden.iso && rm -rf out/hybrid
-echo "Klart: build/out/oden.iso, build/out/SBOM.txt"
+mv out/hybrid/out.iso out/oden.iso
+
+# Varianter: samma bild + extra filer i ISO-trädet (inget nytt live-build). Filer över 4 GiB kräver -file_size_limit off.
+version=$(git describe --tags --always --dirty 2>/dev/null || date +%Y%m%d)
+for v in ${variants//,/ }; do
+  case "$v" in
+    minimal)  maps=(-map /lock/maps.lock /oden/assets.lock) ;;
+    karta)    maps=(-map /assets/maps /maps) ;;
+    karta-ai) maps=(-map /assets/maps /maps -map /assets/ollama /ollama) ;;
+  esac
+  out="oden-$v-$version.iso"; amount="$assets"; [[ -d "$amount" ]] || amount="$PWD"   # minimal behöver ingen assets-katalog
+  echo "Bygger $out ..."
+  docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/out":/w -v "$amount":/assets:ro -v "$PWD":/lock:ro -w /w oden-builder \
+    xorriso -indev oden.iso -outdev "$out" -boot_image any replay -file_size_limit off -- "${maps[@]}" -commit
+  [[ $(sfdisk -d "out/$out" | grep -c ': start=') -eq 2 ]] || { echo "FEL: $out har inte exakt 2 partitioner" >&2; exit 1; }
+  (cd out && sha256sum "$out" > "$out.sha256")
+done
+rm -rf out/hybrid
+echo "Klart: build/out/oden.iso${variants:+, varianter: $variants}, build/out/SBOM.txt"

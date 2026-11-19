@@ -3,13 +3,13 @@
 # Behövs när stickan är bränd med t.ex. Etcher: bara ISO-storleken skrivs, resten är oallokerat.
 # Rör inga befintliga partitioner. Gör inget om en partition "persistence" redan finns.
 # Exit 0: finns eller skapad. Exit 1: kan inte skapas (skälet skrivs på stderr).
-# Finns /usr/share/oden/assets.lock (minimal-varianten, tillgångar hämtas från nätet) skapas först en assets-partition
+# Finns /run/live/medium/oden/assets.lock (minimal-varianten, tillgångar hämtas från nätet) skapas först en assets-partition
 # "oden-assets" som rymmer dem (summan av kolumn 4, byte, + 5 % + 256 MiB); persistensen får resten.
 # Testvariabler: ODEN_DISK (disk eller avbildsfil), ODEN_MINFREE_MB (standard 8192), ODEN_NOPARTX=1, ODEN_LOCK.
 set -euo pipefail
 S=sudo; [[ $EUID -eq 0 || -n "${ODEN_DISK:-}" ]] && S=""   # ODEN_DISK = testfil, behöver inte root
 MINFREE_MB="${ODEN_MINFREE_MB:-8192}"
-LOCK="${ODEN_LOCK:-/usr/share/oden/assets.lock}"
+LOCK="${ODEN_LOCK:-/run/live/medium/oden/assets.lock}"
 die() { echo "oden-make-persist: $*" >&2; exit 1; }
 
 disk="${ODEN_DISK:-}"

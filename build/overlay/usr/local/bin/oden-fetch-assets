@@ -1,10 +1,10 @@
 #!/bin/bash
 # Minimal-varianten: hämtar kartor från nätet till assets-partitionen (label oden-assets) första gången.
-# Lista: /usr/share/oden/assets.lock, rader "relativ-sökväg url sha256 byte". Finns inte listan gör skriptet inget.
+# Lista: /run/live/medium/oden/assets.lock, rader "relativ-sökväg url sha256 byte". Finns inte listan gör skriptet inget.
 # Återupptar avbrutna hämtningar (curl -C -) och kontrollerar SHA256 innan filen tas i bruk.
 # Testvariabler: ODEN_LOCK, ODEN_ASSETS (monterad målkatalog; hoppar över partitionshantering), ODEN_CURL, ODEN_NOGUI=1.
 set -euo pipefail
-LOCK="${ODEN_LOCK:-/usr/share/oden/assets.lock}"
+LOCK="${ODEN_LOCK:-/run/live/medium/oden/assets.lock}"
 ASSETS="${ODEN_ASSETS:-/srv/oden-assets}"
 CURL="${ODEN_CURL:-curl}"
 S=sudo; [[ $EUID -eq 0 || -n "${ODEN_ASSETS:-}" ]] && S=""
