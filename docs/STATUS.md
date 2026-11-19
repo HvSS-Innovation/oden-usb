@@ -1,13 +1,17 @@
 # Status: ODEN-stick
 
-Uppdaterad 2026-11-19, gren `feature/stick-bygge` (ej pushad). Ingen del har ännu körts på en riktig stick eller dator.
+Uppdaterad 2026-11-19, gren `feature/stick-bygge` (ej pushad). Bilden är byggd (`build/out/oden.iso`) men ingen del har körts på en riktig stick eller dator.
 Förklaring: **Klart** = skrivet och testat så långt det går utan hårdvara. **Skrivet** = kod finns men är inte körd.
 **Kvar** = inte gjort.
 
 ## Läge i korthet
 - Bygg-pipelinen är på plats och alla artefakter är låsta. Oden för Linux bygger och startar i en Debian 13-container.
-- Hela bilden (live-build), `make-stick.sh`, krypterad persistens och boot är **inte körda**. Det är nästa stora risk.
-- Kartan (rasterrendering) är inte gjord, och utan den visar stickan ingen karta.
+- Bilden har byggts med live-build och har exakt 2 GPT-partitioner (p1 ISO, p2 EFI, kontrollerat med sfdisk/sgdisk). Den är **inte bootad**.
+  `make-stick.sh`, krypterad persistens, upplåsning vid boot och de nya Etcher-varianterna är **inte körda på en stick**. Det är nästa stora risk.
+- Målet är nu tre ISO-filer (minimal, karta, karta+AI) som går att bränna med Etcher (se `plan/08-iso-varianter.md`). All kod finns, men bara testad mot filavbilder och fejkade verktyg.
+- Fynden i granskningen 2026-11-19 (tio) är åtgärdade i koden, flera overifierade (se `docs/GRANSKNING-2026-11-19.md`).
+- Kartan (rasterrendering) är inte gjord och inte uppladdad, och utan den visar stickan ingen karta. `build/maps.lock` är tom, så `minimal` kan inte byggas än.
+- GitHub Pages-skal finns i `site/` (publiceras från `main`; kräver att Pages sätts till *GitHub Actions*).
 
 ## Per steg (se `plan/`)
 | Steg | Status | Detaljer |
@@ -15,10 +19,11 @@ Förklaring: **Klart** = skrivet och testat så långt det går utan hårdvara. 
 | 00 Beslut och kravspec | Klart | `docs/KRAVSPEC.md`, hotmodell beslutad |
 | 01 Bygg-pipeline | Skrivet | `build.sh`, `fetch.sh`, låsning, SBOM, `bump.sh`, `make-stick.sh`. Testat: syntax, partitionering på gles fil, `tests/run.sh`. Ej testat: live-build-bygget, `dd`/`mkfs`/`mount` mot en enhet, att live-builds iso-hybrid-ISO (efterbehandlad till GPT med p1 ISO-data + p2 EFI) har exakt 2 partitioner. Verifierat med sfdisk, ej bootat |
 | 02 Mjukvara i bilden | Delvis klart | Oden-binär byggd (`/opt/oden/oden`, 197 MB) och rökprovad; `stage.sh` testad mot riktiga artefakter. Kvar: `config.ini`- och Obsidian-förkonfiguration, `--no-sandbox` för Obsidian, versionsnummer i binären (visar `v0.0.0-dev`) |
-| 03 Krypterad persistens | Skrivet | `oden-firstboot`, `oden-wipe`, `oden-persist-dev`. Endast syntaxkontroll. Ej verifierat: live-boots upplåsning med frasen, beteende vid fel fras, `noatime`, strömavbrottstest |
+| 03 Krypterad persistens | Skrivet | `oden-firstboot`, `oden-wipe`, `oden-persist-dev`, `oden-persist-state`, `oden-passphrase-ok` (enbart a-z, 0-9, mellanslag, minst 16 tecken), LUKS-etikett `oden-pending` → `oden` som sista steg. Syntax och lösenfrastester körda; cryptsetup-flödet inte. Ej verifierat: `--label`/`config --label`/luksDump-parsning, live-boots upplåsning med frasen, beteende vid fel fras, `noatime`, strömavbrottstest |
 | 04 Nät, Signal, TAK | Delvis | NetworkManager, nftables, timesyncd och wifi-firmware finns i bilden (ej provade). Kvar: tydlig statusindikator för frånkopplat läge. Signal-länkning och TAK sköts av Odens eget gränssnitt (ej provat i bilden) |
 | 05 Kartor | Kvar | Källan (vektor, 4 GB) är låst. Rasterrendering av z0–14 är inte gjord. `pmtiles.service` är skriven men flaggsyntaxen för `serve` är overifierad. Map View-konfigurationen mot `127.0.0.1:8081` är inte gjord. p3 monteras via `fstab` (overifierat) |
 | 06 AI / Ollama | Skrivet | `ollama.service`, RAM-kontroll, NVIDIA-paket i paketlistan, Ollama låst. Modeller (`qwen3-vl:4b`, `qwen3:8b`) är inte hämtade. Inget provat |
+| 08 ISO-varianter (Etcher) | Skrivet | `oden-make-persist` (skapar partitioner efter ISO-datan, `sgdisk -e`/`partx -a`), `oden-assets-bind` (+ `oden-assets.service`), `oden-fetch-assets` (kartor vid första start), `ODEN_VARIANTS` i `build.sh`, `release-json.sh`, `site/ladda-ner.html`. Testat: filavbilder, fejkad mount/curl, xorriso i Docker med 4,3 GB-fil. Ej provat: allt på en riktig stick (partx live, mount av fil >4 GiB, bind-montering, nedladdning) |
 | 07 Test, härdning, dokumentation | Delvis | Användarguide, adminguide, felsökning och mall för HW-matris skrivna. Kvar: maskinvarutest, E2E mot ODEN-analys, paketfångst, strömavbrott, `oden-wipe`-test |
 
 ## Artefakter (`build/artifacts.lock`)
@@ -34,7 +39,8 @@ Förklaring: **Klart** = skrivet och testat så långt det går utan hårdvara. 
 | sweden-osm.pmtiles | OSM 2026-05-20 | Låst men används inte av bilden (källa för rastret) |
 
 ## Kända problem och beslut att ta
-- `fetch.sh` hämtar `sweden-osm.pmtiles` (4 GB) vid varje färsk cache trots att bilden inte använder den. Förslag: ta ur lås-filen tills steg 05.
+- Min längd 16 på lösenfrasen är ett eget val (`ODEN_MINLEN`); `KRAVSPEC` listar lösenfrasstyrka under "Senare".
+- AI-modeller i `minimal` (hämtas inte från nätet än; `karta-ai` täcker AI).
 - Oden är en "onefile"-binär som packar upp sig själv (ca 200 MB) i `/tmp` (RAM) vid varje start. Alternativ: bygga "onedir".
 - Oden kan öppna webbläsaren själv vid första start (`_welcome_first_start`), och stickan autostartar också en webbläsare. Ej provat.
 - Oden-GUI lyssnar på `127.0.0.1:8080` enligt planen, men att inga andra portar är öppna (`ss -tulpn`) är inte kontrollerat.
@@ -43,13 +49,24 @@ Förklaring: **Klart** = skrivet och testat så långt det går utan hårdvara. 
 - Obsidian-pluginernas version mot Obsidian 1.15.1 är inte kontrollerad.
 
 ## Nästa steg i ordning
-1. Ta bort `sweden-osm.pmtiles` ur lås-filen (eller flytta den till ett eget kartsteg).
-2. `./build/build.sh` hela vägen: första riktiga live-build. Räkna med att åtgärda paketnamn och hook-fel.
-3. Boota `build/out/oden.iso` i QEMU/OVMF; kontrollera att den har 2 partitioner, att `oden.service` startar och att skrivbordet kommer upp.
-4. Rendera rasterkartan (steg 05) och fyll i `build/cache/assets/maps/`.
-5. Skriv en riktig stick med `make-stick.sh`; testa första start, omstart med lösenfras, fel lösenfras och `oden-wipe` (steg 03).
-6. Förkonfigurera Oden och Obsidian (steg 02, uppgift 7) och koppla kartan i Map View.
-7. Maskinvarumatris, paketfångst och E2E (steg 07).
+1. **Första stickprovet** (provlista nedan) med `minimal`-lik bas: bränn `build/out/oden.iso` med Etcher (basbilden duger för att prova partitionering, firstboot och upplåsning; kartor kommer senare).
+2. Rendera rasterkartan (steg 05), ladda upp den, fyll i `build/maps.lock` och `build/cache/assets/maps/`. Bygg varianterna: `ODEN_VARIANTS=all ./build/build.sh`.
+3. Prova `karta` (fil över 4 GiB, bind-montering) och `minimal` (nedladdning) på stick.
+4. Förkonfigurera Oden och Obsidian (steg 02, uppgift 7) och koppla kartan i Map View.
+5. Maskinvarumatris, paketfångst, strömavbrott och E2E (steg 07).
+6. Pusha grenen, ställ in Pages, ladda upp ISO-filer och fyll `site/releases.json` med `release-json.sh`.
+
+## Provlista för första stickprovet
+Bränn `build/out/oden.iso` (basbilden) på en tom 64 GB-stickan med Etcher. Ha en terminal öppen (Ctrl+Alt+T eller via menyn). Notera allt som avviker.
+1. Startar stickan (UEFI, utan Secure Boot först)? Kommer skrivbordet upp?
+2. `lsblk -o NAME,SIZE,PARTLABEL,FSTYPE` och `findmnt /run/live/medium`: ligger mediet där? Finns bara p1/p2 före första start?
+3. Kommer fråga om lösenfras? Prova först en med å/ä/ö (ska avvisas), en kort (ska avvisas), sedan en giltig.
+4. Efter luksFormat: `lsblk` visar ny partition `persistence`? (Fel: se felsökning, "Ingen persistens".) `sudo cryptsetup luksDump <part> | grep Label` ska ge `oden`.
+5. Efter omstart: frågar live-boot efter lösenfras? Fungerar den? Startar Oden och Obsidian? Finns `~/.oden-persist`?
+6. Fel lösenfras vid boot: vad händer (startar utan persistens, eller frågar igen)? Notera.
+7. `oden-wipe`: går data att öppna efteråt? (Förstör stickans data.) Avbrott: dra ur stickan mitt under firstboot och starta igen (ska erbjuda göra om).
+8. `ss -tulpn`: bara `127.0.0.1:8080` m.fl. lokala portar lyssnar?
+9. Notera stickans storlek och hur lång tid Etcher tog (för guiden).
 
 ## Commits på grenen (sedan `main`)
 Plan, Steg 00–01, Steg 02 (konfig), Steg 03, `make-stick.sh`, staging, steg 07-dokument, bygg av Oden och `bump.sh`,
