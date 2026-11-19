@@ -1,7 +1,7 @@
 # Ultrareview av feature/stick-bygge (2026-11-19)
 
 Molngranskning av hela branchen mot `main` (45 filer, 1023 tillagda rader, 7 borttagna). Granskningen omfattar
-alla steg på branchen, inte bara bygg-ändringarna från samma dag. Fynd 1, 2, 4, 5, 6, 7, 8, 9 och 10 är åtgärdade (markerade nedan); 3 återstår.
+alla steg på branchen, inte bara bygg-ändringarna från samma dag. Alla tio fynd är åtgärdade (markerade nedan). Flera är overifierade mot en riktig stick.
 Radnummer i originalrapporten stämmer delvis inte med filerna; mekanismerna är verifierade av granskaren.
 Radnumren nedan är de som rapporten uppgav, rättade där den själv rättade dem.
 
@@ -38,7 +38,7 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
   avbröts före ändringen saknar etikett och räknas som låsta. Overifierat: `--label`, `config --label` och
   `luksDump`-raden `Label:` mot riktig cryptsetup, samt strömavbrottstest (steg 03/07). Ingen förloppsdialog under mkfs.
 
-### 3. Lösenfrasens tangentbordslayout skiljer mellan skapande och boot (normal)
+### 3. Lösenfrasens tangentbordslayout skiljer mellan skapande och boot (normal) — ÅTGÄRDAD (overifierad)
 - **Fil:** `build/overlay/usr/local/bin/oden-firstboot:33` (zenity) och `:51` (`luksFormat --key-file=-`)
 - **Problem:** Lösenfrasen skrivs i X-sessionen med svensk layout, men vid boot skrivs den i initramfs som saknar
   keymap. `keyboard-layouts=se` tillämpas först av live-config efter `switch_root`.
@@ -46,6 +46,11 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
   Upplåsningen misslyckas och krypterad /home går inte att öppna.
 - **Åtgärd:** Lägg svensk keymap i initramfs (t.ex. `KEYMAP=y` plus console-setup), eller begränsa och varna för
   layoutberoende tecken i lösenfrasen.
+- **Status:** Lösenfrasen begränsas till a-z, A-Z, 0-9 och blanksteg, minst 16 tecken (`oden-passphrase-ok`, anropas av
+  `oden-firstboot`). Det är tecken som ligger på samma tangent på svensk och amerikansk layout, så upplåsningen fungerar
+  oavsett vilken keymap initramfs har. Dessutom: `KEYMAP=y` (`initramfs-tools/conf.d`), `/etc/default/keyboard` med
+  `XKBLAYOUT=se` och `update-initramfs -u` i bygghooken. Keymap-delen är overifierad (plymouth/`splash` kan hantera
+  prompten själv); begränsningen i sig beror inte på den. Lägsta längd 16 är ett val: ändras med `ODEN_MINLEN`.
 
 ### 4. Firefox och Obsidian ringer hem (normal) — ÅTGÄRDAD (overifierad)
 - **Filer:** `build/overlay/etc/xdg/autostart/oden-browser.desktop:4`, `oden-obsidian.desktop:4`
@@ -129,7 +134,7 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
 |---|------|--------------|------------------|
 | 1 | `persistence-media=removable-usb` saknas (åtgärdad) | normal | en rad |
 | 2 | Firstboot inte avbrottssäker | normal | designval (åtgärdad, overifierad) |
-| 3 | Keymap saknas i initramfs | normal | designval |
+| 3 | Keymap saknas i initramfs | normal | designval (åtgärdad, overifierad) |
 | 4 | Firefox/Obsidian ringer hem | normal | policyfiler (åtgärdad, väntar på paketfångst i steg 07) |
 | 5 | Rootägd `out/lb` stoppar ombygge (åtgärdad) | normal | liten |
 | 6 | Gammal `oden-linux` återanvänds (åtgärdad) | normal | liten/medel |

@@ -14,7 +14,7 @@ den krypterade partitionen första gången.
 - TAK-certifikat, loggar
 
 ## Förstastart (`oden-firstboot`, zenity)
-1. Om p4 inte är formaterad: fråga lösenfras och bekräfta (inga styrkekrav i nuläget).
+1. Om p4 inte är formaterad: fråga lösenfras och bekräfta. Tillåtna tecken: a-z, A-Z, 0-9 och blanksteg, minst 16 tecken (`oden-passphrase-ok`). Skälet: vid boot skrivs frasen i initramfs utan säker tangentbordslayout, så bara tecken som är samma på svensk och amerikansk layout tillåts. Svensk keymap läggs även i initramfs (`KEYMAP=y`, `/etc/default/keyboard`), men upplåsningen ska inte bero på den.
 2. `cryptsetup luksFormat --type luks2 --pbkdf argon2id --pbkdf-memory 524288 --iter-time 2000`
    (fasta värden så att upplåsning fungerar även på svag dator), öppna, `mkfs.ext4 -L persistence`,
    skriv `persistence.conf`, kopiera valvmallen och skapa markörfilen `~/.oden-persist`.

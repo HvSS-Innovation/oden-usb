@@ -1,0 +1,7 @@
+# Svensk layout även i initramfs (KEYMAP=y i initramfs-tools/conf.d). Lösenfrasen är ändå begränsad till tecken som
+# är samma på svensk och amerikansk layout (oden-passphrase-ok), så upplåsning ska inte bero på att keymapen laddas.
+XKBMODEL="pc105"
+XKBLAYOUT="se"
+XKBVARIANT=""
+XKBOPTIONS=""
+BACKSPACE="guess"

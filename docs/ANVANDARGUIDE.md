@@ -9,6 +9,8 @@
 ## Första start
 1. Sätt i stickan, starta datorn och välj USB i startmenyn (ofta F12, F10 eller Esc).
 2. Skrivbordet startar. Första gången frågar ODEN efter en **lösenfras** (två gånger). Den krypterar allt du sparar på stickan.
+   Lösenfrasen ska vara minst 16 tecken och får bara innehålla bokstäverna a-z (inte å, ä, ö), siffror och mellanslag,
+   eftersom tangentbordet vid start inte alltid har svensk layout. Fyra ord med mellanslag är ett bra val.
    **Glömmer du lösenfrasen går datat inte att få tillbaka.** Det finns ingen återställning.
 3. Skapandet av den krypterade lagringen tar en stund. Datorn startar sedan om.
 4. Vid varje start frågar systemet efter lösenfrasen. Skriver du fel och systemet ändå startar visas
