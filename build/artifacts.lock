@@ -1,0 +1,9 @@
+# namn  url  sha256  (PENDING = ännu inte låst; fetch.sh vägrar bygga med PENDING)
+# Lås med: ./build/fetch.sh --pin <namn>
+sweden-osm.pmtiles  https://kartverktyget.s3.eu-central-003.backblazeb2.com/sweden-osm.pmtiles  59fe0b51666c9ab95a03fce87bb5e8aced22a4edcba25560dfb176884bf3027a
+oden-linux          PENDING_URL  PENDING
+oden-valv           PENDING_URL  PENDING
+signal-cli          PENDING_URL  PENDING
+obsidian-appimage   PENDING_URL  PENDING
+go-pmtiles          PENDING_URL  PENDING
+ollama              PENDING_URL  PENDING

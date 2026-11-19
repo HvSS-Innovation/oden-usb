@@ -2,3 +2,4 @@
 *.mbtiles
 *.pmtiles
 build/out/
+build/cache/
