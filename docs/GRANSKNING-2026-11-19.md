@@ -1,7 +1,7 @@
 # Ultrareview av feature/stick-bygge (2026-11-19)
 
 Molngranskning av hela branchen mot `main` (45 filer, 1023 tillagda rader, 7 borttagna). Granskningen omfattar
-alla steg på branchen, inte bara bygg-ändringarna från samma dag. Fynd 1, 4, 5, 6, 8, 9 och 10 är åtgärdade (markerade nedan); 2, 3 och 7 återstår.
+alla steg på branchen, inte bara bygg-ändringarna från samma dag. Fynd 1, 2, 4, 5, 6, 8, 9 och 10 är åtgärdade (markerade nedan); 3 och 7 återstår.
 Radnummer i originalrapporten stämmer delvis inte med filerna; mekanismerna är verifierade av granskaren.
 Radnumren nedan är de som rapporten uppgav, rättade där den själv rättade dem.
 
@@ -20,7 +20,7 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
   bara udisks i det körande systemet, inte initramfs.
 - **Åtgärd:** Lägg till `persistence-media=removable-usb` i `--bootappend-live`.
 
-### 2. Första start är inte avbrottssäker (normal)
+### 2. Första start är inte avbrottssäker (normal) — ÅTGÄRDAD (overifierad)
 - **Fil:** `build/overlay/usr/local/bin/oden-firstboot:19-53`
 - **Problem:** Skriptet anser installationen klar så fort `blkid` visar `crypto_LUKS` (rad 19-23), men LUKS-headern
   är det första som skrivs (rad 51). De riktiga färdigmarkörerna (mkfs, `persistence.conf`, `~/.oden-persist`)
@@ -32,6 +32,11 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
   köra `make-stick.sh` igen. Bryter kravet att strömavbrott inte får ge förlorad eller korrupt data.
 - **Åtgärd:** Skriv LUKS-headern sist, eller behandla "crypto_LUKS men inget användbart persistence-filsystem eller
   `persistence.conf`" som ofärdigt och erbjud att göra om.
+- **Status:** `luksFormat` sätter LUKS2-etiketten `oden-pending`; `oden-firstboot` byter den till `oden` som sista steg.
+  Etiketten `oden-pending` (avbruten installation, eller efter `oden-wipe`) ger frågan "Göra om?" vid nästa inloggning
+  (`wipefs -a`, sedan ny installation). Läses av `oden-persist-state`, som även `oden-start-gui` använder. Sticks som
+  avbröts före ändringen saknar etikett och räknas som låsta. Overifierat: `--label`, `config --label` och
+  `luksDump`-raden `Label:` mot riktig cryptsetup, samt strömavbrottstest (steg 03/07). Ingen förloppsdialog under mkfs.
 
 ### 3. Lösenfrasens tangentbordslayout skiljer mellan skapande och boot (normal)
 - **Fil:** `build/overlay/usr/local/bin/oden-firstboot:33` (zenity) och `:51` (`luksFormat --key-file=-`)
@@ -120,7 +125,7 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
 | # | Fynd | Allvarlighet | Storlek på fixen |
 |---|------|--------------|------------------|
 | 1 | `persistence-media=removable-usb` saknas (åtgärdad) | normal | en rad |
-| 2 | Firstboot inte avbrottssäker | normal | designval |
+| 2 | Firstboot inte avbrottssäker | normal | designval (åtgärdad, overifierad) |
 | 3 | Keymap saknas i initramfs | normal | designval |
 | 4 | Firefox/Obsidian ringer hem | normal | policyfiler (åtgärdad, väntar på paketfångst i steg 07) |
 | 5 | Rootägd `out/lb` stoppar ombygge (åtgärdad) | normal | liten |

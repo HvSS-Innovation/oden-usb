@@ -14,12 +14,21 @@ note() { notify-send "$1" "${2:-}" 2>/dev/null || echo "$1 ${2:-}" >&2; }
 [[ -f "$MARK" ]] && exit 0
 
 part=$(oden-persist-dev) || { note "Ingen persistens" "Hittade inte p4 på stickan. Data sparas inte."; exit 0; }
-type=$($S blkid -s TYPE -o value "$part" 2>/dev/null || true)
+map=oden-new
 
-case "$type" in
-  "") ;;                                   # tom: första start
-  crypto_LUKS) note "Data inte upplåst" "Starta om och ange lösenfras."; exit 0 ;;
-  *) note "Oväntat innehåll på p4" "Partitionen har filsystemet '$type' och rörs inte."; exit 0 ;;
+case "$(oden-persist-state)" in
+  empty) ;;                                # tom: första start
+  locked) note "Data inte upplåst" "Starta om och ange lösenfras."; exit 0 ;;
+  pending)
+    # Tidigare installation avbröts (strömavbrott, utdragen stick, utloggning) eller nyckeln raderades med oden-wipe.
+    # Inget användbart data finns: etiketten oden-pending byts till oden först när allt är skrivet.
+    zenity --question --text="En tidigare installation av den krypterade lagringen blev aldrig klar.\nInget data har sparats på den.\n\nGöra om den nu?" \
+      --ok-label="Gör om" --cancel-label="Inte nu" || exit 0
+    $S umount "/dev/mapper/$map" 2>/dev/null || true
+    $S cryptsetup close "$map" 2>/dev/null || true
+    $S wipefs -a "$part" >/dev/null ;;
+  other:*) note "Oväntat innehåll på p4" "Partitionen har ett annat filsystem och rörs inte."; exit 0 ;;
+  *) note "Ingen persistens" "Hittade inte p4 på stickan. Data sparas inte."; exit 0 ;;
 esac
 
 # Förkontroller innan något förstörs.
@@ -39,7 +48,7 @@ done
 
 zenity --question --text="Skapar krypterad lagring på stickan. Det kan ta en stund.\nGlöms lösenfrasen går data inte att återfå." --ok-label="Fortsätt" || exit 0
 
-map=oden-new; mnt=$(mktemp -d)
+mnt=$(mktemp -d)
 cleanup() {
   mountpoint -q "$mnt" && $S umount "$mnt" || true
   [[ -e /dev/mapper/$map ]] && $S cryptsetup close "$map" || true
@@ -48,7 +57,8 @@ cleanup() {
 trap cleanup EXIT
 
 # printf utan radbrytning: samma tecken som live-boot får när lösenfrasen skrivs vid boot.
-printf '%s' "$p1" | $S cryptsetup luksFormat --batch-mode --type luks2 --pbkdf argon2id \
+# Etiketten oden-pending markerar ofärdig installation (se oden-persist-state); den byts till oden sist.
+printf '%s' "$p1" | $S cryptsetup luksFormat --batch-mode --type luks2 --label oden-pending --pbkdf argon2id \
   --pbkdf-memory 524288 --iter-time 2000 --key-file=- "$part"
 printf '%s' "$p1" | $S cryptsetup open --key-file=- "$part" "$map"
 unset p1 p2
@@ -67,6 +77,9 @@ $S chown -R "$(id -u):$(id -g)" "$mnt$HOME"
 $S sync
 
 cleanup; trap - EXIT
+
+# Sista steget: först nu är installationen klar. Avbrott före detta ger oden-pending och erbjuds göras om.
+$S cryptsetup config --label oden "$part" || { note "Installationen misslyckades" "Kunde inte slutföra krypterad lagring. Starta om och försök igen."; exit 1; }
 
 if [[ "${ODEN_NOREBOOT:-}" == 1 ]]; then echo "klart (ingen omstart)"; exit 0; fi
 zenity --info --text="Klart. Datorn startar om och frågar sedan efter lösenfrasen vid varje start."

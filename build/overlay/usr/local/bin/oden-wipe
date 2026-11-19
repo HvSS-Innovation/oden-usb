@@ -16,6 +16,8 @@ if [[ "${1:-}" != --yes ]]; then
 fi
 
 $S cryptsetup luksErase --batch-mode "$part"
+# Markera som ofärdig så att nästa start erbjuder en ny installation i stället för att fastna i "Data inte upplåst".
+$S cryptsetup config --label oden-pending "$part" 2>/dev/null || true
 $S sync
 echo "Klart: $part kan inte längre låsas upp."
 [[ "${ODEN_NOPOWEROFF:-}" == 1 ]] || $S systemctl poweroff -f

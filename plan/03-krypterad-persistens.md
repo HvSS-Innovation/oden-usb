@@ -23,6 +23,7 @@ den krypterade partitionen första gången.
    startar inte och en notis säger "Data inte upplåst, starta om". (Verifiera live-boots beteende vid fel lösenfras.)
 
 ## Säkerhet
+- **Avbrottssäker första start:** `luksFormat --label oden-pending`; etiketten byts till `oden` som sista steg. `oden-pending` (avbruten installation eller efter `oden-wipe`) erbjuder ny installation (`oden-persist-state`, `oden-firstboot`). Overifierat mot riktig cryptsetup.
 - **Nödradering:** `oden-wipe` kör `cryptsetup luksErase`. Hur den startas beslutas senare. Ingen header-backup, så raderingen är slutgiltig.
   Dokumentera att flashminne kan behålla gamla block.
 - Ingen swap på disk (zram ok), ingen hibernation, core dumps av.

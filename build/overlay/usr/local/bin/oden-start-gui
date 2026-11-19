@@ -1,10 +1,9 @@
 #!/bin/sh
 # Autostart: bara med upplåst persistens (steg 03).
 if [ ! -f "$HOME/.oden-persist" ]; then
-  # Notisen visas bara när p4 faktiskt är krypterad men inte upplåst. Är p4 tom pågår förstastarten
-  # (oden-firstboot) och den ber själv om lösenfras.
-  part=$(oden-persist-dev 2>/dev/null) || exit 0
-  [ "$(sudo blkid -s TYPE -o value "$part" 2>/dev/null)" = crypto_LUKS ] &&
+  # Notisen visas bara när p4 är färdigt krypterad men inte upplåst. Är p4 tom eller ofärdig sköter
+  # oden-firstboot det och ber själv om lösenfras.
+  [ "$(oden-persist-state)" = locked ] &&
     notify-send "Data inte upplåst" "Starta om och ange lösenfras." 2>/dev/null
   exit 0
 fi
