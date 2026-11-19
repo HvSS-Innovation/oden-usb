@@ -1,7 +1,7 @@
 # Ultrareview av feature/stick-bygge (2026-11-19)
 
 Molngranskning av hela branchen mot `main` (45 filer, 1023 tillagda rader, 7 borttagna). Granskningen omfattar
-alla steg på branchen, inte bara bygg-ändringarna från samma dag. Inga av fynden är åtgärdade ännu.
+alla steg på branchen, inte bara bygg-ändringarna från samma dag. Fynd 1, 5, 6, 8, 9 och 10 är åtgärdade (markerade nedan); 2, 3, 4 och 7 återstår.
 Radnummer i originalrapporten stämmer delvis inte med filerna; mekanismerna är verifierade av granskaren.
 Radnumren nedan är de som rapporten uppgav, rättade där den själv rättade dem.
 
@@ -9,7 +9,7 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
 
 ## Data och säkerhet
 
-### 1. Persistence-sökning begränsas inte till USB (normal)
+### 1. Persistence-sökning begränsas inte till USB (normal) — ÅTGÄRDAD
 - **Fil:** `build/config/auto/config:13`
 - **Problem:** Bootparametrarna har `persistence persistence-encryption=luks` men ingen `persistence-media=`.
   live-boot går igenom alla blockenheter i initramfs och öppnar varje LUKS-partition, interndiskar inkluderade,
@@ -55,7 +55,7 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
 
 ## Byggpipelinen
 
-### 5. Andra bygget som vanlig användare misslyckas (normal)
+### 5. Andra bygget som vanlig användare misslyckas (normal) — ÅTGÄRDAD
 - **Fil:** `build/build.sh` (`rm -rf out/lb && mkdir -p out/lb`; rapporten angav rad 69-76, rätt ställe är ca rad 25)
 - **Problem:** `lb config && lb build` körs som root i en `--privileged`-container utan `--user`, så `out/lb`
   (chroot, binary, cache) blir rootägd. Nästa körning av `build.sh` som vanlig användare får "permission denied"
@@ -66,7 +66,7 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
 - **Åtgärd:** Rensa `out/lb` inifrån containern eller som root, eller `chown` tillbaka till anroparen efter
   `lb build`.
 
-### 6. `cache/oden-linux` byggs bara om om filen saknas (normal)
+### 6. `cache/oden-linux` byggs bara om om filen saknas (normal) — ÅTGÄRDAD
 - **Fil:** `build/build.sh:16-20`
 - **Problem:** Binären kopplas inte till de `oden-source`-, `jre-x64`- och `signal-cli`-rader den byggdes från.
   Verifieringsloopen hoppar över den (`sha=BUILD`) och `fetch.sh` likaså. Bara `bump.sh` på samma maskin tar bort den.
@@ -88,7 +88,7 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
 
 ## Övrigt
 
-### 8. Fel flagga i `pmtiles.service` (normal)
+### 8. Fel flagga i `pmtiles.service` (normal) — ÅTGÄRDAD
 - **Fil:** `build/overlay/etc/systemd/user/pmtiles.service:9` (samma kommandorad i `plan/05`)
 - **Problem:** `pmtiles serve ... --bind 127.0.0.1`. go-pmtiles heter flaggan `--interface`. Kong avvisar den
   okända flaggan (TODO-raden ovanför erkänner att syntaxen är overifierad).
@@ -96,14 +96,14 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
   `127.0.0.1:8081`. Obsidians offlinekarta är alltid tom.
 - **Åtgärd:** `--interface=127.0.0.1` (pinnade go-pmtiles v1.31.2) i både servicefilen och planen.
 
-### 9. `make-stick.sh` tappar `ODEN_ASSETS` (nit)
+### 9. `make-stick.sh` tappar `ODEN_ASSETS` (nit) — ÅTGÄRDAD
 - **Fil:** `build/scripts/make-stick.sh:11` (läses på rad 16; rapporten angav rad 723-728)
 - **Problem:** `exec sudo "$0" "$@"` körs innan `ODEN_ASSETS` läses. sudos `env_reset` släpper variabeln, så
   skriptet tyst faller tillbaka på `build/cache/assets`.
 - **Följd:** Antingen "Kartor saknas", eller en stick med fel eller gamla kartor och modeller utan någon varning.
 - **Åtgärd:** `exec sudo ODEN_ASSETS="${ODEN_ASSETS:-}" "$0" "$@"`, eller lös sökvägen före omstarten.
 
-### 10. Missvisande notis vid allra första start (nit)
+### 10. Missvisande notis vid allra första start (nit) — ÅTGÄRDAD
 - **Fil:** `build/overlay/usr/local/bin/oden-start-gui:3`
 - **Problem:** Utan `~/.oden-persist` visar skriptet "Data inte upplåst / Starta om och ange lösenfras". Både
   `oden-browser.desktop` och `oden-obsidian.desktop` anropar det, så notisen visas två gånger medan
@@ -116,13 +116,13 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
 
 | # | Fynd | Allvarlighet | Storlek på fixen |
 |---|------|--------------|------------------|
-| 1 | `persistence-media=removable-usb` saknas | normal | en rad |
+| 1 | `persistence-media=removable-usb` saknas (åtgärdad) | normal | en rad |
 | 2 | Firstboot inte avbrottssäker | normal | designval |
 | 3 | Keymap saknas i initramfs | normal | designval |
 | 4 | Firefox/Obsidian ringer hem | normal | policyfiler |
-| 5 | Rootägd `out/lb` stoppar ombygge | normal | liten |
-| 6 | Gammal `oden-linux` återanvänds | normal | liten/medel |
+| 5 | Rootägd `out/lb` stoppar ombygge (åtgärdad) | normal | liten |
+| 6 | Gammal `oden-linux` återanvänds (åtgärdad) | normal | liten/medel |
 | 7 | `--offline` stämmer inte | normal | designval |
-| 8 | `--bind` ska vara `--interface` | normal | en rad |
-| 9 | `ODEN_ASSETS` tappas av sudo | nit | en rad |
-| 10 | Missvisande notis vid första start | nit | liten |
+| 8 | `--bind` ska vara `--interface` (åtgärdad) | normal | en rad |
+| 9 | `ODEN_ASSETS` tappas av sudo (åtgärdad) | nit | en rad |
+| 10 | Missvisande notis vid första start (åtgärdad) | nit | liten |

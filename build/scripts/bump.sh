@@ -62,7 +62,7 @@ PY
 # som beror på denna måste byggas om.
 if [[ "$(awk '{print $2, $3}' <<<"$old")" != "$url $sha" ]]; then
   rm -f "cache/$name"
-  case "$name" in oden-source|jre-x64|signal-cli) rm -f cache/oden-linux cache/oden-linux.pip-freeze.txt ;; esac
+  case "$name" in oden-source|jre-x64|signal-cli) rm -f cache/oden-linux cache/oden-linux.inputs cache/oden-linux.pip-freeze.txt ;; esac
 fi
 echo "Uppdaterad: $name -> $info"
 echo "Nästa: git diff build/artifacts.lock, sedan ./build/build.sh"

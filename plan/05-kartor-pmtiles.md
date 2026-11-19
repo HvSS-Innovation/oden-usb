@@ -31,7 +31,7 @@ och skulle behöva patchas. Raster är enklare att driva.
 1. Kartfilen ligger på p3: `/srv/oden-assets/maps/sverige.pmtiles`. Ny karta = ny stick.
 2. systemd-user-tjänst:
    ```
-   ExecStart=/opt/pmtiles/pmtiles serve /srv/oden-assets/maps --port 8081 --bind 127.0.0.1 --cors=app://obsidian.md
+   ExecStart=/opt/pmtiles/pmtiles serve /srv/oden-assets/maps --port 8081 --interface=127.0.0.1 --cors=app://obsidian.md
    ```
    (`serve` exponerar `/{namn}/{z}/{x}/{y}.{png|webp|jpg}` för raster; kontrollera exakt flaggsyntax mot den pinnade versionen.)
    Odens webbgränssnitt använder 8080, därför ligger kartservern på 8081.

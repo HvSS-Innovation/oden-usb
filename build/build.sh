@@ -13,23 +13,27 @@ while read -r name _ sha _; do
   echo "$sha  cache/$name" | sha256sum -c --quiet || { echo "FEL: $name avviker" >&2; exit 1; }
 done < artifacts.lock
 
-# Oden för Linux finns inte som release: bygg från källa (kräver nät för pip) om den saknas i cache/.
-if [[ ! -f cache/oden-linux ]]; then
-  [[ "${1:-}" == "--offline" ]] && { echo "FEL: cache/oden-linux saknas och --offline kan inte bygga den" >&2; exit 1; }
+# Oden för Linux finns inte som release: bygg från källa (kräver nät för pip) om den saknas i cache/
+# eller om låsraderna för oden-source, jre-x64 och signal-cli ändrats sedan den byggdes.
+if [[ ! -f cache/oden-linux ]] || [[ "$(cat cache/oden-linux.inputs 2>/dev/null)" != "$(scripts/build-oden.sh --print-inputs)" ]]; then
+  [[ "${1:-}" == "--offline" ]] && { echo "FEL: cache/oden-linux saknas eller är byggd från andra indata än artifacts.lock, och --offline kan inte bygga den" >&2; exit 1; }
+  rm -f cache/oden-linux
   scripts/build-oden.sh
 fi
 
 docker build -t oden-builder .
 
 # live-build kör i out/lb; config och overlay kopieras in färska varje bygge.
-rm -rf out/lb && mkdir -p out/lb
+# Container-bygget körs som root; out/lb chownas tillbaka efteråt, men en rootägd rest från ett äldre bygge städas via containern.
+rm -rf out/lb 2>/dev/null || docker run --rm -v "$PWD/out":/o oden-builder rm -rf /o/lb
+mkdir -p out/lb
 cp -r config/. out/lb/
 mkdir -p out/lb/config/includes.chroot
 cp -r overlay/. out/lb/config/includes.chroot/
 scripts/stage.sh out/lb/config/includes.chroot
 
-docker run --rm --privileged -v "$PWD/out/lb":/lb -w /lb oden-builder \
-  sh -c 'lb config && lb build'
+docker run --rm --privileged -e OWNER="$(id -u):$(id -g)" -v "$PWD/out/lb":/lb -w /lb oden-builder \
+  sh -c 'rc=0; lb config && lb build || rc=$?; chown -R "$OWNER" /lb; exit $rc'
 
 # SBOM: paketdelen från bilden + artefaktlåset
 { cat out/lb/chroot/usr/share/oden/SBOM-packages.txt 2>/dev/null; echo "--- artefakter"; grep -v '^#' artifacts.lock

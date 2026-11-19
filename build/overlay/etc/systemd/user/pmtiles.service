@@ -6,7 +6,7 @@ ConditionPathExists=/srv/oden-assets/maps
 
 [Service]
 # TODO: kontrollera flaggsyntax mot pinnad go-pmtiles-version
-ExecStart=/opt/pmtiles/pmtiles serve /srv/oden-assets/maps --port 8081 --bind 127.0.0.1 --cors=app://obsidian.md
+ExecStart=/opt/pmtiles/pmtiles serve /srv/oden-assets/maps --port 8081 --interface=127.0.0.1 --cors=app://obsidian.md
 Restart=on-failure
 
 [Install]

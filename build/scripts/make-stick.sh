@@ -8,7 +8,7 @@
 # hittar den krypterade partitionen via det namnet) och nollad header.
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
-[[ $EUID -eq 0 ]] || exec sudo "$0" "$@"
+[[ $EUID -eq 0 ]] || exec sudo env ODEN_ASSETS="${ODEN_ASSETS:-}" "$0" "$@"
 
 with_ai=0
 [[ "${1:-}" == "--with-ai" ]] && { with_ai=1; shift; }
