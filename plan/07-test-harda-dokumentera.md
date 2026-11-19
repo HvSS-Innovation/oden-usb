@@ -1,8 +1,9 @@
 # Steg 07: Test, härdning och dokumentation
 
 ## Maskinvarutest (matris)
-4–6 datorer: olika tillverkare, Intel/AMD, med och utan Secure Boot, 8 GB och >=16 GB RAM.
-För varje: boot, wifi, grafik, upplåsning, Oden, Obsidian + karta, Ollama (om >=16 GB).
+4–6 datorer: olika tillverkare, Intel/AMD, med och utan Secure Boot, med och utan NVIDIA
+(minst en bärbar med hybridgrafik), 8 GB och >=16 GB RAM.
+För varje: boot, wifi, grafik, upplåsning, Oden, Obsidian + karta, Ollama (om >=16 GB), GPU-användning (NVIDIA med Secure Boot av).
 Resultat i `docs/HW-MATRIS.md`.
 
 ## Funktionstest (E2E)
@@ -19,7 +20,7 @@ Resultat i `docs/HW-MATRIS.md`.
 - `docs/ANVANDARGUIDE.md`: skriv stickan, första start, länka Signal, daglig användning, avstängning,
   kopiera ut data innan man byter till en ny stick.
 - `docs/ADMINGUIDE.md`: bygga ny stick, byta karta/modeller (= nytt bygge), nyckelhantering.
-- `docs/FELSOKNING.md`: bootproblem (Secure Boot, BIOS-inställningar), wifi, fel klocka, glömd lösenfras (= data förlorad).
+- `docs/FELSOKNING.md`: bootproblem (Secure Boot, BIOS-inställningar), NVIDIA (stäng av Secure Boot för GPU-AI), wifi, fel klocka, glömd lösenfras (= data förlorad).
 - Versionspolicy: stickversion = datum + Oden-version + ODEN-analys-version (visas i boot-meny och i Obsidian).
 
 ## Klart när

@@ -23,6 +23,7 @@ build/
 | Obsidian | obsidian.md AppImage | Licens ok för distribution i bilden |
 | go-pmtiles | protomaps/go-pmtiles release | Statisk Go-binär |
 | Ollama-binär | ollama.com | Steg 06 |
+| NVIDIA-drivrutin | Debian non-free (`nvidia-driver`, `firmware-misc-nonfree`) | Modulen byggs med DKMS mot bildens kärna vid bygget (kräver `linux-headers`) |
 | PMTiles-karta | Ange källa | Läggs på p3 |
 | Ollama-modeller | `ollama pull` vid bygget | Inget versionslås |
 

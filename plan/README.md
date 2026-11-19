@@ -14,8 +14,9 @@ Hellre en funktion mindre än en rörlig del till.
 - **Persistens:** Debian live-boots inbyggda krypterade persistens (LUKS2). Bara `/home` sparas.
 - **Oden körs som PyInstaller-binär** (bundlar signal-cli + JRE, samma layout som `s7_watcher.spec`).
 - **Kartor:** raster-PMTiles serveras lokalt med `go-pmtiles serve`.
-- **AI/Ollama:** endast CPU, startas bara på datorer med tillräckligt RAM.
-- **Secure Boot:** stöds via Debians signerade shim/grub, inget eget arbete. Ingen proprietär GPU-drivrutin.
+- **AI/Ollama:** startas bara på datorer med tillräckligt RAM. Använder NVIDIA-GPU om den finns och drivrutinen laddas, annars CPU.
+- **Secure Boot:** stöds via Debians signerade shim/grub, inget eget arbete.
+- **NVIDIA-drivrutin** ingår men signeras inte. Med Secure Boot på laddas den inte och systemet kör enkel grafik + CPU-AI.
 - **Ingen uppdatering av stickor.** Ny version = ny stick. Användaren kopierar ut relevant data först.
 - **Ingen hibernation**, ingen swap på disk.
 - **Ingen brandväggsvitlista.** Inkommande blockeras, utgående är öppet.
