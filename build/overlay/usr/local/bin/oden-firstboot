@@ -1,5 +1,5 @@
 #!/bin/bash
-# Förstastart: skapar krypterad persistens (LUKS2) på p4 om den är tom. Autostartas vid inloggning.
+# Förstastart: skapar (vid behov) partitionen och krypterad persistens (LUKS2) om den är tom. Autostartas vid inloggning.
 # Formaterar BARA en partition utan något filsystem. Allt annat lämnas orört.
 # Testvariabler: ODEN_PART (enhet), ODEN_TEMPLATE (valvmall), ODEN_NOREBOOT=1.
 set -euo pipefail
@@ -13,7 +13,11 @@ note() { notify-send "$1" "${2:-}" 2>/dev/null || echo "$1 ${2:-}" >&2; }
 # Redan upplåst persistens: inget att göra.
 [[ -f "$MARK" ]] && exit 0
 
-part=$(oden-persist-dev) || { note "Ingen persistens" "Hittade inte p4 på stickan. Data sparas inte."; exit 0; }
+# Etcher-bränd sticka: partitionen finns inte än. Skapa den i det lediga utrymmet (rör inget befintligt).
+if [[ "$(oden-persist-state)" == none ]]; then
+  err=$(oden-make-persist 2>&1) || { note "Ingen persistens" "${err#oden-make-persist: } Data sparas inte."; exit 0; }
+fi
+part=$(oden-persist-dev) || { note "Ingen persistens" "Hittade inte partitionen för lagring på stickan. Data sparas inte."; exit 0; }
 map=oden-new
 
 case "$(oden-persist-state)" in
@@ -27,8 +31,8 @@ case "$(oden-persist-state)" in
     $S umount "/dev/mapper/$map" 2>/dev/null || true
     $S cryptsetup close "$map" 2>/dev/null || true
     $S wipefs -a "$part" >/dev/null ;;
-  other:*) note "Oväntat innehåll på p4" "Partitionen har ett annat filsystem och rörs inte."; exit 0 ;;
-  *) note "Ingen persistens" "Hittade inte p4 på stickan. Data sparas inte."; exit 0 ;;
+  other:*) note "Oväntat innehåll på lagringspartitionen" "Partitionen har ett annat filsystem och rörs inte."; exit 0 ;;
+  *) note "Ingen persistens" "Hittade inte partitionen för lagring på stickan. Data sparas inte."; exit 0 ;;
 esac
 
 # Förkontroller innan något förstörs.
@@ -71,7 +75,7 @@ unset p1 p2
 $S mkfs.ext4 -q -L persistence "/dev/mapper/$map"
 $S mount -o noatime "/dev/mapper/$map" "$mnt"
 
-# live-boot: /home på p4 bind-monteras över /home. Rotkatalogen innehåller home/ och persistence.conf.
+# live-boot: /home på persistensen bind-monteras över /home. Rotkatalogen innehåller home/ och persistence.conf.
 echo "/home bind" | $S tee "$mnt/persistence.conf" >/dev/null
 $S install -d -m 755 "$mnt/home"
 $S install -d -o "$(id -u)" -g "$(id -g)" -m 755 "$mnt$HOME"

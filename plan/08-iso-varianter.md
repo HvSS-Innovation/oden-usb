@@ -41,6 +41,8 @@ Etcher skriver bara ISO-storleken; resten av stickan är oallokerad. `oden-first
    Etcher inte rör tabellen. Kan inte provas utan riktig sticka och root.
 2. **`oden-firstboot`**: om p4 saknas, skapa den i det lediga utrymmet efter ISO-datan (och p3 i `minimal`).
    Avbrottssäker som idag (LUKS-etikett `oden-pending`). Kräv minsta ledigt utrymme och säg tydligt om det inte räcker.
+   **Gjort:** `oden-make-persist` (sgdisk -e, ny partition, `partx -a`, kräver 8 GiB ledigt, idempotent) anropas av `oden-firstboot` när
+   ingen persistens-partition finns. Testat mot filavbild i `tests/run.sh`; `partx` och live-beteendet är oprovade. `minimal` (assets som egen partition) återstår.
 3. **Sökvägen `/srv/oden-assets`**: i `karta`/`karta-ai` bind-montera `/run/live/medium/maps` (och `ollama`), i `minimal` p3.
    Tjänsterna (`pmtiles.service`, Ollama) ska inte behöva ändras.
 4. **Nedladdning i `minimal`** (`oden-fetch-assets`): hämta från S3-URL med SHA256 från en fil i ISO:n, återupptagning (`curl -C -`),

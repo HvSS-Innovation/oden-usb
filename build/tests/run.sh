@@ -50,4 +50,19 @@ pp "tillrackligt-langt-men-bindestreck" && bad "lösenfras: symboler avvisas" ||
 pp "kort fras" && bad "lösenfras: för kort avvisas" || ok "lösenfras: för kort avvisas"
 pp "" && bad "lösenfras: tom avvisas" || ok "lösenfras: tom avvisas"
 
+if command -v sgdisk >/dev/null; then
+  mk() { rm -f "$t/d.img"; truncate -s "$1" "$t/d.img"; sgdisk -n 1:2048:+10M -n 2:0:+2M "$t/d.img" >/dev/null; sgdisk -e "$t/d.img" >/dev/null 2>&1 || true
+         truncate -s "$2" "$t/d.img"; }
+  mp() { ODEN_DISK="$t/d.img" ODEN_NOPARTX=1 ODEN_MINFREE_MB=8 overlay/usr/local/bin/oden-make-persist; }
+  mk 20M 64M
+  if mp 2>/dev/null && sgdisk -p "$t/d.img" | awk '$NF=="persistence"' | grep -q . && sgdisk -v "$t/d.img" | grep -q "No problems"; then
+    ok "make-persist: skapar partition och GPT är giltig"; else bad "make-persist: skapar partition"; fi
+  mp 2>/dev/null && [[ $(sgdisk -p "$t/d.img" | awk '$NF=="persistence"' | wc -l) -eq 1 ]] \
+    && ok "make-persist: andra körningen gör inget" || bad "make-persist: idempotent"
+  mk 20M 18M
+  mp 2>/dev/null && bad "make-persist: för lite utrymme ska ge fel" || ok "make-persist: för lite utrymme avvisas"
+else
+  echo "hoppar över make-persist-tester (sgdisk saknas)"
+fi
+
 exit $fail
