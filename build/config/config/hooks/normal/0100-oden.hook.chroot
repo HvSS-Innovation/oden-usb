@@ -1,0 +1,23 @@
+#!/bin/sh
+# Körs i chroot vid bygget.
+set -e
+
+# Tjänster som ska vara av
+for u in hibernate.target hybrid-sleep.target suspend-then-hibernate.target \
+         apt-daily.timer apt-daily-upgrade.timer man-db.timer \
+         avahi-daemon.service cups.service cups-browsed.service bluetooth.service; do
+  systemctl mask "$u" 2>/dev/null || true
+done
+
+# Brandvägg och tidssynk på
+systemctl enable nftables.service systemd-timesyncd.service
+
+# Användartjänster (oden/pmtiles/ollama) startas för alla användare; villkor i unit-filerna
+systemctl --global enable oden.service pmtiles.service ollama.service
+
+# Skrivskyddade installationsplatser skapas av build.sh (staging); skapa mappar här så att units inte faller på saknad sökväg
+mkdir -p /opt/oden /opt/obsidian /opt/pmtiles /opt/ollama /opt/oden-template /srv/oden-assets
+
+# SBOM (paketdelen)
+mkdir -p /usr/share/oden
+dpkg-query -W -f='${binary:Package} ${Version}\n' | sort > /usr/share/oden/SBOM-packages.txt

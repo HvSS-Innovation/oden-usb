@@ -1,0 +1,10 @@
+firmware-linux-free
+firmware-linux-nonfree
+firmware-misc-nonfree
+firmware-iwlwifi
+firmware-realtek
+firmware-atheros
+firmware-brcm80211
+firmware-intel-graphics
+amd64-microcode
+intel-microcode

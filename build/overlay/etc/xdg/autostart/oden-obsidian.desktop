@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Name=Obsidian
+Exec=/usr/local/bin/oden-start-gui obsidian

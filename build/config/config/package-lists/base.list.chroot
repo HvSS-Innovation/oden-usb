@@ -1,0 +1,54 @@
+# Live-system
+live-boot
+live-config
+live-config-systemd
+systemd-sysv
+dbus-user-session
+cryptsetup
+cryptsetup-initramfs
+e2fsprogs
+dosfstools
+sudo
+locales
+console-setup
+keyboard-configuration
+# Secure Boot (Debians signerade kedja)
+shim-signed
+grub-efi-amd64-signed
+# Skrivbord
+xorg
+xfce4
+xfce4-terminal
+xfce4-notifyd
+libnotify-bin
+lightdm
+thunar
+gvfs
+udisks2
+policykit-1
+zenity
+firefox-esr
+fonts-dejavu
+fonts-noto-color-emoji
+pipewire-pulse
+wireplumber
+# Nät
+network-manager
+network-manager-gnome
+nftables
+systemd-timesyncd
+ca-certificates
+curl
+# Minne istället för swap
+systemd-zram-generator
+# Obsidian (AppImage extraherad) kräver Electron-beroenden
+libgtk-3-0
+libnss3
+libxss1
+libasound2t64
+libgbm1
+libxshmfence1
+# Verktyg
+tcpdump
+less
+nano

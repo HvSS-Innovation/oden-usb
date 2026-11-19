@@ -1,0 +1,16 @@
+[Unit]
+Description=Ollama (lokal AI, bara om tillräckligt RAM)
+ConditionPathExists=%h/.oden-persist
+ConditionPathExists=/srv/oden-assets/ollama
+
+[Service]
+ExecCondition=/usr/local/bin/oden-ollama-check
+Environment=OLLAMA_HOST=127.0.0.1:11434
+Environment=OLLAMA_MODELS=/srv/oden-assets/ollama
+Environment=OLLAMA_MAX_LOADED_MODELS=1
+Environment=OLLAMA_NOPRUNE=1
+ExecStart=/opt/ollama/bin/ollama serve
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

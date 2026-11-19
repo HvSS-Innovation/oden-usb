@@ -1,0 +1,7 @@
+#!/bin/sh
+# Autostart: bara med upplåst persistens (steg 03).
+[ -f "$HOME/.oden-persist" ] || { notify-send "Data inte upplåst" "Starta om och ange lösenfras." 2>/dev/null; exit 0; }
+case "$1" in
+  browser)  sleep 3; exec firefox-esr --new-window http://127.0.0.1:8080 ;;
+  obsidian) exec /opt/obsidian/obsidian ;;
+esac

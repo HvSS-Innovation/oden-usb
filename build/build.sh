@@ -14,6 +14,15 @@ done < artifacts.lock
 
 docker build -t oden-builder .
 
-docker run --rm --privileged -v "$PWD":/work -w /work oden-builder \
-  bash -c 'cd /work/out && lb clean --purge 2>/dev/null; cp -r /work/config /work/out/config && lb config && lb build'
-# SBOM skrivs av hooken config/hooks/live/9000-sbom.hook.chroot
+# live-build kör i out/lb; config och overlay kopieras in färska varje bygge.
+rm -rf out/lb && mkdir -p out/lb
+cp -r config/. out/lb/
+mkdir -p out/lb/config/includes.chroot
+cp -r overlay/. out/lb/config/includes.chroot/
+# TODO (steg 02): lägg artefakter från cache/ under includes.chroot/opt/*
+
+docker run --rm --privileged -v "$PWD/out/lb":/lb -w /lb oden-builder \
+  sh -c 'lb config && lb build'
+
+# SBOM: paketdelen från bilden + artefaktlåset
+{ cat out/lb/chroot/usr/share/oden/SBOM-packages.txt 2>/dev/null; echo "--- artefakter"; grep -v '^#' artifacts.lock; } > out/SBOM.txt
