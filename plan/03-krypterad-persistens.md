@@ -33,3 +33,14 @@ den krypterade partitionen första gången.
 - Ny stick: första start ger fungerande krypterad persistens; omstart ber om lösenfras; fel lösenfras ger ingen åtkomst.
 - `oden-wipe` gör data oåtkomlig (verifierat med försök att öppna).
 - Hård strömavstängning mitt i skrivning ger ingen korrupt DB (testa 10 gånger).
+
+## Status (skript skrivna, ej körtestade)
+Skrivna i `build/overlay/usr/local/bin/`: `oden-persist-dev` (hittar p4 på boot-stickan), `oden-firstboot`
+(+ autostart i `etc/xdg/autostart/`), `oden-wipe`. Endast `bash -n` körd; cryptsetup-flödet är inte testat.
+Bakom skripten:
+- p4 måste ha **GPT-partitionsnamn `persistence`** (sätts av `make-stick.sh`, som ännu är TODO). Live-boot
+  hittar krypterade partitioner via det namnet, filsystemets label inuti LUKS är `persistence`.
+- `oden-firstboot` formaterar bara en partition utan filsystem, och avbryter före formatering om `/opt/oden-template` är tom.
+- Lösenfrasen skickas utan radbrytning (`printf '%s'`) så att den är identisk med vad live-boot får vid boot.
+- Att verifiera på riktig stick: att live-boot-prompten accepterar frasen, beteendet vid fel fras, `noatime` på p4
+  (live-boot monterar själv), 10 hårda strömavbrott.

@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Name=ODEN förstastart
+Exec=/usr/local/bin/oden-firstboot

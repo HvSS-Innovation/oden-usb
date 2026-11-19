@@ -1,0 +1,73 @@
+#!/bin/bash
+# Förstastart: skapar krypterad persistens (LUKS2) på p4 om den är tom. Autostartas vid inloggning.
+# Formaterar BARA en partition utan något filsystem. Allt annat lämnas orört.
+# Testvariabler: ODEN_PART (enhet), ODEN_TEMPLATE (valvmall), ODEN_NOREBOOT=1.
+set -euo pipefail
+
+TEMPLATE="${ODEN_TEMPLATE:-/opt/oden-template}"
+MARK="$HOME/.oden-persist"
+S=sudo; [[ $EUID -eq 0 ]] && S=""
+
+note() { notify-send "$1" "${2:-}" 2>/dev/null || echo "$1 ${2:-}" >&2; }
+
+# Redan upplåst persistens: inget att göra.
+[[ -f "$MARK" ]] && exit 0
+
+part=$(oden-persist-dev) || { note "Ingen persistens" "Hittade inte p4 på stickan. Data sparas inte."; exit 0; }
+type=$($S blkid -s TYPE -o value "$part" 2>/dev/null || true)
+
+case "$type" in
+  "") ;;                                   # tom: första start
+  crypto_LUKS) note "Data inte upplåst" "Starta om och ange lösenfras."; exit 0 ;;
+  *) note "Oväntat innehåll på p4" "Partitionen har filsystemet '$type' och rörs inte."; exit 0 ;;
+esac
+
+# Förkontroller innan något förstörs.
+[[ "$HOME" == /home/* ]] || { note "Fel hemkatalog" "$HOME ligger inte under /home."; exit 1; }
+if [[ -z "$(ls -A "$TEMPLATE" 2>/dev/null)" ]]; then
+  note "Valvmall saknas" "$TEMPLATE är tom; bilden är ofullständig."; exit 1
+fi
+
+# Lösenfras (två gånger). Avbryt = fråga igen vid nästa inloggning.
+while :; do
+  p1=$(zenity --password --title="ODEN: välj lösenfras för krypterad lagring") || exit 0
+  p2=$(zenity --password --title="ODEN: upprepa lösenfrasen") || exit 0
+  [[ -z "$p1" ]] && { zenity --error --text="Lösenfrasen får inte vara tom."; continue; }
+  [[ "$p1" == "$p2" ]] && break
+  zenity --error --text="Lösenfraserna är olika. Försök igen."
+done
+
+zenity --question --text="Skapar krypterad lagring på stickan. Det kan ta en stund.\nGlöms lösenfrasen går data inte att återfå." --ok-label="Fortsätt" || exit 0
+
+map=oden-new; mnt=$(mktemp -d)
+cleanup() {
+  mountpoint -q "$mnt" && $S umount "$mnt" || true
+  [[ -e /dev/mapper/$map ]] && $S cryptsetup close "$map" || true
+  rmdir "$mnt" 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# printf utan radbrytning: samma tecken som live-boot får när lösenfrasen skrivs vid boot.
+printf '%s' "$p1" | $S cryptsetup luksFormat --batch-mode --type luks2 --pbkdf argon2id \
+  --pbkdf-memory 524288 --iter-time 2000 --key-file=- "$part"
+printf '%s' "$p1" | $S cryptsetup open --key-file=- "$part" "$map"
+unset p1 p2
+
+$S mkfs.ext4 -q -L persistence "/dev/mapper/$map"
+$S mount -o noatime "/dev/mapper/$map" "$mnt"
+
+# live-boot: /home på p4 bind-monteras över /home. Rotkatalogen innehåller home/ och persistence.conf.
+echo "/home bind" | $S tee "$mnt/persistence.conf" >/dev/null
+$S install -d -m 755 "$mnt/home"
+$S install -d -o "$(id -u)" -g "$(id -g)" -m 755 "$mnt$HOME"
+$S cp -a /etc/skel/. "$mnt$HOME/"
+$S cp -a "$TEMPLATE" "$mnt$HOME/ODEN-valv"
+$S touch "$mnt$HOME/.oden-persist"
+$S chown -R "$(id -u):$(id -g)" "$mnt$HOME"
+$S sync
+
+cleanup; trap - EXIT
+
+if [[ "${ODEN_NOREBOOT:-}" == 1 ]]; then echo "klart (ingen omstart)"; exit 0; fi
+zenity --info --text="Klart. Datorn startar om och frågar sedan efter lösenfrasen vid varje start."
+systemctl reboot
