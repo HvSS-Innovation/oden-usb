@@ -24,12 +24,21 @@ Etcher skriver bara ISO-storleken; resten av stickan är oallokerad. `oden-first
 `make-stick.sh` blir en alternativ väg för dem som vill ha karta på separat partition; den tas inte bort.
 
 ## Uppgifter
-1. **Partitionstabell (avgör resten, prova först).** live-boot hittar p4 via GPT-namnet `persistence` (`oden-persist-dev`).
-   Kontrollera vad live-builds `iso-hybrid` ger (MBR eller GPT-hybrid). Alternativ:
-   a. bygg ISO:n med GPT-hybrid (xorriso), eller
-   b. låt firstboot konvertera/utvidga tabellen (`sgdisk -g`/`-e`) på stickan den kör från, eller
-   c. hitta p4 på annat sätt än via GPT-namn (t.ex. filsystemetikett på LUKS-headern via `--label`, redan använt som markör).
-   Välj det enklaste som fungerar på riktig hårdvara.
+1. **Partitionstabell (klar på pappret, återstår att prova på riktig sticka).** Undersökt på `build/out/oden.iso`: `build.sh` ger redan
+   en GPT-hybrid med p1 = ISO9660 och p2 = EFI, och GPT-namn fungerar alltså. Inget behöver ändras i ISO-bygget.
+   Efter Etcher ligger sikthuvudet (backup-GPT) vid ISO:ns slut och resten av stickan är oallokerad. Firstboot behöver:
+   ```
+   sgdisk -e DISK                                   # flytta sikthuvudet till diskens slut
+   sgdisk -a 2048 -n 3:0:0 -t 3:8309 -c 3:persistence DISK
+   partx -a -n 3 DISK                               # läs in nya partitionen; BLKRRPART/partprobe misslyckas när p1 är monterad
+   ```
+   Provat på en 64 GB-kopia av ISO:n (fil): `sgdisk -v` ger inga fel, p1/p2 är orörda och p3 (`persistence`) tar resten.
+   Utan `-a 2048` hamnar p3 på sektor 7393284, som inte är 4 KiB-justerad; med flaggan startar den på 7395328.
+   **Numrering:** en Etcher-bränd sticka får persistensen som **p3** (inte p4). I `minimal` hamnar assets därför före den
+   (assets = p3, persistens = p4 om assets skapas först) eller så sparas nedladdat på persistensen. Alla skript hittar persistensen
+   via GPT-namnet, så de påverkas inte, men kommentarer och texter som säger "p4" ska rättas.
+   **Kvarstår att prova:** att `partx -a` fungerar när stickan körs live, att live-boot hittar `persistence` efter omstart, och att
+   Etcher inte rör tabellen. Kan inte provas utan riktig sticka och root.
 2. **`oden-firstboot`**: om p4 saknas, skapa den i det lediga utrymmet efter ISO-datan (och p3 i `minimal`).
    Avbrottssäker som idag (LUKS-etikett `oden-pending`). Kräv minsta ledigt utrymme och säg tydligt om det inte räcker.
 3. **Sökvägen `/srv/oden-assets`**: i `karta`/`karta-ai` bind-montera `/run/live/medium/maps` (och `ollama`), i `minimal` p3.
