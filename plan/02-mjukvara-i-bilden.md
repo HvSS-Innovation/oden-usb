@@ -34,6 +34,9 @@ Assets (p3) monteras skrivskyddat på `/srv/oden-assets` (karta, modeller).
 - `ss -tulpn` visar bara lokala lyssnare.
 
 ## Status
-`build/scripts/stage.sh` packar upp artefakter till `/opt/*` (format via första byte) och kontrollerar att binärerna finns;
-skriver `/etc/oden-release`. Testat med fejkade artefakter. Odefinierat tills riktiga artefakter är låsta: exakt layout i
-Oden-bundlen och Ollama-arkivet, Oden-binärens namn (`oden.service`), `config.ini`- och Obsidian-förkonfiguration (uppgift 7).
+- `build/scripts/stage.sh` packar upp artefakter till `/opt/*` (format via första byte), kontrollerar att binärerna finns och
+  skriver `/etc/oden-release`. Testat mot riktiga artefakter (Oden, valv, Obsidian, go-pmtiles); Ollama bara med fejkad fil.
+- Oden för Linux saknar upstream-release och byggs av `build/scripts/build-oden.sh` från git-taggen (PyInstaller i docker).
+  Binären (`/opt/oden/oden`, ca 197 MB, onefile) startar i Debian 13-container med medföljande JRE och signal-cli. Se `docs/ADMINGUIDE.md`.
+- Alla artefakter är låsta i `artifacts.lock`; uppgradering med `build/scripts/bump.sh`.
+- Kvar: `config.ini`- och Obsidian-förkonfiguration (uppgift 7), kontroll av `--no-sandbox`, versionsnummer i binären, live-build-bygget av bilden.

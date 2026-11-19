@@ -1,41 +1,93 @@
 # Adminguide: bygga och skriva ODEN-stickor
 
-> Status: bygg- och skrivskripten är syntaxkontrollerade och delvis testade (partitionering på gles fil, uppackning med
-> fejkade artefakter). Ett helt bygge och en skriven stick är inte körda än.
+> Status 2026-11-19: artefakterna är låsta, Oden för Linux byggs och startar i en Debian 13-container, `stage.sh` är
+> testad mot riktiga artefakter. **Inte körda än:** live-build-bygget av hela bilden, `make-stick.sh` mot en riktig stick
+> och boot. Se "Kända begränsningar" nedan.
+
+## Översikt: vad som finns var
+```
+build/
+  artifacts.lock        låsta artefakter: namn, URL, SHA256, # versionsinfo
+  sources.conf          var varje artefakt kommer ifrån (GitHub-repo, taggmall, asset-mönster)
+  build.sh              fetch -> verifiera -> bygg Oden -> staging -> live-build -> out/oden.img + SBOM
+  fetch.sh              hämtar och verifierar artefakter
+  scripts/bump.sh       uppgradera en artefakt i lås-filen
+  scripts/build-oden.sh bygger Oden för Linux från källa (docker, PyInstaller)
+  scripts/stage.sh      packar upp artefakter i bilden under /opt och skriver /etc/oden-release
+  scripts/make-stick.sh skriver bilden till en USB-stick och lägger till assets-partitionen och p4
+  config/ overlay/      live-build-konfig och filer som kopieras in i bilden
+  tests/run.sh          offline-tester av skripten
+```
+Cache och byggresultat (`build/cache/`, `build/out/`) ligger utanför git.
 
 ## Krav på byggmaskinen
-Linux med docker, `gdisk` (sgdisk), `fdisk` (sfdisk), `e2fsprogs`, `parted`, `curl`, `tar`. Nät behövs bara för `fetch.sh`.
+Linux med docker, GitHub CLI (`gh`, inloggad), `python3`, `curl`, `tar`, `zstd` (Ollama-arkivet), `gdisk` (sgdisk),
+`fdisk` (sfdisk), `e2fsprogs`, `parted`. Nät behövs för `fetch.sh`, `bump.sh` och `build-oden.sh` (pip).
 
-## Artefakter
-Allt externt står i `build/artifacts.lock` (namn, URL, SHA256). Poster med `PENDING` måste låsas först:
-`build/fetch.sh --pin <namn>` hämtar och skriver ut checksumman som förs in i filen. `build.sh` vägrar bygga med
-`PENDING` eller avvikande checksumma.
-
-Formatet avgörs av filens första byte (tar/gzip/xz/zstd, zip eller ELF). Förväntad layout efter uppackning:
-`oden-linux` ger `/opt/oden/oden`, `go-pmtiles` ger `/opt/pmtiles/pmtiles`, `ollama` ger `/opt/ollama/bin/ollama`,
-Obsidian är en AppImage (`/opt/obsidian/obsidian`) och `oden-valv` är valvmallen. Stämmer inte layouten avbryts bygget.
-
-## Bygga bilden
+## Bygga en ny stick från noll
 ```
-./build/build.sh            # hämtar, verifierar, bygger i container -> build/out/oden.img + SBOM.txt
-./build/build.sh --offline  # hoppar över nedladdning (cache/ måste vara komplett)
+./build/tests/run.sh                 # 1. snabb kontroll av skripten (offline)
+./build/build.sh                     # 2. hämta, verifiera, bygg Oden, bygg bilden -> build/out/oden.img
+ls build/cache/assets/maps           # 3. lägg assets: maps/ (krävs), ollama/ (bara för --with-ai)
+sudo ./build/scripts/make-stick.sh [--with-ai] build/out/oden.img /dev/sdX     # 4. skriv stickan
 ```
+- `build.sh --offline` hoppar över nedladdning; cache måste då vara komplett (inklusive `cache/oden-linux`).
+- `make-stick.sh` kräver en flyttbar hel disk på minst 60 GB och frågar innan allt raderas.
+- Layout: p1 EFI, p2 live, p3 `oden-assets` (ext4, skrivskyddad på `/srv/oden-assets`), p4 `persistence` (krypteras
+  vid första start).
+- Spara `build/out/SBOM.txt` tillsammans med stickans versionsstämpel (`/etc/oden-release` i bilden).
+- Test på en riktig stick: se `plan/07-test-harda-dokumentera.md` och fyll i `docs/HW-MATRIS.md`.
 
-## Skriva en stick
-Lägg assets under `build/cache/assets/` (eller sätt `ODEN_ASSETS`):
-`maps/` (kartfil, krävs) och `ollama/` (modeller, bara för `--with-ai`).
+## Uppgradera ett verktyg
+Alla versioner står i `artifacts.lock`. Uppgradering är alltid samma tre steg: bumpa, granska, bygg om.
 ```
-sudo ./build/scripts/make-stick.sh [--with-ai] build/out/oden.img /dev/sdX
+./build/scripts/bump.sh --list                    # vilka artefakter finns
+./build/scripts/bump.sh go-pmtiles 1.32.0         # en specifik version
+./build/scripts/bump.sh ollama latest             # senaste release
+git diff build/artifacts.lock                     # granska: URL, SHA256 och versionskommentar
+./build/tests/run.sh && ./build/build.sh          # bygg en ny bild; skriv sedan en ny stick
 ```
-Skriptet kräver en flyttbar hel disk på minst 60 GB och frågar innan allt raderas. Layout: p1 EFI, p2 live,
-p3 `oden-assets` (ext4, skrivskyddad på `/srv/oden-assets`), p4 `persistence` (krypteras vid första start).
+| Artefakt | Exempel | Att kontrollera efter uppgradering |
+|---|---|---|
+| `oden-source` | `bump.sh oden-source 4.3.0` | Byggs om automatiskt (`cache/oden-linux` raderas). Kontrollera att Oden startar och att `oden.service` stämmer med binärens namn; läs upstreams CHANGELOG. |
+| `oden-valv` | `bump.sh oden-valv 1.7.0` | Valv och plugin ska vara kompatibla med vald Obsidian-version. Map View ska peka på `127.0.0.1:8081` (steg 05). |
+| `signal-cli` | `bump.sh signal-cli 0.14.6` | Bundlas in i Oden-binären (bygger om). Matcha mot den Java-version Oden-repot kräver. |
+| `jre-x64` | `bump.sh jre-x64 25.0.6.1+1` | Bundlas in i Oden-binären (bygger om). Versionen är Temurins tagg utan `jdk-`. |
+| `obsidian-appimage` | `bump.sh obsidian-appimage 1.16.0` | Obsidian ska starta med valvet och Map View-pluginen. |
+| `go-pmtiles` | `bump.sh go-pmtiles 1.32.0` | Kontrollera flaggsyntaxen för `serve` (se `pmtiles.service`). |
+| `ollama` | `bump.sh ollama latest` | Kontrollera att modellerna i `ollama/` fortfarande laddas. Arkivet är ca 1,5 GB. |
 
-## Byta karta eller modeller
-Det kräver en ny stick (assets skrivs bara av `make-stick.sh`).
+Andra uppgraderingar:
+- **Debian-paket** kommer från live-build vid varje bygge (trixie). Paketlistorna ligger i `config/config/package-lists/`;
+  `SBOM.txt` visar vilka versioner som ingick.
+- **Ny artefakt eller ny källa:** lägg en rad i `sources.conf` och en rad i `artifacts.lock`
+  (`<namn> PENDING_URL PENDING`), kör sedan `bump.sh <namn> latest`. Lägg uppackning i `stage.sh` och en kontroll av
+  binären i dess slutkontroll, och ett testfall i `tests/run.sh`.
+- **Ny karta eller nya modeller:** ersätt filerna i `build/cache/assets/` och skriv en ny stick.
+- **`bump.sh` ger "N asset matchar":** upstream har bytt filnamn. Justera regexet i `sources.conf`.
+
+## Om Oden för Linux
+Upstream släpper bara Windows och macOS. `build-oden.sh` bygger Linux-binären från git-taggen med upstreams egen
+`s7_watcher.spec` (en enda körbar fil med JRE och signal-cli inbyggda) i `python:3.12-bookworm`. Resultatet är
+`build/cache/oden-linux` (ca 200 MB). Radera filen för att bygga om. SBOM:en innehåller binärens SHA256 och
+`pip freeze`.
+
+## Kända begränsningar
+- **`oden-linux` är inte bit-för-bit reproducerbar.** Python-beroendena i Oden är angivna som `>=`, så pip kan välja
+  nyare versioner vid ett senare bygge. `cache/oden-linux.pip-freeze.txt` och SBOM:en dokumenterar vad som ingick.
+- GitHubs källtarball för en tagg har normalt samma checksumma över tid, men det garanteras inte. Avviker den
+  misslyckas bygget (avsiktligt): kontrollera commit-hashen i kommentaren på raden och kör `bump.sh oden-source <version>` igen.
+- Oden-binären är "onefile": den packar upp sig själv (ca 200 MB) i `/tmp` vid varje start. På stickan är `/tmp` RAM.
+- Oden visar versionen `v0.0.0-dev`, eftersom bygget inte skickar in något versionsnummer.
+- `sweden-osm.pmtiles` (vektor, 4 GB) står i lås-filen men används inte av bilden; kartan på p3 måste vara en
+  renderad raster-fil (steg 05, ännu inte gjort).
+- Obsidian körs som extraherad AppImage; `chrome-sandbox` kan kräva `--no-sandbox` (verifieras vid första boot).
+- Ollama-modeller har inget versionslås.
 
 ## Nycklar
 Varje stick får egen LUKS-nyckel vid första start; det finns ingen central nyckel och ingen header-backup.
 Förlorad lösenfras = förlorad data. Vid förlorad stick: koppla bort stickans enhet i Signal och spärra dess TAK-certifikat.
 
 ## Version
-`/etc/oden-release` i bilden innehåller bygg-datum och checksumma för `artifacts.lock`.
+`/etc/oden-release` i bilden innehåller bygg-datum och checksumma för `artifacts.lock`. Versionerna för varje verktyg
+står som kommentar på respektive rad i `artifacts.lock`.
