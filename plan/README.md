@@ -13,7 +13,7 @@ Hellre en funktion mindre än en rörlig del till.
 - **Bas:** Debian 13 live via `live-build`, skrivbordsmiljö **XFCE**.
 - **Persistens:** Debian live-boots inbyggda krypterade persistens (LUKS2). Bara `/home` sparas.
 - **Oden körs som PyInstaller-binär** (bundlar signal-cli + JRE, samma layout som `s7_watcher.spec`).
-- **Kartor:** raster-PMTiles serveras lokalt med `go-pmtiles serve`. Källan är vektor (OpenMapTiles) och renderas till raster en gång (steg 05).
+- **Kartor:** raster-PMTiles serveras lokalt med `go-pmtiles serve`. Källan är Protomaps-vektor (`sweden-osm.pmtiles`) och renderas till raster en gång (steg 05).
 - **AI/Ollama:** startas bara på datorer med tillräckligt RAM. Använder NVIDIA-GPU om den finns och drivrutinen laddas, annars CPU.
 - **Secure Boot:** stöds via Debians signerade shim/grub, inget eget arbete.
 - **NVIDIA-drivrutin** ingår men signeras inte. Med Secure Boot på laddas den inte och systemet kör enkel grafik + CPU-AI.

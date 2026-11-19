@@ -24,7 +24,7 @@ build/
 | go-pmtiles | protomaps/go-pmtiles release | Statisk Go-binär |
 | Ollama-binär | ollama.com | Steg 06 |
 | NVIDIA-drivrutin | Debian non-free (`nvidia-driver`, `firmware-misc-nonfree`) | Modulen byggs med DKMS mot bildens kärna vid bygget (kräver `linux-headers`) |
-| PMTiles-karta (raster) | Renderad en gång från OpenMapTiles-vektor (steg 05) | Läggs på p3 |
+| PMTiles-karta (raster) | Renderad en gång från `sweden-osm.pmtiles` (Protomaps-vektor, steg 05) | Läggs på p3 |
 | Ollama-modeller | `ollama pull` vid bygget | Inget versionslås |
 
 ## make-stick.sh
