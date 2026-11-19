@@ -40,3 +40,12 @@ build/
 ## Klart när
 - `./build/build.sh` på ren maskin ger en bild, och `make-stick.sh` ger en stick.
 - Bilden bootar i QEMU/OVMF (`qemu-system-x86_64 -bios OVMF.fd -drive file=oden.img`).
+
+## Status make-stick.sh (skriven, ej körd mot riktig stick)
+Förkontroller före skrivning: flyttbar hel disk, >= 60 GB, bilden har exakt 2 partitioner, `maps/` finns
+(och `ollama/` med `--with-ai`) under `$ODEN_ASSETS` (standard `build/cache/assets`). Därefter: `sgdisk --zap-all`,
+`dd`, GPT (konverterar MBR vid behov), p1 sätts till EF00, p3 `oden-assets` (ext4, innehåll + 5 % + 256 MiB),
+p4 `persistence` (resten, första 16 MiB nollade så att gammal LUKS-header inte blir kvar).
+Testat: syntax och sgdisk-sekvensen på en gles fil. Inte testat: dd/mount/mkfs mot en riktig enhet, och att
+live-builds `hdd`-bild verkligen har 2 partitioner (skriptet vägrar annars).
+p3 monteras skrivskyddat på `/srv/oden-assets` via `build/overlay/etc/fstab` (`nofail`). Overifierat att live-boot lämnar raden orörd.

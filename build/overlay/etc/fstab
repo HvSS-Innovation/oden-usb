@@ -1,0 +1,2 @@
+# Assets (p3): karta och modeller, okrypterat och skrivskyddat. nofail: stickan ska starta även om p3 saknas.
+LABEL=oden-assets  /srv/oden-assets  ext4  ro,noatime,nofail,x-systemd.device-timeout=5s  0  0
