@@ -4,7 +4,7 @@
 # Assets hämtas från $ODEN_ASSETS (standard build/cache/assets):
 #   maps/    kartfiler (krävs)         -> p3:/maps    (ska monteras som /srv/oden-assets/maps)
 #   ollama/  modeller (med --with-ai)  -> p3:/ollama
-# Layout: p1+p2 från bilden, p3 ext4 "oden-assets", p4 resten med GPT-namn "persistence" (live-boot
+# Layout: p1 (ISO-data) + p2 (EFI) från bilden, p3 ext4 "oden-assets", p4 resten med GPT-namn "persistence" (live-boot
 # hittar den krypterade partitionen via det namnet) och nollad header.
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -28,9 +28,9 @@ done
 dev_bytes=$(blockdev --getsize64 "$dev")
 (( dev_bytes >= MIN_BYTES )) || { echo "$dev är för liten ($((dev_bytes / 1000000000)) GB, kräver >= 60 GB)" >&2; exit 1; }
 
-# Bilden ska ha exakt p1 (EFI) + p2 (live); annars stämmer inte numreringen p3/p4.
+# Bilden ska ha exakt p1 (ISO-data) + p2 (EFI); annars stämmer inte numreringen p3/p4.
 nparts=$(sfdisk -d "$img" | grep -c ': start=' || true)
-(( nparts == 2 )) || { echo "Bilden har $nparts partitioner, förväntade 2 (EFI + live). Justera live-build-konfigen eller skriptet." >&2; exit 1; }
+(( nparts == 2 )) || { echo "Bilden har $nparts partitioner, förväntade 2 (ISO + EFI). Justera live-build-konfigen eller skriptet." >&2; exit 1; }
 
 [[ -d "$assets/maps" && -n "$(ls -A "$assets/maps")" ]] || { echo "Kartor saknas i $assets/maps" >&2; exit 1; }
 if (( with_ai )); then
@@ -69,7 +69,7 @@ if [[ "$(blkid -o value -s PTTYPE "$dev" || true)" == gpt ]]; then
 else
   sgdisk -g "$dev" >/dev/null
 fi
-sgdisk -t 1:EF00 "$dev" >/dev/null                 # p1 är EFI-partitionen
+sgdisk -t 2:EF00 "$dev" >/dev/null                 # p2 är EFI-partitionen (p1 är ISO-data)
 sgdisk -n "3:0:+${p3_mib}M" -t 3:8300 -c 3:oden-assets \
        -n 4:0:0             -t 4:8309 -c 4:persistence "$dev" >/dev/null
 partprobe "$dev"; udevadm settle
@@ -91,5 +91,5 @@ if (( with_ai )); then cp -a "$assets/ollama" "$mnt/ollama"; fi
 sync
 umount "$mnt"
 
-echo "Klart. p1 EFI, p2 live, p3 assets ($p3), p4 $p4 (krypteras vid första start)."
+echo "Klart. p1 ISO-data, p2 EFI, p3 assets ($p3), p4 $p4 (krypteras vid första start)."
 lsblk -o NAME,SIZE,FSTYPE,LABEL,PARTLABEL "$dev"

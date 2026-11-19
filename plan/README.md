@@ -40,12 +40,14 @@ Hellre en funktion mindre än en rörlig del till.
 | `06-ai-ollama.md` | Ollama, modeller, resurskontroll |
 | `07-test-harda-dokumentera.md` | Test, härdning, dokumentation |
 
+Aktuell status: se `docs/STATUS.md`.
+
 MVP: steg 00–03, minimal 04 (nätverk + Signal-länkning, utan TAK) och 05.
 
 ## Målbild: stickans layout (minst 64 GB)
 ```
-p1  EFI           ~512 MB
-p2  Live-system   ~6–8 GB          squashfs: Debian, XFCE, Oden (+signal-cli, JRE), Obsidian, go-pmtiles, Ollama-binär
+p1  ISO-data      ~3,6 GB          live-ISO (squashfs): Debian, XFCE, Oden (+signal-cli, JRE), Obsidian, go-pmtiles, Ollama-binär
+p2  EFI           ~3 MB            efi.img (ESP, grub-efi)
 p3  Assets        efter innehåll   ext4, okrypterad, monteras skrivskyddad: PMTiles, Ollama-modeller (valfritt)
 p4  Persistence   resten           LUKS2 + ext4, label "persistence": /home (valv, ~/.oden, signal-cli-data, TAK-cert, loggar)
 ```

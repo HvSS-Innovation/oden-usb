@@ -9,7 +9,7 @@
 build/
   artifacts.lock        låsta artefakter: namn, URL, SHA256, # versionsinfo
   sources.conf          var varje artefakt kommer ifrån (GitHub-repo, taggmall, asset-mönster)
-  build.sh              fetch -> verifiera -> bygg Oden -> staging -> live-build -> out/oden.img + SBOM
+  build.sh              fetch -> verifiera -> bygg Oden -> staging -> live-build -> out/oden.iso + SBOM
   fetch.sh              hämtar och verifierar artefakter
   scripts/bump.sh       uppgradera en artefakt i lås-filen
   scripts/build-oden.sh bygger Oden för Linux från källa (docker, PyInstaller)
@@ -27,13 +27,13 @@ Linux med docker, GitHub CLI (`gh`, inloggad), `python3`, `curl`, `tar`, `zstd` 
 ## Bygga en ny stick från noll
 ```
 ./build/tests/run.sh                 # 1. snabb kontroll av skripten (offline)
-./build/build.sh                     # 2. hämta, verifiera, bygg Oden, bygg bilden -> build/out/oden.img
+./build/build.sh                     # 2. hämta, verifiera, bygg Oden, bygg bilden -> build/out/oden.iso
 ls build/cache/assets/maps           # 3. lägg assets: maps/ (krävs), ollama/ (bara för --with-ai)
-sudo ./build/scripts/make-stick.sh [--with-ai] build/out/oden.img /dev/sdX     # 4. skriv stickan
+sudo ./build/scripts/make-stick.sh [--with-ai] build/out/oden.iso /dev/sdX     # 4. skriv stickan
 ```
 - `build.sh --offline` hoppar över nedladdning; cache måste då vara komplett (inklusive `cache/oden-linux`).
 - `make-stick.sh` kräver en flyttbar hel disk på minst 60 GB och frågar innan allt raderas.
-- Layout: p1 EFI, p2 live, p3 `oden-assets` (ext4, skrivskyddad på `/srv/oden-assets`), p4 `persistence` (krypteras
+- Layout: p1 ISO-data (live), p2 EFI, p3 `oden-assets` (ext4, skrivskyddad på `/srv/oden-assets`), p4 `persistence` (krypteras
   vid första start).
 - Spara `build/out/SBOM.txt` tillsammans med stickans versionsstämpel (`/etc/oden-release` i bilden).
 - Test på en riktig stick: se `plan/07-test-harda-dokumentera.md` och fyll i `docs/HW-MATRIS.md`.

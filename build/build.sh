@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# fetch -> verify -> live-build (i container) -> build/out/oden.img
+# fetch -> verify -> live-build (i container) -> build/out/oden.iso
 set -euo pipefail
 cd "$(dirname "$0")"
 mkdir -p out
@@ -36,9 +36,19 @@ docker run --rm --privileged -v "$PWD/out/lb":/lb -w /lb oden-builder \
   echo "--- oden-linux (byggd) sha256: $(sha256sum cache/oden-linux | cut -d' ' -f1)"
   echo "--- Python-paket i oden-linux"; cat cache/oden-linux.pip-freeze.txt 2>/dev/null; } > out/SBOM.txt
 
-# Bilden: live-build skriver live-image-<arch>.img (binary-image hdd)
+# live-build (grub-efi + iso-hybrid) ger en ren El Torito-ISO utan MBR/GPT, som inte bootar från dd:ad USB.
+# Efterbehandla: GPT med p1 = ISO-data och p2 = EFI-partition (efi.img), så att bilden är USB-bootbar
+# och har exakt två partitioner (make-stick.sh lägger p3/p4 efter dem).
 shopt -s nullglob
-imgs=(out/lb/live-image-*.img)
-[[ ${#imgs[@]} -eq 1 ]] || { echo "FEL: förväntade en live-image-*.img i out/lb, hittade ${#imgs[@]}" >&2; exit 1; }
-mv "${imgs[0]}" out/oden.img
-echo "Klart: build/out/oden.img, build/out/SBOM.txt"
+imgs=(out/lb/live-image-*.iso)
+[[ ${#imgs[@]} -eq 1 ]] || { echo "FEL: förväntade en live-image-*.iso i out/lb, hittade ${#imgs[@]}" >&2; exit 1; }
+rm -rf out/hybrid && mkdir -p out/hybrid && cp "${imgs[0]}" out/hybrid/in.iso
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/out/hybrid":/w -w /w oden-builder sh -ec '
+  xorriso -osirrox on -indev in.iso -extract /boot/grub/efi.img efi.img
+  chmod u+w efi.img
+  xorriso -indev in.iso -outdev out.iso -boot_image any replay \
+    -append_partition 2 0xef efi.img -boot_image any appended_part_as=gpt \
+    -boot_image any partition_offset=16 -map efi.img /boot/grub/efi.img -commit'
+[[ $(sfdisk -d out/hybrid/out.iso | grep -c ': start=') -eq 2 ]] || { echo "FEL: hybridbilden har inte exakt 2 partitioner" >&2; exit 1; }
+mv out/hybrid/out.iso out/oden.iso && rm -rf out/hybrid
+echo "Klart: build/out/oden.iso, build/out/SBOM.txt"

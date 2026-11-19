@@ -25,7 +25,8 @@ lightdm
 thunar
 gvfs
 udisks2
-policykit-1
+polkitd
+pkexec
 zenity
 firefox-esr
 fonts-dejavu
