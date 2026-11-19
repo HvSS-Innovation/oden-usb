@@ -19,6 +19,8 @@ Hellre en funktion mindre än en rörlig del till.
 - **Ingen uppdatering av stickor.** Ny version = ny stick. Användaren kopierar ut relevant data först.
 - **Ingen hibernation**, ingen swap på disk.
 - **Ingen brandväggsvitlista.** Inkommande blockeras, utgående är öppet.
+- **Obsidian** får distribueras i bilden (licens bekräftad).
+- **TAK-servrar** konfigureras av användaren i Odens GUI; inget förkonfigureras i bilden.
 
 ## Källrepon
 - https://github.com/NicklasAndersson/oden  (Bin 1: Signal -> Markdown)

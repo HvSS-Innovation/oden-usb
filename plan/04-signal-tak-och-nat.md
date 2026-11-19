@@ -11,7 +11,8 @@ Det uppnås genom att inget annat är konfigurerat att ringa hem, inte genom vit
 3. **Signal-länkning:** Odens befintliga länkflöde (QR-kod i Web GUI) när nät finns. Länkning kräver internet *en gång*.
    Dokumentera att Signal tar bort länkade enheter som varit inaktiva ca 30 dagar; då måste stickan länkas om.
 4. **Frånkopplat läge:** Oden/ODEN ska fungera utan nät (mottagning pausar, analys fungerar). Tydlig statusindikator.
-5. **TAK:** `pytak` ingår i Oden-bundlen. Import av `.p12`/PEM till `~/.oden` via Web GUI eller filkopiering.
+5. **TAK:** `pytak` ingår i Oden-bundlen. Användaren lägger in TAK-servrar och certifikat (`.p12`/PEM) i Odens GUI;
+   allt lagras i `~/.oden`. Inget förkonfigureras i bilden.
 6. **Tid:** NTP (systemd-timesyncd) på. Rätt klocka krävs för TLS; dokumentera det i felsökningen.
 
 ## Klart när

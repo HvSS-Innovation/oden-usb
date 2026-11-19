@@ -20,7 +20,7 @@ build/
 | Oden (Linux, PyInstaller) | NicklasAndersson/oden | Release-binär om den finns, annars byggd i containern med `s7_watcher.spec` |
 | signal-cli 0.14.5 + Temurin JRE 25 | AsamK/signal-cli, Adoptium | Bundlas in i Oden-binären (`signal-cli/`, `jre-x64/`) |
 | ODEN-valv + plugin | larsnor/ODEN-analys release (`ODEN-valv-<v>.zip`) | Innehåller Map View |
-| Obsidian | obsidian.md AppImage | Se licensfråga i steg 00 |
+| Obsidian | obsidian.md AppImage | Licens ok för distribution i bilden |
 | go-pmtiles | protomaps/go-pmtiles release | Statisk Go-binär |
 | Ollama-binär | ollama.com | Steg 06 |
 | PMTiles-karta | Ange källa | Läggs på p3 |

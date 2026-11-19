@@ -10,12 +10,9 @@ Grundbesluten står i `README.md` (Debian 13 + XFCE, live-boot-persistens, PyIns
   Live-systemets egna skrivningar hamnar i RAM; räkna med det i minimikraven.
 
 ## Kvar att besluta
-1. **Obsidian-licens.** Obsidian är proprietärt. Kontrollera om det får distribueras i en bild.
-   Fallback: bygget hämtar AppImage från obsidian.md vid *byggtid* och bäddar in den internt (ingen publik distribution).
-2. **Kartkälla.** Bekräfta att PMTiles är raster; täckningsområde, max zoom, filstorlek.
-3. **Hotmodell (kort).** Förlorad stick och beslagtagen dator. Skadlig/manipulerad dator (evil maid) skyddas inte,
+1. **Kartkälla.** Bekräfta att PMTiles är raster; täckningsområde, max zoom, filstorlek.
+2. **Hotmodell (kort).** Förlorad stick och beslagtagen dator. Skadlig/manipulerad dator (evil maid) skyddas inte,
    det dokumenteras. Bestämmer lösenfrasregler.
-4. **TAK-användning.** Vilka TAK-servrar/certifikat (.p12) som ska hanteras.
 
 ## Acceptanskriterier för hela projektet
 - Stick bootar på >=4 olika datormodeller (UEFI, med och utan Secure Boot).
