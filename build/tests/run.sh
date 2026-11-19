@@ -39,4 +39,8 @@ if CACHE="$t/c" scripts/stage.sh "$t/root" >/dev/null 2>&1; then bad "stage: sak
 fake_cache; printf '#!/bin/sh\n' > "$t/c/obsidian-appimage"; rm -rf "$t/root"; mkdir "$t/root"
 if CACHE="$t/c" scripts/stage.sh "$t/root" >/dev/null 2>&1; then bad "stage: falsk AppImage ska ge fel"; else ok "stage: falsk AppImage avbryter"; fi
 
+for j in overlay/etc/firefox-esr/policies/policies.json overlay/etc/skel/.config/obsidian/obsidian.json; do
+  python3 -m json.tool "$j" >/dev/null 2>&1 && ok "json $j" || bad "json $j"
+done
+
 exit $fail

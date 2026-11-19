@@ -18,6 +18,12 @@ systemctl --global enable oden.service pmtiles.service ollama.service
 # Skrivskyddade installationsplatser skapas av build.sh (staging); skapa mappar här så att units inte faller på saknad sökväg
 mkdir -p /opt/oden /opt/obsidian /opt/pmtiles /opt/ollama /opt/oden-template /srv/oden-assets
 
+# Firefox läser policies.json från distribution/ (kravet: inga nätanrop utöver de tillåtna). Finns den inte där, länka;
+# saknas den helt avbryts bygget i stället för att leverera en Firefox som ringer hem.
+d=/usr/lib/firefox-esr/distribution
+[ -e "$d/policies.json" ] || { mkdir -p "$d"; ln -s /etc/firefox-esr/policies/policies.json "$d/policies.json"; }
+[ -s "$d/policies.json" ] || { echo "FEL: Firefox-policies saknas" >&2; exit 1; }
+
 # SBOM (paketdelen)
 mkdir -p /usr/share/oden
 dpkg-query -W -f='${binary:Package} ${Version}\n' | sort > /usr/share/oden/SBOM-packages.txt

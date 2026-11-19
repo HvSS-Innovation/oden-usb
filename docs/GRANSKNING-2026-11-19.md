@@ -1,7 +1,7 @@
 # Ultrareview av feature/stick-bygge (2026-11-19)
 
 Molngranskning av hela branchen mot `main` (45 filer, 1023 tillagda rader, 7 borttagna). Granskningen omfattar
-alla steg på branchen, inte bara bygg-ändringarna från samma dag. Fynd 1, 5, 6, 8, 9 och 10 är åtgärdade (markerade nedan); 2, 3, 4 och 7 återstår.
+alla steg på branchen, inte bara bygg-ändringarna från samma dag. Fynd 1, 4, 5, 6, 8, 9 och 10 är åtgärdade (markerade nedan); 2, 3 och 7 återstår.
 Radnummer i originalrapporten stämmer delvis inte med filerna; mekanismerna är verifierade av granskaren.
 Radnumren nedan är de som rapporten uppgav, rättade där den själv rättade dem.
 
@@ -42,7 +42,7 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
 - **Åtgärd:** Lägg svensk keymap i initramfs (t.ex. `KEYMAP=y` plus console-setup), eller begränsa och varna för
   layoutberoende tecken i lösenfrasen.
 
-### 4. Firefox och Obsidian ringer hem (normal)
+### 4. Firefox och Obsidian ringer hem (normal) — ÅTGÄRDAD (overifierad)
 - **Filer:** `build/overlay/etc/xdg/autostart/oden-browser.desktop:4`, `oden-obsidian.desktop:4`
 - **Problem:** Kravet "inga nätanrop utöver Signal, TAK, DHCP, DNS och NTP" (KRAVSPEC, plan/04) uppnås bara för
   NetworkManager (`20-no-connectivity-check.conf`). `firefox-esr` startas på varje inloggning utan policyer och
@@ -52,6 +52,9 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
   hotmodellen förbjuder. Ingen `policies.json` finns i repot.
 - **Åtgärd:** Leverera `/etc/firefox-esr/policies/policies.json` och Obsidian-inställningar som stänger av alla
   anrop vid start och i bakgrunden.
+- **Status:** `policies.json` och `/etc/skel/.config/obsidian/obsidian.json` (`updateDisabled`) finns i overlayn.
+  Overifierat: att Firefox läser policyfilen från Debians sökväg (bygghooken kontrollerar/länkar), att nyckeln
+  `updateDisabled` stämmer och att Obsidian inte har fler startanrop. Avgörs av paketfångsten i steg 07.
 
 ## Byggpipelinen
 
@@ -119,7 +122,7 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
 | 1 | `persistence-media=removable-usb` saknas (åtgärdad) | normal | en rad |
 | 2 | Firstboot inte avbrottssäker | normal | designval |
 | 3 | Keymap saknas i initramfs | normal | designval |
-| 4 | Firefox/Obsidian ringer hem | normal | policyfiler |
+| 4 | Firefox/Obsidian ringer hem | normal | policyfiler (åtgärdad, väntar på paketfångst i steg 07) |
 | 5 | Rootägd `out/lb` stoppar ombygge (åtgärdad) | normal | liten |
 | 6 | Gammal `oden-linux` återanvänds (åtgärdad) | normal | liten/medel |
 | 7 | `--offline` stämmer inte | normal | designval |
