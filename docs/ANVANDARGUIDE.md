@@ -1,10 +1,22 @@
 # Användarguide: ODEN-stick
 
-> Status: skriven mot det som är byggt, men stickan är inte körd på riktig hårdvara än. Punkter märkta (?) är overifierade.
+> Status: skriven mot det som är byggt, men stickan är inte körd på riktig hårdvara än. Punkter märkta (?) är overifierade. Flödet med Etcher-bränd sticka är oprovat.
 
 ## Det här behöver du
-- ODEN-stick (USB, minst 64 GB) och en dator med UEFI. 8 GB RAM räcker för grundsystemet; AI kräver 16 GB.
-- Inget behöver installeras. Stickan startar sitt eget system och rör inte datorns interna diskar.
+- En USB-sticka på minst 64 GB och en dator med UEFI. 8 GB RAM räcker för grundsystemet; AI kräver 16 GB.
+- En ISO-fil (se nedan) och ett program som bränner den till stickan, t.ex. balenaEtcher.
+- Inget behöver installeras på datorn. Stickan startar sitt eget system och rör inte datorns interna diskar.
+
+## Skaffa och bränn stickan
+1. **Välj variant** på nedladdningssidan:
+   - **Minimal:** kartorna hämtas från nätet en enda gång vid första start. Kräver internet då.
+   - **Med karta:** kartorna ingår. Inget nätbehov alls, men en stor fil.
+   - **Med karta och AI:** kartor och lokala AI-modeller ingår. Störst fil; kräver troligen mer än 64 GB (?).
+2. **Kontrollera kontrollsumman** (SHA256) mot det som står på sidan: `sha256sum fil.iso` (Linux/macOS) eller
+   `Get-FileHash fil.iso -Algorithm SHA256` (Windows). Stämmer den inte ska filen inte användas.
+3. **Bränn** med balenaEtcher: välj ISO-filen, välj stickan, klicka *Flash*. **Allt på stickan raderas.** Det tar en stund för de stora varianterna.
+4. Etcher skriver bara ISO-filen; resten av stickan lämnas tom. Den krypterade lagringen skapas på det lediga utrymmet vid första start.
+   Du behöver minst 8 GB ledigt utöver ISO-filen (och kartorna i Minimal). Är stickan för liten säger systemet det och sparar ingenting.
 
 ## Första start
 1. Sätt i stickan, starta datorn och välj USB i startmenyn (ofta F12, F10 eller Esc).
@@ -13,7 +25,11 @@
    eftersom tangentbordet vid start inte alltid har svensk layout. Fyra ord med mellanslag är ett bra val.
    **Glömmer du lösenfrasen går datat inte att få tillbaka.** Det finns ingen återställning.
 3. Skapandet av den krypterade lagringen tar en stund. Datorn startar sedan om.
-4. Vid varje start frågar systemet efter lösenfrasen. Skriver du fel och systemet ändå startar visas
+4. **Bara Minimal:** efter omstarten och upplåsningen frågar ODEN om kartorna ska hämtas (ca storleken visas).
+   Välj *Hämta nu* och låt datorn vara på och ansluten till internet tills det är klart; en förloppsruta visas.
+   Avbryts det (nätfel, utdragen sladd) fortsätter hämtningen där den slutade nästa gång du loggar in. Välj du *Senare* frågar den igen vid nästa inloggning.
+   Kartorna fungerar först när hämtningen är klar. Därefter behövs inget nät för kartorna.
+5. Vid varje start frågar systemet efter lösenfrasen. Skriver du fel och systemet ändå startar visas
    "Data inte upplåst": starta om och försök igen. Oden och Obsidian startar inte förrän lagringen är upplåst.
 
 ## Koppla Signal
@@ -23,7 +39,7 @@
 4. Signal tar bort länkade enheter som varit inaktiva i ca 30 dagar. Då måste stickan länkas om.
 
 ## Daglig användning
-- Obsidian öppnar ODEN-valvet automatiskt. Kartan visas utan internet.
+- Obsidian öppnar ODEN-valvet automatiskt. Kartan visas utan internet (i Minimal först när kartorna har hämtats).
 - TAK-servrar och certifikat lägger du in själv i Odens gränssnitt. Inget är förinställt.
 - Utan nätverk fungerar analys som vanligt; mottagning av Signal-meddelanden pausar tills nät finns.
 - AI (Ollama) startar bara på datorer med minst 16 GB RAM, och bara om stickan byggts med AI.
