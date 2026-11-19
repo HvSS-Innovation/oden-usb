@@ -14,7 +14,7 @@ den krypterade partitionen första gången.
 - TAK-certifikat, loggar
 
 ## Förstastart (`oden-firstboot`, zenity)
-1. Om p4 inte är formaterad: fråga lösenfras (minst 12 tecken), bekräfta.
+1. Om p4 inte är formaterad: fråga lösenfras och bekräfta (inga styrkekrav i nuläget).
 2. `cryptsetup luksFormat --type luks2 --pbkdf argon2id --pbkdf-memory 524288 --iter-time 2000`
    (fasta värden så att upplåsning fungerar även på svag dator), öppna, `mkfs.ext4 -L persistence`,
    skriv `persistence.conf`, kopiera valvmallen och skapa markörfilen `~/.oden-persist`.
@@ -23,7 +23,7 @@ den krypterade partitionen första gången.
    startar inte och en notis säger "Data inte upplåst, starta om". (Verifiera live-boots beteende vid fel lösenfras.)
 
 ## Säkerhet
-- **Nödradering:** `oden-wipe` kör `cryptsetup luksErase`. Ingen header-backup, så raderingen är slutgiltig.
+- **Nödradering:** `oden-wipe` kör `cryptsetup luksErase`. Hur den startas beslutas senare. Ingen header-backup, så raderingen är slutgiltig.
   Dokumentera att flashminne kan behålla gamla block.
 - Ingen swap på disk (zram ok), ingen hibernation, core dumps av.
 - ext4 med `noatime`; SQLite i WAL-läge om Oden använder SQLite. `sync` vid avstängning.

@@ -10,9 +10,17 @@ Grundbesluten står i `README.md` (Debian 13 + XFCE, live-boot-persistens, PyIns
 - **Minimikrav:** 8 GB RAM för grundsystemet; AI kräver >=16 GB RAM (se steg 06). Stickstorlek >=64 GB.
   Live-systemets egna skrivningar hamnar i RAM; räkna med det i minimikraven.
 
-## Kvar att besluta
-1. **Hotmodell (kort).** Förlorad stick och beslagtagen dator. Skadlig/manipulerad dator (evil maid) skyddas inte,
-   det dokumenteras. Bestämmer lösenfrasregler.
+## Hotmodell
+- **Skyddas:** förlorad stick och beslagtagen dator när systemet är avstängt (data i vila, LUKS2).
+- **Skyddas inte:** manipulerad dator (evil maid); det dokumenteras.
+- **Värddatorn:** live-systemet monterar aldrig datorns interna diskar. USB-minnen monteras som vanligt.
+- **Accepterat:** att det syns att stickan är ett ODEN-system, och att Oden-GUI på localhost saknar inloggning.
+
+## Senare (inga krav i nuläget)
+- Krav på lösenfrasens styrka.
+- Skydd när stickan tas under drift (skärmlås, avstängning vid urdragning).
+- Hur nödradering startas (bootmeny, genväg).
+- Rutin vid förlorad stick (koppla bort Signal-enhet, spärra TAK-certifikat).
 
 ## Acceptanskriterier för hela projektet
 - Stick bootar på >=4 olika datormodeller (UEFI, med och utan Secure Boot).

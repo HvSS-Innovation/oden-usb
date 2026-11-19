@@ -18,14 +18,16 @@ Assets (p3) monteras skrivskyddat på `/srv/oden-assets` (karta, modeller).
 1. Lägg Oden-bundlen i `/opt/oden`; verifiera `signal-cli --version` utan nät.
 2. Packa upp Obsidian; kör med `--no-sandbox` endast om nödvändigt.
 3. Lägg ODEN-valvmallen (`ODEN-valv-<v>.zip`, operativt). Ev. övningsvariant med `ODEN-ovning`.
-4. **Skrivbord:** XFCE, svensk locale och tangentbordslayout, autologin för användaren `oden`, skärmlås vid inaktivitet.
+4. **Skrivbord:** XFCE, svensk locale och tangentbordslayout, autologin för användaren `oden`.
 5. **systemd-user-tjänster:** `oden.service` (webbgränssnitt på localhost), `pmtiles.service` (steg 05),
    `ollama.service` (steg 06, villkorad). Startar bara om `/home` ligger på krypterad persistens
    (kontrollera markörfil `~/.oden-persist`, se steg 03).
 6. **Autostart:** Obsidian öppnar valvet, Oden-GUI i webbläsare.
 7. **Förkonfigurera** `config.ini` (valvsökväg, `oden_home` i `/home/oden`) och Obsidian (pluginen betrodda).
 8. **Avaktivera** Obsidian auto-update, apt-timers och NetworkManagers anslutningskontroll. NTP får vara på.
-9. **Ingen hibernation:** maska `hibernate.target` och `hybrid-sleep.target`. Ingen swap på disk (zram ok).
+9. **Interna diskar monteras aldrig:** udisks2/polkit-regel som döljer och nekar montering av datorns interna diskar.
+   USB-minnen monteras som vanligt (för att kunna kopiera ut data).
+10. **Ingen hibernation:** maska `hibernate.target` och `hybrid-sleep.target`. Ingen swap på disk (zram ok).
 
 ## Klart när
 - Med upplåst persistens startar Oden och Obsidian utan nätverksanslutning och valvet visar kartan (steg 05).

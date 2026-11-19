@@ -15,6 +15,7 @@ Resultat i `docs/HW-MATRIS.md`.
 - Ta bort onödiga tjänster/paket (avahi, cups, bluetooth om ej behövs).
 - Granska att inga hemligheter hamnar i bilden (bygg-token, cache). Kontrollera SBOM.
 - Test av `oden-wipe`.
+- Datorns interna diskar monteras inte och syns inte i filhanteraren.
 
 ## Dokumentation (svenska)
 - `docs/ANVANDARGUIDE.md`: skriv stickan, första start, länka Signal, daglig användning, avstängning,
