@@ -10,7 +10,8 @@ Grundbesluten står i `README.md` (Debian 13 + XFCE, live-boot-persistens, PyIns
   Live-systemets egna skrivningar hamnar i RAM; räkna med det i minimikraven.
 
 ## Kvar att besluta
-1. **Kartkälla.** Bekräfta att PMTiles är raster; täckningsområde, max zoom, filstorlek.
+1. **Kartkälla.** Mottagen: OpenMapTiles-vektor (MBTiles, z0–14, Sverige, OSM 2020). Kvar: licensvillkor från MapTiler,
+   och om 2020 års data duger (annars `planetiler` från Geofabrik). Se steg 05.
 2. **Hotmodell (kort).** Förlorad stick och beslagtagen dator. Skadlig/manipulerad dator (evil maid) skyddas inte,
    det dokumenteras. Bestämmer lösenfrasregler.
 
