@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # fetch -> verify -> live-build (i container) -> build/out/oden.iso
+# Bygget kräver nät (docker build, debootstrap/apt i live-build, pip). --no-fetch hoppar bara över fetch.sh:
+# artefakterna måste redan ligga i cache/. Det är stickan som ska gå att köra offline, inte bygget.
 set -euo pipefail
 cd "$(dirname "$0")"
 mkdir -p out
 
-[[ "${1:-}" == "--offline" ]] || ./fetch.sh
-# Verifiera igen offline: bygget ska misslyckas om något avviker.
+[[ "${1:-}" == "--no-fetch" ]] || ./fetch.sh
+# Verifiera artefakterna i cache/ mot låset: bygget ska misslyckas om något avviker.
 while read -r name _ sha _; do
   [[ -z "${name:-}" || "$name" == \#* ]] && continue
   [[ "$sha" == BUILD ]] && continue
@@ -16,7 +18,7 @@ done < artifacts.lock
 # Oden för Linux finns inte som release: bygg från källa (kräver nät för pip) om den saknas i cache/
 # eller om låsraderna för oden-source, jre-x64 och signal-cli ändrats sedan den byggdes.
 if [[ ! -f cache/oden-linux ]] || [[ "$(cat cache/oden-linux.inputs 2>/dev/null)" != "$(scripts/build-oden.sh --print-inputs)" ]]; then
-  [[ "${1:-}" == "--offline" ]] && { echo "FEL: cache/oden-linux saknas eller är byggd från andra indata än artifacts.lock, och --offline kan inte bygga den" >&2; exit 1; }
+  [[ "${1:-}" == "--no-fetch" ]] && { echo "FEL: cache/oden-linux saknas eller är byggd från andra indata än artifacts.lock, och --no-fetch kan inte bygga den (kräver nät för pip)" >&2; exit 1; }
   rm -f cache/oden-linux
   scripts/build-oden.sh
 fi

@@ -33,7 +33,9 @@ build/
 3. Lägger till p4 som tar resten av stickan, oformaterad. Den krypteras vid första start (steg 03).
 
 ## Regler
-- `fetch.sh` är det enda som använder nät; `build.sh` kör därefter offline och misslyckas om en checksumma avviker.
+- Bygget kräver nät (fetch.sh, docker build, live-build mot Debians speglar, pip för `oden-linux`); bara den färdiga stickan ska fungera offline.
+  `build.sh --no-fetch` hoppar över `fetch.sh` när cache/ redan är komplett. Bygget misslyckas om en artefakts checksumma avviker.
+- Debian-paketen pinnas medvetet inte: releasen är den färdiga ISO:n, och ett nytt bygge är en ny release. SBOM:en dokumenterar vad som ingick.
 - Bygget skriver en SBOM (paket + artefaktversioner) till `build/out/SBOM.txt`.
 - Bygg i container (podman/docker).
 

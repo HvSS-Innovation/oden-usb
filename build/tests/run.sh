@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Offline-tester av byggskripten (inga riktiga artefakter, ingen root, ingen docker).
+# Tester av byggskripten utan nät (inga riktiga artefakter, ingen root, ingen docker).
 #   build/tests/run.sh
 # Testar: syntax i alla skript, stage.sh med fejkade artefakter (positivt, saknad binär, falsk AppImage).
 set -euo pipefail

@@ -1,7 +1,7 @@
 # Ultrareview av feature/stick-bygge (2026-11-19)
 
 Molngranskning av hela branchen mot `main` (45 filer, 1023 tillagda rader, 7 borttagna). Granskningen omfattar
-alla steg på branchen, inte bara bygg-ändringarna från samma dag. Fynd 1, 2, 4, 5, 6, 8, 9 och 10 är åtgärdade (markerade nedan); 3 och 7 återstår.
+alla steg på branchen, inte bara bygg-ändringarna från samma dag. Fynd 1, 2, 4, 5, 6, 7, 8, 9 och 10 är åtgärdade (markerade nedan); 3 återstår.
 Radnummer i originalrapporten stämmer delvis inte med filerna; mekanismerna är verifierade av granskaren.
 Radnumren nedan är de som rapporten uppgav, rättade där den själv rättade dem.
 
@@ -84,7 +84,7 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
 - **Åtgärd:** Spara indatahashar bredvid binären (t.ex. `cache/oden-linux.inputs` med de tre låsraderna eller
   deras sha256) och bygg om när de skiljer sig.
 
-### 7. `--offline` och "enda nätsteget är fetch.sh" stämmer inte (normal)
+### 7. `--offline` och "enda nätsteget är fetch.sh" stämmer inte (normal) — ÅTGÄRDAD
 - **Fil:** `build/build.sh` (rapporten angav rad 97-122)
 - **Problem:** `--offline` hoppar bara över `./fetch.sh`. `docker build` (Dockerfile: `FROM debian:13` och
   `apt-get install`) och `lb build` (debootstrap och apt mot Debians speglar) behöver nätet, och `out/lb` med
@@ -93,6 +93,9 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
   Debian-paketen inte pinnade eller verifierade av `artifacts.lock`, så två bygg från samma lock kan skilja sig.
 - **Åtgärd:** Antingen ett persistent eller förhämtat paketcache eller snapshot-spegel utanför `out/lb`, eller
   dokumentera att live-build kräver nätet och ta bort offline-löftet (`docs/ADMINGUIDE.md:34`, plan/01).
+- **Status:** Offline-löftet gäller stickan, inte bygget. Flaggan heter nu `--no-fetch` (hoppar bara över `fetch.sh`),
+  adminguiden och plan/01 säger att bygget kräver nät. Debian-paketen pinnas medvetet inte (releasen är den färdiga ISO:n,
+  ett nytt bygge är en ny release; SBOM dokumenterar paketen). Ingen paketcache eller snapshot-spegel behövs.
 
 ## Övrigt
 
@@ -130,7 +133,7 @@ Allvarlighet: **normal** = bugg eller kravbrott, **nit** = mindre problem.
 | 4 | Firefox/Obsidian ringer hem | normal | policyfiler (åtgärdad, väntar på paketfångst i steg 07) |
 | 5 | Rootägd `out/lb` stoppar ombygge (åtgärdad) | normal | liten |
 | 6 | Gammal `oden-linux` återanvänds (åtgärdad) | normal | liten/medel |
-| 7 | `--offline` stämmer inte | normal | designval |
+| 7 | `--offline` stämmer inte | normal | designval (åtgärdad) |
 | 8 | `--bind` ska vara `--interface` (åtgärdad) | normal | en rad |
 | 9 | `ODEN_ASSETS` tappas av sudo (åtgärdad) | nit | en rad |
 | 10 | Missvisande notis vid första start (åtgärdad) | nit | liten |

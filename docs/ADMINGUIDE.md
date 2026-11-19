@@ -22,7 +22,8 @@ Cache och byggresultat (`build/cache/`, `build/out/`) ligger utanför git.
 
 ## Krav på byggmaskinen
 Linux med docker, GitHub CLI (`gh`, inloggad), `python3`, `curl`, `tar`, `zstd` (Ollama-arkivet), `gdisk` (sgdisk),
-`fdisk` (sfdisk), `e2fsprogs`, `parted`. Nät behövs för `fetch.sh`, `bump.sh` och `build-oden.sh` (pip).
+`fdisk` (sfdisk), `e2fsprogs`, `parted`. Byggmaskinen behöver nät: `fetch.sh`, `bump.sh`, `build-oden.sh` (pip), `docker build` och live-build (debootstrap/apt mot Debians speglar).
+Bara den färdiga stickan ska gå att köra offline, inte byggprocessen.
 
 ## Bygga en ny stick från noll
 ```
@@ -31,7 +32,8 @@ Linux med docker, GitHub CLI (`gh`, inloggad), `python3`, `curl`, `tar`, `zstd` 
 ls build/cache/assets/maps           # 3. lägg assets: maps/ (krävs), ollama/ (bara för --with-ai)
 sudo ./build/scripts/make-stick.sh [--with-ai] build/out/oden.iso /dev/sdX     # 4. skriv stickan
 ```
-- `build.sh --offline` hoppar över nedladdning; cache måste då vara komplett (inklusive `cache/oden-linux`).
+- `build.sh --no-fetch` hoppar bara över `fetch.sh`; artefakterna måste redan ligga i `cache/`. Bygget behöver ändå nät
+  (docker, live-build, och pip om `oden-linux` ska byggas om).
 - `make-stick.sh` kräver en flyttbar hel disk på minst 60 GB och frågar innan allt raderas.
 - Layout: p1 ISO-data (live), p2 EFI, p3 `oden-assets` (ext4, skrivskyddad på `/srv/oden-assets`), p4 `persistence` (krypteras
   vid första start).
@@ -83,6 +85,9 @@ Upstream släpper bara Windows och macOS. `build-oden.sh` bygger Linux-binären 
   renderad raster-fil (steg 05, ännu inte gjort).
 - Obsidian körs som extraherad AppImage; `chrome-sandbox` kan kräva `--no-sandbox` (verifieras vid första boot).
 - Ollama-modeller har inget versionslås.
+- **Debian-paketen i bilden är medvetet inte pinnade.** live-build hämtar aktuella paket från Debians speglar vid varje
+  bygge, och `artifacts.lock` täcker dem inte. Releasen är den färdiga ISO:n, inte byggreceptet: behövs ett nytt bygge
+  blir det en ny release. `build/out/SBOM.txt` listar vilka paketversioner som ingick i just den ISO:n.
 
 ## Nycklar
 Varje stick får egen LUKS-nyckel vid första start; det finns ingen central nyckel och ingen header-backup.
