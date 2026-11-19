@@ -12,6 +12,7 @@ pin=""
 while read -r name url sha _; do
   [[ -z "${name:-}" || "$name" == \#* ]] && continue
   [[ -n "$pin" && "$name" != "$pin" ]] && continue
+  [[ "$url" == BUILD ]] && continue   # byggs av scripts/build-oden.sh
   if [[ "$url" == PENDING_URL ]]; then
     echo "FEL: $name saknar URL i artifacts.lock" >&2; exit 1
   fi
