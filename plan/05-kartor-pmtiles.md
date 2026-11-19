@@ -6,6 +6,7 @@ som exakt sådana rutor, lokalt, utan nät.
 
 ## Källa
 `https://kartverktyget.s3.eu-central-003.backblazeb2.com/sweden-osm.pmtiles` (4,1 GB, Last-Modified 2026-05-27):
+- SHA256 `59fe0b51666c9ab95a03fce87bb5e8aced22a4edcba25560dfb176884bf3027a`, 4 092 223 980 byte (förs in i `artifacts.lock`).
 - **Vektor** (MVT, gzip), PMTiles v3, **Protomaps Basemap** v4.14.8 byggd med planetiler 0.10.1.
 - OSM-data från 2026-05-20, licens ODbL (attribution: © OpenStreetMap).
 - Zoom 0–15, Sverige (bounds 10.54,55.20 – 24.17,69.07). Lager: boundaries, buildings, earth, landcover,
