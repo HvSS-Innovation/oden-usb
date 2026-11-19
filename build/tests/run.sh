@@ -65,4 +65,11 @@ else
   echo "hoppar över make-persist-tester (sgdisk saknas)"
 fi
 
+# oden-assets-bind: binder maps/ollama från mediet; hoppar över tomma/saknade kataloger.
+mkdir -p "$t/med/maps" "$t/med/ollama" "$t/as"; touch "$t/med/maps/sverige.pmtiles"
+printf '#!/bin/sh\necho "$@" >> "%s/mounts"\n' "$t" > "$t/fakemount"; chmod +x "$t/fakemount"
+ODEN_MEDIUM="$t/med" ODEN_ASSETS="$t/as" ODEN_MOUNT="$t/fakemount" overlay/usr/local/bin/oden-assets-bind
+if grep -q -- "--bind $t/med/maps $t/as/maps" "$t/mounts" && grep -q "remount,bind,ro $t/as/maps" "$t/mounts" \
+   && ! grep -q ollama "$t/mounts"; then ok "assets-bind: binder maps, hoppar över tom ollama"; else bad "assets-bind"; fi
+
 exit $fail

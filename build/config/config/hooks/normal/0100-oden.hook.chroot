@@ -10,7 +10,7 @@ for u in hibernate.target hybrid-sleep.target suspend-then-hibernate.target \
 done
 
 # Brandvägg och tidssynk på
-systemctl enable nftables.service systemd-timesyncd.service
+systemctl enable nftables.service systemd-timesyncd.service oden-assets.service
 
 # Användartjänster (oden/pmtiles/ollama) startas för alla användare; villkor i unit-filerna
 systemctl --global enable oden.service pmtiles.service ollama.service

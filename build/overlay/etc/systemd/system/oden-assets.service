@@ -1,0 +1,13 @@
+[Unit]
+Description=Bind-montera kartor och modeller från ISO-mediet (om de finns där)
+# Efter fstab-monteringen av en eventuell assets-partition; före användarsessionen.
+After=local-fs.target
+Before=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/oden-assets-bind
+
+[Install]
+WantedBy=multi-user.target

@@ -45,6 +45,9 @@ Etcher skriver bara ISO-storleken; resten av stickan är oallokerad. `oden-first
    ingen persistens-partition finns. Testat mot filavbild i `tests/run.sh`; `partx` och live-beteendet är oprovade. `minimal` (assets som egen partition) återstår.
 3. **Sökvägen `/srv/oden-assets`**: i `karta`/`karta-ai` bind-montera `/run/live/medium/maps` (och `ollama`), i `minimal` p3.
    Tjänsterna (`pmtiles.service`, Ollama) ska inte behöva ändras.
+   **Gjort:** `oden-assets-bind` + `oden-assets.service` (system, aktiverad i hooken) bind-monterar `maps`/`ollama` skrivskyddat från
+   `/run/live/medium` om ingen assets-partition är monterad. Fstab-raden för `LABEL=oden-assets` (p3, `nofail`) är kvar och gäller `minimal` och
+   `make-stick.sh`. Testat mot fejkad mount; oprovat live (att mediet ligger på `/run/live/medium` i en ISO-hybrid-boot och att enheten körs före användarsessionen).
 4. **Nedladdning i `minimal`** (`oden-fetch-assets`): hämta från S3-URL med SHA256 från en fil i ISO:n, återupptagning (`curl -C -`),
    förloppsvisning, kontroll av ledigt utrymme före start, och hantering av nätfel. Karta 10–25 GB: ge användaren val (hämta nu/senare).
 5. **Bygget**: `ISO_VARIANT=minimal|karta|karta-ai` i `build.sh` lägger innehåll i ISO-trädet före xorriso. Kartfilen ska ligga
