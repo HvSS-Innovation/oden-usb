@@ -69,6 +69,8 @@ Etcher skriver bara ISO-storleken; resten av stickan är oallokerad. `oden-first
    (t.ex. per landsdel) och låt `pmtiles serve` läsa alla.
    **Delvis klart:** xorriso skriver en 4,3 GB-fil (multi-extent) och listar den korrekt. Att Linux-kärnan läser den vid boot (mount iso9660) är ej provat.
 7. **Pages**: "Ladda ner" med länk, storlek och SHA256 per variant, plus Etcher-instruktion (`site/`).
+   **Gjort:** `site/ladda-ner.html` (tre varianter, Etcher-steg, kontroll av SHA256) fylls från `site/releases.json`, som skapas av
+   `build/scripts/release-json.sh <bas-url>` ur `build/out`. Tom lista visar "Inte publicerad än". Oprovad i webbläsare och deploy (kräver Pages-inställning).
 8. Dokumentation: ANVANDARGUIDE (bränn med Etcher, första start, nätbehov i minimal), ADMINGUIDE (bygga varianter, ladda upp, uppdatera Pages), STATUS.
 
 ## Risker och öppna frågor

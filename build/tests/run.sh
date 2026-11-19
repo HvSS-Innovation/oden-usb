@@ -96,4 +96,13 @@ if fa 2>/dev/null; then bad "fetch-assets: fel SHA256 ska ge fel"; else
   [[ ! -e $t/fa/maps/sverige.pmtiles && ! -e $t/fa/maps/sverige.pmtiles.part ]] && ok "fetch-assets: fel SHA256 avvisas och rensas" || bad "fetch-assets: rester kvar"; fi
 rm -f "$t/fl"; fa && ok "fetch-assets: utan lista gör den inget" || bad "fetch-assets: utan lista"
 
+# release-json.sh: JSON från fejkade ISO-filer.
+mkdir -p "$t/rel"; head -c 1000 /dev/zero > "$t/rel/oden-karta-abc123.iso"
+(cd "$t/rel" && sha256sum oden-karta-abc123.iso > oden-karta-abc123.iso.sha256)
+if scripts/release-json.sh https://x.example/d "$t/rel" | python3 -c 'import json,sys; d=json.load(sys.stdin)["isos"][0]; assert d["variant"]=="karta" and d["bytes"]==1000 and d["url"]=="https://x.example/d/oden-karta-abc123.iso" and len(d["sha256"])==64'
+then ok "release-json: variant, url, storlek och sha256"; else bad "release-json"; fi
+rm "$t/rel/oden-karta-abc123.iso.sha256"
+scripts/release-json.sh https://x.example/d "$t/rel" >/dev/null 2>&1 && bad "release-json: saknad .sha256 ska ge fel" || ok "release-json: saknad .sha256 avvisas"
+python3 -m json.tool ../site/releases.json >/dev/null && ok "json site/releases.json" || bad "json site/releases.json"
+
 exit $fail
