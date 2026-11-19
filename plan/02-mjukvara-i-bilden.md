@@ -32,3 +32,8 @@ Assets (p3) monteras skrivskyddat på `/srv/oden-assets` (karta, modeller).
 ## Klart när
 - Med upplåst persistens startar Oden och Obsidian utan nätverksanslutning och valvet visar kartan (steg 05).
 - `ss -tulpn` visar bara lokala lyssnare.
+
+## Status
+`build/scripts/stage.sh` packar upp artefakter till `/opt/*` (format via första byte) och kontrollerar att binärerna finns;
+skriver `/etc/oden-release`. Testat med fejkade artefakter. Odefinierat tills riktiga artefakter är låsta: exakt layout i
+Oden-bundlen och Ollama-arkivet, Oden-binärens namn (`oden.service`), `config.ini`- och Obsidian-förkonfiguration (uppgift 7).
