@@ -1,6 +1,7 @@
 # namn  url  sha256  (PENDING = ännu inte låst; fetch.sh vägrar bygga med PENDING)
 # Lås med: ./build/fetch.sh --pin <namn>
-sweden-osm.pmtiles  https://kartverktyget.s3.eu-central-003.backblazeb2.com/sweden-osm.pmtiles  59fe0b51666c9ab95a03fce87bb5e8aced22a4edcba25560dfb176884bf3027a
+# Steg 05 (kartor): sweden-osm.pmtiles (4 GB, vektorkälla för rastret) är medvetet ur låset tills kartsteget görs. Återinför raden:
+# sweden-osm.pmtiles  https://kartverktyget.s3.eu-central-003.backblazeb2.com/sweden-osm.pmtiles  59fe0b51666c9ab95a03fce87bb5e8aced22a4edcba25560dfb176884bf3027a
 # oden-linux byggs av scripts/build-oden.sh från oden-source + jre-x64 + signal-cli (url/sha = BUILD: inte nedladdad, ej reproducerbar;
 # dess SHA256 skrivs i SBOM.txt). Upstream har ingen Linux-release.
 oden-linux          BUILD  BUILD

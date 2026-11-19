@@ -3,7 +3,6 @@ Description=Oden (Signal -> Markdown, webbgränssnitt på 127.0.0.1:8080)
 ConditionPathExists=%h/.oden-persist
 
 [Service]
-# TODO: bekräfta binärens namn när bundlen finns (steg 02, uppgift 1)
 ExecStart=/opt/oden/oden
 Restart=on-failure
 
