@@ -1,0 +1,69 @@
+#!/bin/bash
+# Minimal-varianten: hämtar kartor från nätet till assets-partitionen (label oden-assets) första gången.
+# Lista: /usr/share/oden/assets.lock, rader "relativ-sökväg url sha256 byte". Finns inte listan gör skriptet inget.
+# Återupptar avbrutna hämtningar (curl -C -) och kontrollerar SHA256 innan filen tas i bruk.
+# Testvariabler: ODEN_LOCK, ODEN_ASSETS (monterad målkatalog; hoppar över partitionshantering), ODEN_CURL, ODEN_NOGUI=1.
+set -euo pipefail
+LOCK="${ODEN_LOCK:-/usr/share/oden/assets.lock}"
+ASSETS="${ODEN_ASSETS:-/srv/oden-assets}"
+CURL="${ODEN_CURL:-curl}"
+S=sudo; [[ $EUID -eq 0 || -n "${ODEN_ASSETS:-}" ]] && S=""
+note() { notify-send "$1" "${2:-}" 2>/dev/null || echo "$1 ${2:-}" >&2; }
+gui() { [[ "${ODEN_NOGUI:-}" != 1 ]]; }
+
+[[ -s "$LOCK" ]] || exit 0
+mapfile -t rows < <(grep -v '^#' "$LOCK" | awk 'NF >= 4')
+(( ${#rows[@]} )) || exit 0
+
+# Förbered målet (bara på riktig stick): hitta partitionen, skapa filsystem om det saknas, montera skrivbart.
+if [[ -z "${ODEN_ASSETS:-}" ]]; then
+  src=$(findmnt -no SOURCE /run/live/medium 2>/dev/null || true)
+  disk=""; [[ -n "$src" ]] && disk=$(lsblk -no PKNAME "$src" 2>/dev/null | head -1 || true)
+  part=$(lsblk -nrpo NAME,PKNAME,PARTLABEL | awk -v d="/dev/$disk" '$3=="oden-assets" && $2==d {print $1}')
+  [[ $(wc -w <<<"$part") -eq 1 ]] || { note "Kartor kan inte hämtas" "Hittade ingen assets-partition på stickan."; exit 1; }
+  type=$($S blkid -s TYPE -o value "$part" 2>/dev/null || true)
+  case "$type" in
+    "") $S mkfs.ext4 -q -m 0 -L oden-assets "$part" ;;
+    ext4) ;;
+    *) note "Kartor kan inte hämtas" "Assets-partitionen har oväntat innehåll ($type)."; exit 1 ;;
+  esac
+  mountpoint -q "$ASSETS" && $S umount "$ASSETS"
+  $S mkdir -p "$ASSETS"; $S mount -o noatime "$part" "$ASSETS"
+fi
+
+# Allt klart redan?
+todo=()
+for r in "${rows[@]}"; do read -r rel _ sha _ <<<"$r"; [[ -f "$ASSETS/$rel" ]] || todo+=("$r"); done
+(( ${#todo[@]} )) || exit 0
+
+total=0; for r in "${todo[@]}"; do read -r _ _ _ b <<<"$r"; total=$((total + b)); done
+gb=$(( total / 1000000000 ))
+if gui; then
+  zenity --question --text="Kartorna (ca $gb GB) hämtas från nätet en enda gång och sparas på stickan.\nDatorn måste ha internet och vara ansluten under hela hämtningen.\nAvbryts den fortsätter den nästa gång du loggar in." \
+    --ok-label="Hämta nu" --cancel-label="Senare" || exit 0
+fi
+
+fail() { note "Hämtningen misslyckades" "$1"; exit 1; }
+for r in "${todo[@]}"; do
+  read -r rel url sha bytes <<<"$r"
+  dest="$ASSETS/$rel"; part="$dest.part"
+  $S mkdir -p "$(dirname "$dest")"
+  $S "$CURL" -fL --retry 5 --retry-delay 5 -C - -o "$part" "$url" &
+  cpid=$!
+  if gui; then
+    ( while kill -0 "$cpid" 2>/dev/null; do
+        sz=$(stat -c %s "$part" 2>/dev/null || echo 0)
+        echo "$(( sz * 100 / bytes ))"; echo "# $(basename "$rel"): $(( sz / 1000000 )) av $(( bytes / 1000000 )) MB"
+        sleep 2
+      done; echo 100 ) | zenity --progress --title="Hämtar kartor" --auto-close --no-cancel 2>/dev/null &
+  fi
+  wait "$cpid" || fail "Nedladdningen avbröts (nätfel). Logga in igen för att fortsätta där den slutade."
+  [[ "$(stat -c %s "$part")" == "$bytes" ]] || { $S rm -f "$part"; fail "Filen $rel har fel storlek."; }
+  [[ "$($S sha256sum "$part" | cut -d' ' -f1)" == "$sha" ]] || { $S rm -f "$part"; fail "Kontrollsumman för $rel stämmer inte."; }
+  $S mv "$part" "$dest"
+done
+$S sync
+
+# Gör kartorna skrivskyddade och starta kartservern.
+if [[ -z "${ODEN_ASSETS:-}" ]]; then $S mount -o remount,ro "$ASSETS"; systemctl --user restart pmtiles.service 2>/dev/null || true; fi
+note "Kartorna är hämtade" "Kartorna finns nu på stickan och fungerar utan nät."

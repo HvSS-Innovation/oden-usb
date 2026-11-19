@@ -72,4 +72,28 @@ ODEN_MEDIUM="$t/med" ODEN_ASSETS="$t/as" ODEN_MOUNT="$t/fakemount" overlay/usr/l
 if grep -q -- "--bind $t/med/maps $t/as/maps" "$t/mounts" && grep -q "remount,bind,ro $t/as/maps" "$t/mounts" \
    && ! grep -q ollama "$t/mounts"; then ok "assets-bind: binder maps, hoppar över tom ollama"; else bad "assets-bind"; fi
 
+# make-persist med assets.lock: assets-partitionen skapas före persistensen.
+if command -v sgdisk >/dev/null; then
+  printf 'maps/x.pmtiles http://x/x 00 %s\n' 3000000 > "$t/lock"
+  mk 20M 600M
+  ODEN_LOCK="$t/lock" mp 2>/dev/null || true; out=$(sgdisk -p "$t/d.img")
+  if grep -q oden-assets <<<"$out" && grep -q persistence <<<"$out" \
+     && [[ $(awk '$NF=="oden-assets" {print $1}' <<<"$out") -lt $(awk '$NF=="persistence" {print $1}' <<<"$out") ]]
+  then ok "make-persist: assets före persistens när lock finns"; else bad "make-persist: assets med lock"; fi
+fi
+
+# oden-fetch-assets: fejkad curl kopierar en lokal fil.
+printf '#!/bin/bash\nwhile [[ $# -gt 0 ]]; do case "$1" in -o) o=$2; shift;; -*) ;; *) u=$1;; esac; shift; done\ncp "$u" "$o"\n' > "$t/fakecurl"; chmod +x "$t/fakecurl"
+head -c 5000 /dev/zero > "$t/src.bin"; sum=$(sha256sum "$t/src.bin" | cut -d' ' -f1)
+fa() { ODEN_NOGUI=1 ODEN_CURL="$t/fakecurl" ODEN_LOCK="$t/fl" ODEN_ASSETS="$t/fa" overlay/usr/local/bin/oden-fetch-assets; }
+rm -rf "$t/fa"; mkdir "$t/fa"
+echo "maps/sverige.pmtiles $t/src.bin $sum 5000" > "$t/fl"
+fa 2>/dev/null && [[ -f $t/fa/maps/sverige.pmtiles && ! -e $t/fa/maps/sverige.pmtiles.part ]] \
+  && ok "fetch-assets: hämtar och kontrollerar SHA256" || bad "fetch-assets: positivt"
+echo "maps/sverige.pmtiles $t/src.bin $sum 5000" > "$t/fl"; rm -rf "$t/fa"; mkdir "$t/fa"
+echo "maps/sverige.pmtiles $t/src.bin deadbeef 5000" > "$t/fl"
+if fa 2>/dev/null; then bad "fetch-assets: fel SHA256 ska ge fel"; else
+  [[ ! -e $t/fa/maps/sverige.pmtiles && ! -e $t/fa/maps/sverige.pmtiles.part ]] && ok "fetch-assets: fel SHA256 avvisas och rensas" || bad "fetch-assets: rester kvar"; fi
+rm -f "$t/fl"; fa && ok "fetch-assets: utan lista gör den inget" || bad "fetch-assets: utan lista"
+
 exit $fail

@@ -50,6 +50,13 @@ Etcher skriver bara ISO-storleken; resten av stickan är oallokerad. `oden-first
    `make-stick.sh`. Testat mot fejkad mount; oprovat live (att mediet ligger på `/run/live/medium` i en ISO-hybrid-boot och att enheten körs före användarsessionen).
 4. **Nedladdning i `minimal`** (`oden-fetch-assets`): hämta från S3-URL med SHA256 från en fil i ISO:n, återupptagning (`curl -C -`),
    förloppsvisning, kontroll av ledigt utrymme före start, och hantering av nätfel. Karta 10–25 GB: ge användaren val (hämta nu/senare).
+   **Gjort (kartor):** `oden-fetch-assets` läser `/usr/share/oden/assets.lock` (rader: `sökväg url sha256 byte`; filen läggs bara i
+   `minimal` av bygget, uppgift 5). Fråga "Hämta nu / Senare", förlopp i zenity, `curl -C -` (återupptar), kontroll av storlek och SHA256,
+   `.part`-fil som döps om först när allt stämmer, därefter skrivskyddad montering och omstart av `pmtiles.service`. Autostart först när
+   persistensen är klar. **Ordning:** `oden-make-persist` skapar assets-partitionen (`oden-assets`, storlek = summan av byte + 5 % + 256 MiB)
+   *före* persistensen, som får resten; annars hade persistensen tagit allt utrymme. Testat med fejkad curl och filavbild.
+   **Inte gjort:** AI-modeller i `minimal` (kräver `ollama pull` mot ett körande Ollama, inte en vanlig fil); `karta-ai` täcker behovet tills vidare.
+   Oprovat: riktig nedladdning, `partx`/mkfs/mount på stickan, `x-systemd`-montering av nytillkommen partition (görs i skriptet, inte via fstab).
 5. **Bygget**: `ISO_VARIANT=minimal|karta|karta-ai` i `build.sh` lägger innehåll i ISO-trädet före xorriso. Kartfilen ska ligga
    som vanlig fil, inte i squashfs. Utdata: `oden-<variant>-<version>.iso` och `.sha256`.
 6. **Filer över 4 GiB i ISO 9660**: verifiera att xorriso (multi-extent) och live-boots mount läser dem, annars dela kartan i flera filer

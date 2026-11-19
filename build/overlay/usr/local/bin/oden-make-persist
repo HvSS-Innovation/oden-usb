@@ -3,10 +3,13 @@
 # Behövs när stickan är bränd med t.ex. Etcher: bara ISO-storleken skrivs, resten är oallokerat.
 # Rör inga befintliga partitioner. Gör inget om en partition "persistence" redan finns.
 # Exit 0: finns eller skapad. Exit 1: kan inte skapas (skälet skrivs på stderr).
-# Testvariabler: ODEN_DISK (disk eller avbildsfil), ODEN_MINFREE_MB (standard 8192), ODEN_NOPARTX=1.
+# Finns /usr/share/oden/assets.lock (minimal-varianten, tillgångar hämtas från nätet) skapas först en assets-partition
+# "oden-assets" som rymmer dem (summan av kolumn 4, byte, + 5 % + 256 MiB); persistensen får resten.
+# Testvariabler: ODEN_DISK (disk eller avbildsfil), ODEN_MINFREE_MB (standard 8192), ODEN_NOPARTX=1, ODEN_LOCK.
 set -euo pipefail
 S=sudo; [[ $EUID -eq 0 || -n "${ODEN_DISK:-}" ]] && S=""   # ODEN_DISK = testfil, behöver inte root
 MINFREE_MB="${ODEN_MINFREE_MB:-8192}"
+LOCK="${ODEN_LOCK:-/usr/share/oden/assets.lock}"
 die() { echo "oden-make-persist: $*" >&2; exit 1; }
 
 disk="${ODEN_DISK:-}"
@@ -19,20 +22,30 @@ if [[ -z "$disk" ]]; then
 fi
 
 $S sgdisk -p "$disk" >/dev/null 2>&1 || die "$disk har ingen läsbar GPT"
-if $S sgdisk -p "$disk" | awk '$1 ~ /^[0-9]+$/ {print $NF}' | grep -qx persistence; then exit 0; fi
+haslabel() { $S sgdisk -p "$disk" | awk '$1 ~ /^[0-9]+$/ {print $NF}' | grep -qx "$1"; }
+if haslabel persistence; then exit 0; fi
 
 # Etcher m.fl. lägger sikthuvudet (backup-GPT) vid ISO:ns slut. Flytta det till diskens slut.
 $S sgdisk -e "$disk" >/dev/null 2>&1 || die "kunde inte flytta GPT-sikthuvudet på $disk"
 
 first=$($S sgdisk -F "$disk"); last=$($S sgdisk -E "$disk")
 free_mb=$(( (last - first + 1) * 512 / 1048576 ))
-(( free_mb >= MINFREE_MB )) || die "för lite ledigt utrymme efter ISO-datan: $free_mb MiB, kräver minst $MINFREE_MB MiB. Använd en större stick."
+reserve_mb=0
+if [[ -s "$LOCK" ]] && ! haslabel oden-assets; then
+  need=$(awk '!/^#/ && NF >= 4 {s += $4} END {printf "%d", s}' "$LOCK")
+  reserve_mb=$(( (need + need / 20) / 1048576 + 256 ))
+fi
+(( free_mb >= MINFREE_MB + reserve_mb )) || die "för lite ledigt utrymme efter ISO-datan: $free_mb MiB, kräver minst $((MINFREE_MB + reserve_mb)) MiB (varav $reserve_mb MiB för kartor). Använd en större stick."
 
+if (( reserve_mb > 0 )); then
+  $S sgdisk -a 2048 -n "0:0:+${reserve_mb}M" -t 0:8300 -c 0:oden-assets "$disk" >/dev/null 2>&1 || die "kunde inte skapa assets-partitionen"
+fi
 $S sgdisk -a 2048 -n 0:0:0 -t 0:8309 -c 0:persistence "$disk" >/dev/null 2>&1 || die "kunde inte skapa partitionen"
 
 if [[ "${ODEN_NOPARTX:-}" != 1 ]]; then
   # p1 är monterad, så hela tabellen kan inte läsas om (partprobe/BLKRRPART misslyckas). Lägg bara till den nya.
-  n=$($S sgdisk -p "$disk" | awk '$NF=="persistence" {print $1}')
-  $S partx -a -n "$n" "$disk" 2>/dev/null || true
+  for n in $($S sgdisk -p "$disk" | awk '$NF=="persistence" || $NF=="oden-assets" {print $1}'); do
+    $S partx -a -n "$n" "$disk" 2>/dev/null || true
+  done
   $S udevadm settle 2>/dev/null || true
 fi
