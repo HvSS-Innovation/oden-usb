@@ -48,4 +48,12 @@ if [[ "${ODEN_NOPARTX:-}" != 1 ]]; then
     $S partx -a -n "$n" "$disk" 2>/dev/null || true
   done
   $S udevadm settle 2>/dev/null || true
+  # Etcher skriver bara ISO-området; en tidigare installation kan ha lämnat en gammal LUKS-header/filsystem där de nya
+  # partitionerna hamnar. Nollställ första 16 MiB så att de räknas som tomma (som make-stick.sh gör).
+  for l in persistence oden-assets; do
+    dev=$(lsblk -nrpo NAME,PARTLABEL "$disk" 2>/dev/null | awk -v l="$l" '$2==l {print $1}')
+    [[ -b "${dev:-}" ]] || continue
+    $S wipefs -a "$dev" >/dev/null 2>&1 || true
+    $S dd if=/dev/zero of="$dev" bs=1M count=16 conv=fsync status=none
+  done
 fi

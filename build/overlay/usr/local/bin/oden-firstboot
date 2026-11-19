@@ -43,8 +43,10 @@ fi
 
 # Lösenfras (två gånger). Avbryt = fråga igen vid nästa inloggning.
 while :; do
-  p1=$(zenity --password --title="ODEN: välj lösenfras (minst 16 tecken: a-z, 0-9 och mellanslag, inte å/ä/ö)") || exit 0
-  p2=$(zenity --password --title="ODEN: upprepa lösenfrasen") || exit 0
+  # zenity --password visar bara en titel; --entry --hide-text har en brödtext där kraven syns ordentligt.
+  p1=$(zenity --entry --hide-text --width=480 --title="ODEN: välj lösenfras" \
+    --text="Välj en lösenfras som krypterar allt du sparar på stickan.\n\nKrav:\n  • minst 16 tecken\n  • bara bokstäverna a-z (inte å, ä, ö), siffror och mellanslag\n  • inga symboler (. , - _ ! och liknande)\n\nTips: fyra ord med mellanslag, t.ex. \"gron buss pa torsdag\".\nGlömmer du den går datat inte att få tillbaka." ) || exit 0
+  p2=$(zenity --entry --hide-text --width=480 --title="ODEN: upprepa lösenfrasen" --text="Skriv samma lösenfras igen.") || exit 0
   # Vid boot skrivs frasen i initramfs utan säker layout: bara tecken som är samma på svensk och amerikansk layout.
   printf '%s' "$p1" | oden-passphrase-ok && rc=0 || rc=$?
   case $rc in
