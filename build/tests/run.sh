@@ -65,6 +65,33 @@ echo "boot=live oden.scale=2 quiet" > "$t/cmdline"
 [[ "$(PATH="$t/xb:$PATH" ODEN_CMDLINE="$t/cmdline" "$hi" scale)" == 2 ]] && ok "hidpi: oden.scale på kärnraden överstyr" || bad "hidpi: oden.scale på kärnraden"
 PATH="/usr/bin:/bin" ODEN_CMDLINE=/dev/null "$hi" scale 2>/dev/null | grep -qx 1 && ok "hidpi: utan xrandr blir skala 1" || bad "hidpi: utan xrandr"
 
+# oden-keyboard: Mac-layout bara på Apple
+printf '#!/bin/sh\necho "$@" > "%s/xkb"\n' "$t" > "$t/fakexkb"; chmod +x "$t/fakexkb"
+echo "Apple Inc." > "$t/vend"; rm -f "$t/xkb"
+ODEN_DMI_VENDOR="$t/vend" ODEN_SETXKBMAP="$t/fakexkb" overlay/usr/local/bin/oden-keyboard
+grep -q -- "-layout se -variant mac" "$t/xkb" 2>/dev/null && ok "keyboard: Apple får se(mac)" || bad "keyboard: Apple får se(mac)"
+echo "LENOVO" > "$t/vend"; rm -f "$t/xkb"
+ODEN_DMI_VENDOR="$t/vend" ODEN_SETXKBMAP="$t/fakexkb" overlay/usr/local/bin/oden-keyboard
+[[ ! -e "$t/xkb" ]] && ok "keyboard: annan tillverkare lämnas orörd" || bad "keyboard: annan tillverkare"
+
+# stage: Map View får bara den lokala kartkällan (inga externa tileservrar)
+fake_cache; ( cd "$w" && mkdir -p v-2/.obsidian/plugins/obsidian-map-view && echo n > v-2/note.md
+  echo '{"mapSources":[{"name":"CartoDB","urlLight":"https://a.basemaps.cartocdn.com/x/{z}/{x}/{y}.png","preset":true},{"name":"OSM","urlLight":"https://tile.openstreetmap.org/{z}/{x}/{y}.png"}],"letZoomBeyondMax":false,"cacheAllTiles":true,"defaultState":{"chosenMapSource":1},"savedStates":[{"chosenMapSource":1}]}' > v-2/.obsidian/plugins/obsidian-map-view/data.json
+  python3 -m zipfile -c "$t/c/oden-valv" v-2 ); rm -rf "$t/root"; mkdir "$t/root"
+CACHE="$t/c" scripts/stage.sh "$t/root" >/dev/null 2>&1
+mvd="$t/root/opt/oden-template/.obsidian/plugins/obsidian-map-view/data.json"
+python3 -I - "$mvd" <<'PY' && ok "stage: Map View använder bara lokal karta (maxZoom ur map.conf)" || bad "stage: Map View-källa"
+import json, sys
+d = json.load(open(sys.argv[1]))
+assert len(d["mapSources"]) == 1 and d["mapSources"][0]["urlLight"].startswith("http://127.0.0.1:8081/")
+assert d["mapSources"][0]["maxZoom"] == 12 and d["letZoomBeyondMax"] is True and d["cacheAllTiles"] is False
+assert d["defaultState"]["chosenMapSource"] == 0 and d["savedStates"][0]["chosenMapSource"] == 0
+PY
+
+# stage: release-tarball med en platt binär (som Odens Linux-release) hamnar i opt/oden/oden
+fake_cache; ( cd "$w" && mkdir flat && printf '#!/bin/sh\n' > flat/oden && chmod +x flat/oden && tar -C flat -czf "$t/c/oden-linux" oden ); rm -rf "$t/root"; mkdir "$t/root"
+CACHE="$t/c" scripts/stage.sh "$t/root" >/dev/null 2>&1 && [[ -x "$t/root/opt/oden/oden" ]] && ok "stage: release-tarball med platt binär" || bad "stage: release-tarball med platt binär"
+
 if command -v sgdisk >/dev/null; then
   mk() { rm -f "$t/d.img"; truncate -s "$1" "$t/d.img"; sgdisk -n 1:2048:+10M -n 2:0:+2M "$t/d.img" >/dev/null; sgdisk -e "$t/d.img" >/dev/null 2>&1 || true
          truncate -s "$2" "$t/d.img"; }

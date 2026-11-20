@@ -1,0 +1,2 @@
+# ODEN: Mac-layout på Apple-datorer (se oden-keyboard)
+command -v oden-keyboard >/dev/null 2>&1 && oden-keyboard >/dev/null 2>&1

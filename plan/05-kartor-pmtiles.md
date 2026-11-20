@@ -15,17 +15,10 @@ som exakt sådana rutor, lokalt, utan nät.
 - Filen ligger inte i repot (`.gitignore` utesluter `*.mbtiles` och `*.pmtiles`).
 
 ## Rendering till raster (görs en gång, inte i varje bygge)
-1. Kör `tileserver-gl` (container) med PMTiles-filen som källa och Protomaps-stilen (`@protomaps/basemaps`, t.ex. tema
-   `light`) med typsnitt och sprites från `protomaps/basemaps-assets` lokalt.
-2. Ett skript hämtar alla rutor z0–14 inom bounds från tileservern och skriver en raster-MBTiles (webp).
-3. `pmtiles convert raster.mbtiles sverige.pmtiles`.
-4. Resultatet blir en egen artefakt i `artifacts.lock` (SHA256). Byggen använder den färdiga filen.
-
-Grov uppskattning: drygt 1 miljon rutor på z0–14, storlek i storleksordningen 10–25 GB. z15 skulle ge ca 4 gånger fler
-rutor och utelämnas; Leaflet skalar upp z14 (`maxNativeZoom: 14`). Mät efter första renderingen; räcker utrymmet inte: z13.
-
-Alternativ utan rendering: `protomaps-leaflet` ritar just detta vektorformat direkt i Leaflet, men Map View stöder det inte
-och skulle behöva patchas. Raster är enklare att driva.
+Skriptet `build/scripts/map/render-map.sh` gör hela kedjan (källa, stil, tileserver-gl, rutor, PMTiles). Så körs det på en annan maskin,
+vilka zoomdjup som är rimliga (tider och storlekar) och hur resultatet förs in i bygget står i **`docs/KARTRENDERING.md`**.
+Prov (2026-11-20): tileserver-gl 5.7.0 renderar Protomaps-stilen med svenska namn, ca 21 rutor/s med 3 arbetare. Vektorfilen räcker till z15, men
+z14 (1,15 miljoner rutor, ca 8 GB) är målet; z12 används för PoC. Leaflet förstorar över sista nivån (`maxNativeZoom`, ställs via `build/map.conf`).
 
 ## Uppgifter
 1. Kartfilen ligger på p3: `/srv/oden-assets/maps/sverige.pmtiles`. Ny karta = ny stick.
@@ -39,7 +32,7 @@ och skulle behöva patchas. Raster är enklare att driva.
    `http://127.0.0.1:8081/sverige/{z}/{x}/{y}.webp` (eller `.png`). Ta bort CartoDB-nyckelinstruktionen ur det som visas för användaren.
    Lägg in attribution (© OpenStreetMap).
 4. Bekräfta att Obsidian får hämta från `127.0.0.1`.
-5. Sätt `maxNativeZoom: 14` i Map View och en högre max-zoom (t.ex. 17) så att Leaflet skalar upp z14-rutor.
+5. Map View: `maxZoom` på kartkällan (= högsta renderade nivå) och `letZoomBeyondMax` så att Leaflet förstorar. Sätts av `stage.sh` ur `build/map.conf`.
 
 ## Klart när
 - Datorn utan nät visar kartan i Obsidian med korrekt zoomintervall och markörer.

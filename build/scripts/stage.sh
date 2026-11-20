@@ -39,6 +39,28 @@ unpack() {
 
 unpack oden-linux oden flatten
 unpack oden-valv oden-template flatten
+
+# Map View: bara den lokala kartservern (go-pmtiles på 127.0.0.1:8081, steg 05). CartoDB och OpenStreetMap tas bort ur valvmallen:
+# de ringer ut på nätet. maxZoom = högsta riktiga zoomnivå (build/map.conf); därefter förstoras rutorna (letZoomBeyondMax).
+MAP_MAXZOOM=14; [[ -f "$here/../map.conf" ]] && . "$here/../map.conf"
+mv_data="$root/opt/oden-template/.obsidian/plugins/obsidian-map-view/data.json"
+if [[ -f "$mv_data" ]]; then
+  MAXZ="$MAP_MAXZOOM" python3 -I - "$mv_data" <<'PY'
+import json, os, sys
+p = sys.argv[1]
+d = json.load(open(p, encoding="utf-8"))
+d["mapSources"] = [{"name": "ODEN (lokal karta)", "urlLight": "http://127.0.0.1:8081/sverige/{z}/{x}/{y}.webp", "maxZoom": int(os.environ["MAXZ"])}]
+d["letZoomBeyondMax"] = True
+d["cacheAllTiles"] = False
+def fix(st):
+    if isinstance(st, dict) and "chosenMapSource" in st: st["chosenMapSource"] = 0
+fix(d.get("defaultState"))
+for st in d.get("savedStates", []) or []: fix(st)
+json.dump(d, open(p, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+PY
+  grep -q 127.0.0.1:8081 "$mv_data" || { echo "FEL: kunde inte sätta lokal kartkälla i Map View" >&2; exit 1; }
+  ! grep -qE "cartocdn|tile\.openstreetmap" "$mv_data" || { echo "FEL: Map View pekar fortfarande på externa kartservrar" >&2; exit 1; }
+fi
 unpack go-pmtiles pmtiles
 unpack ollama ollama
 
