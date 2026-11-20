@@ -24,6 +24,10 @@
 | "Kontrollsumman … stämmer inte" / "fel storlek" | Skadad eller manipulerad nedladdning (filen raderas) | Försök igen; upprepas det är källan fel: meddela den som byggt stickan |
 | Kartan visas inte på Med karta-stickan | `maps/` på mediet bind-monterades inte | `systemctl status oden-assets.service`, `findmnt /srv/oden-assets/maps`, `ls /run/live/medium/maps` |
 
+## Tecknen hamnar fel på ett Mac-tangentbord (§ och < omkastade, @ eller | saknas)
+På Apple-datorer sätts svensk Mac-layout (`se`, variant `mac`) av `oden-keyboard`. Är `§` och `<` ändå omkastade är det kärnans `hid_apple`:
+prova kärnparametern `hid_apple.iso_layout=0` (eller `1`) på `linux`-raden i startmenyn (tryck `e`). Lösenfrasen (a–z, siffror, mellanslag) påverkas inte.
+
 ## Allt är för litet eller för stort på skärmen
 `oden-hidpi` väljer skala 1 eller 2 vid varje inloggning ur skärmens pixeltäthet (minst 144 dpi och 2000 pixlar bred ger 2). Överstyr
 genom att trycka `e` i startmenyn och lägga till `oden.scale=1` eller `oden.scale=2` på `linux`-raden. Kontrollera värdet med `oden-hidpi scale`
