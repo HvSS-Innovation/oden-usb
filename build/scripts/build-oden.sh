@@ -6,19 +6,26 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # Hash av de låsrader (namn, url, sha256) binären byggs från. build.sh jämför den med cache/oden-linux.inputs.
-inputs_hash() { awk '$1 ~ /^(oden-source|jre-x64|signal-cli)$/ {print $1, $2, $3}' artifacts.lock | sha256sum | cut -d' ' -f1; }
+# stamp-version-1: ändras när byggsteget ändras så att cache/oden-linux byggs om.
+inputs_hash() { { awk '$1 ~ /^(oden-source|jre-x64|signal-cli)$/ {print $1, $2, $3}' artifacts.lock; echo stamp-version-1; } | sha256sum | cut -d' ' -f1; }
+# Version = taggen i oden-source-URL:en (…/tags/v4.2.1.tar.gz -> 4.2.1).
+ODEN_VERSION=$(awk '$1=="oden-source" {print $2}' artifacts.lock | sed -E 's#.*/tags/v?##; s#\.tar\.gz$##')
+[[ "$ODEN_VERSION" =~ ^[0-9][0-9A-Za-z.+-]*$ ]] || { echo "FEL: kunde inte läsa version ur oden-source-URL:en ($ODEN_VERSION)" >&2; exit 1; }
 [[ "${1:-}" == "--print-inputs" ]] && { inputs_hash; exit 0; }
 for n in oden-source jre-x64 signal-cli; do
   [[ -f cache/$n ]] || { echo "FEL: cache/$n saknas (kör fetch.sh)" >&2; exit 1; }
 done
 work=$(mktemp -d); trap 'rm -rf "$work"' EXIT
 
-docker run --rm -v "$PWD/cache":/cache:ro -v "$work":/work -e OWNER="$(id -u):$(id -g)" \
+docker run --rm -v "$PWD/cache":/cache:ro -v "$work":/work -e OWNER="$(id -u):$(id -g)" -e ODEN_VERSION="$ODEN_VERSION" \
   python:3.12-bookworm bash -euc '
   trap '"'"'chown -R "$OWNER" /work'"'"' EXIT   # även vid fel: värdens städning ska fungera
   cd /work
   mkdir src; tar -xzf /cache/oden-source -C src --strip-components=1
-  S=src; [ -f $S/s7_watcher.spec ] || { echo "s7_watcher.spec saknas i källan" >&2; exit 1; }
+  S=src
+  # Källan har __version__ = 0.0.0-dev; Odens release-workflow stämplar versionen på samma sätt (taggen ur låset).
+  sed -i "s/__version__ = \".*\"/__version__ = \"$ODEN_VERSION\"/" $S/oden/__init__.py
+  [ -f $S/s7_watcher.spec ] || { echo "s7_watcher.spec saknas i källan" >&2; exit 1; }
   mkdir $S/jre-x64 $S/signal-cli
   tar -xzf /cache/jre-x64 -C $S/jre-x64 --strip-components=1
   rm -rf $S/jre-x64/man $S/jre-x64/legal

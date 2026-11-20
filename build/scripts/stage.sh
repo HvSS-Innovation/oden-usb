@@ -49,6 +49,8 @@ cp "$cache/obsidian-appimage" "$tmp/obsidian.AppImage"; chmod +x "$tmp/obsidian.
 [[ -d "$tmp/squashfs-root" ]] || { echo "FEL: AppImagen gav ingen squashfs-root vid --appimage-extract" >&2; exit 1; }
 rm -rf "$root/opt/obsidian"; mkdir -p "$root/opt"
 mv "$tmp/squashfs-root" "$root/opt/obsidian"
+# mktemp -d ger läge 700: utan detta kan användaren oden inte ens gå in i /opt/obsidian (Obsidian startar inte).
+chmod -R u+rwX,go+rX "$root/opt"
 
 # Kontroll: det som unit-filer och autostart pekar på.
 for p in opt/oden/oden opt/obsidian/obsidian opt/pmtiles/pmtiles opt/ollama/bin/ollama; do

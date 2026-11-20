@@ -22,6 +22,17 @@ bakgrunden under uppstart och inloggning.
 4. **Bakgrund under uppstart:** plymouth-tema med loggan (kärnparametern `splash` används redan).
 5. **Inloggning och skrivbord:** lightdm-bakgrund och XFCE-skrivbordsbakgrund med ODEN-styling.
 
+## Gjort (2026-11-20, overifierat på hårdvara)
+- Logga och färger: `build/branding/oden-logo.png` (korp på olivgrönt tyg). Bakgrund `#606959` (tygets färg), text mörkblå
+  `#1f2733`. `build/scripts/make-branding.py` skapar splash, bakgrund och ikon (Pillow, körs i Docker); resultatet är incheckat.
+- GRUB: `build/config/config/bootloaders/grub-pc/` (splash.png, theme.cfg, config.cfg, grub.cfg, live-theme/theme.txt och
+  DejaVu-teckensnitt i 22/30 pt via grub-mkfont). Menyn: "Starta ODEN", "Starta ODEN (säkert läge)" (nomodeset noapic nosmp),
+  "Verktyg...". Svensk hjälprad. gfxmode höjd från 800x600. live-builds egen text (Built, versioner) finns i dess splash och är borta.
+- Bakgrund: `usr/share/oden/background.png` sätts på alla skärmar av `oden-set-background` (autostart); lightdm-gtk-greeter använder samma.
+- Genvägar: skrivbordet (`/etc/skel/Desktop`: Oden, Obsidian, Terminal) och programmenyn (`/usr/share/applications`). Ikon: `oden.png`.
+- **Plymouth utelämnat:** paketet ingår inte i bilden och skulle lägga till initramfs-hookar. Uppstarten är textläge tills skrivbordet
+  startar. Tas upp igen om det behövs.
+
 ## Klart när
 - Startmenyn visar ODEN-logga och svenska texter, och går att läsa på MacBook-skärmen.
 - Uppstart, inloggning och skrivbord har samma utseende.

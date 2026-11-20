@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=ODEN-bakgrund
+Exec=/usr/local/bin/oden-set-background
+OnlyShowIn=XFCE;

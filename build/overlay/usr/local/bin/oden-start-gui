@@ -9,5 +9,5 @@ if [ ! -f "$HOME/.oden-persist" ]; then
 fi
 case "$1" in
   browser)  sleep 3; exec firefox-esr --new-window http://127.0.0.1:8080 ;;
-  obsidian) exec /opt/obsidian/obsidian ;;
+  obsidian) mkdir -p "$HOME/.cache"; exec /opt/obsidian/obsidian >>"$HOME/.cache/oden-obsidian.log" 2>&1 ;;
 esac
