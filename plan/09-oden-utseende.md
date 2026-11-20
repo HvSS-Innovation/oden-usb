@@ -35,6 +35,11 @@ bakgrunden under uppstart och inloggning.
   `oden.plymouth` och `watermark.png` ligger i overlayn; bygghooken kopierar resten från spinner och kör `plymouth-set-default-theme oden`.
   Risk: lösenfrasprompten vid upplåsning ritas av temat; provas på hårdvara. Går den att missa trycker man Esc för textläge.
 
+- **Obsidian startläge:** `scripts/make-obsidian-state.sh` skriver `obsidian.json` (valvet `~/ODEN-valv` registrerat, id `6f64656e76616c76`) och
+  förfyller Chromiums localStorage med `enable-plugin-<id>=true`. Obsidian slår på community-plugins bara om den nyckeln är `true`
+  (kontrollerat i Obsidians kod); annars visas dialogen "Slå på community-plugins" och valvet ser ut som en ren installation.
+  Formatet på LevelDB-nyckeln är antaget (`_app://obsidian.md\0\1enable-plugin-<id>`); fungerar det inte syns dialogen som förut.
+
 ## Klart när
 - Startmenyn visar ODEN-logga och svenska texter, och går att läsa på MacBook-skärmen.
 - Uppstart, inloggning och skrivbord har samma utseende.
