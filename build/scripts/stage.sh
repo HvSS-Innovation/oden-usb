@@ -52,8 +52,11 @@ d = json.load(open(p, encoding="utf-8"))
 d["mapSources"] = [{"name": "ODEN (lokal karta)", "urlLight": "http://127.0.0.1:8081/sverige/{z}/{x}/{y}.webp", "maxZoom": int(os.environ["MAXZ"])}]
 d["letZoomBeyondMax"] = True
 d["cacheAllTiles"] = False
+maxz = int(os.environ["MAXZ"])
 def fix(st):
     if isinstance(st, dict) and "chosenMapSource" in st: st["chosenMapSource"] = 0
+    # Startvyer över kartans sista nivå ger bara 404 ("Tile Unavailable"): kläm ner dem
+    if isinstance(st, dict) and isinstance(st.get("mapZoom"), (int, float)) and st["mapZoom"] > maxz: st["mapZoom"] = maxz
 fix(d.get("defaultState"))
 for st in d.get("savedStates", []) or []: fix(st)
 json.dump(d, open(p, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
