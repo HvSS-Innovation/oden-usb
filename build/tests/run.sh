@@ -81,15 +81,17 @@ fake_cache; ( cd "$w" && mkdir -p v-2/.obsidian/plugins/obsidian-map-view && ech
   python3 -m zipfile -c "$t/c/oden-valv" v-2 ); rm -rf "$t/root"; mkdir "$t/root"
 CACHE="$t/c" scripts/stage.sh "$t/root" >/dev/null 2>&1
 mvd="$t/root/opt/oden-template/.obsidian/plugins/obsidian-map-view/data.json"
-python3 -I - "$mvd" <<'PY' && ok "stage: Map View använder bara lokal karta (maxZoom ur map.conf)" || bad "stage: Map View-källa"
-import json, sys
+MAXZ=$(sed -n 's/^MAP_MAXZOOM=//p' map.conf)
+MAXZ="$MAXZ" python3 -I - "$mvd" <<'PY' && ok "stage: Map View använder bara lokal karta (maxZoom ur map.conf)" || bad "stage: Map View-källa"
+import json, sys, os
+Z = int(os.environ["MAXZ"])
 d = json.load(open(sys.argv[1]))
 assert len(d["mapSources"]) == 1 and d["mapSources"][0]["urlLight"].startswith("http://127.0.0.1:8081/")
-assert d["mapSources"][0]["maxZoom"] == 12 and d["letZoomBeyondMax"] is True and d["cacheAllTiles"] is False
+assert d["mapSources"][0]["maxZoom"] == Z and d["letZoomBeyondMax"] is True and d["cacheAllTiles"] is False
 assert d["defaultState"]["chosenMapSource"] == 0 and d["savedStates"][0]["chosenMapSource"] == 0
-assert d["defaultState"]["mapZoom"] == 12 and d["savedStates"][0]["mapZoom"] == 9   # nedkläm bara det som är för högt
+assert d["defaultState"]["mapZoom"] == min(14, Z) and d["savedStates"][0]["mapZoom"] == 9   # nedkläm bara det som är för högt
 mj = open(sys.argv[1].replace("data.json", "main.js")).read()
-assert "cartocdn" not in mj and "127.0.0.1:8081" in mj and "maxZoom: 12" in mj
+assert "cartocdn" not in mj and "127.0.0.1:8081" in mj and f"maxZoom: {Z}" in mj
 PY
 
 # stage: release-tarball med en platt binär (som Odens Linux-release) hamnar i opt/oden/oden
