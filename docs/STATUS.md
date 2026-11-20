@@ -24,6 +24,7 @@ Förklaring: **Klart** = skrivet och testat så långt det går utan hårdvara. 
 | 05 Kartor | Kvar | Källan (vektor, 4 GB) är låst. Rasterrendering av z0–14 är inte gjord. `pmtiles.service` är skriven men flaggsyntaxen för `serve` är overifierad. Map View-konfigurationen mot `127.0.0.1:8081` är inte gjord. p3 monteras via `fstab` (overifierat) |
 | 06 AI / Ollama | Skrivet | `ollama.service`, RAM-kontroll, NVIDIA-paket i paketlistan, Ollama låst. Modeller (`qwen3-vl:4b`, `qwen3:8b`) är inte hämtade. Inget provat |
 | 08 ISO-varianter (Etcher) | Skrivet | `oden-make-persist` (skapar partitioner efter ISO-datan, `sgdisk -e`/`partx -a`), `oden-assets-bind` (+ `oden-assets.service`), `oden-fetch-assets` (kartor vid första start), `ODEN_VARIANTS` i `build.sh`, `release-json.sh`, `site/ladda-ner.html`. Testat: filavbilder, fejkad mount/curl, xorriso i Docker med 4,3 GB-fil. Ej provat: allt på en riktig stick (partx live, mount av fil >4 GiB, bind-montering, nedladdning) |
+| 09 ODEN-utseende | Planerad | Egen startmeny (GRUB-tema), plymouth, inloggnings- och skrivbordsbakgrund med Odens logga. Väntar på att inloggningsfelet är löst (`plan/09-oden-utseende.md`) |
 | 07 Test, härdning, dokumentation | Delvis | Användarguide, adminguide, felsökning och mall för HW-matris skrivna. Kvar: maskinvarutest, E2E mot ODEN-analys, paketfångst, strömavbrott, `oden-wipe`-test |
 
 ## Artefakter (`build/artifacts.lock`)

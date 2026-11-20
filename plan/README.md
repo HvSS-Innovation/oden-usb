@@ -40,6 +40,7 @@ Hellre en funktion mindre än en rörlig del till.
 | `06-ai-ollama.md` | Ollama, modeller, resurskontroll |
 | `07-test-harda-dokumentera.md` | Test, härdning, dokumentation |
 | `08-iso-varianter.md` | Tre ISO-varianter som går att bränna med Etcher |
+| `09-oden-utseende.md` | Startmeny, uppstartsbild och bakgrund med ODEN-styling |
 
 Aktuell status: se `docs/STATUS.md`.
 
