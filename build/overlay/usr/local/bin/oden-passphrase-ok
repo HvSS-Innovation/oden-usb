@@ -1,0 +1,10 @@
+#!/bin/bash
+# Kontrollerar en lösenfras (läses från stdin, aldrig som argument). Exit 0 = godkänd, 1 = otillåtna tecken, 2 = för kort.
+# Vid boot skrivs lösenfrasen i initramfs, där tangentbordslayouten inte är säkert svensk. Därför tillåts bara tecken som
+# ligger på samma tangent på svensk och amerikansk layout: a-z, A-Z, 0-9 och blanksteg (alltså inte å, ä, ö eller symboler).
+# Ingen minsta längd som standard (bara icke-tom); ODEN_MINLEN kan sätta en. Tillåtna tecken är det som skyddar mot utlåsning.
+LC_ALL=C
+MINLEN="${ODEN_MINLEN:-1}"
+IFS= read -r p || true
+[[ "$p" =~ ^[A-Za-z0-9\ ]+$ ]] || exit 1
+(( ${#p} >= MINLEN )) || exit 2

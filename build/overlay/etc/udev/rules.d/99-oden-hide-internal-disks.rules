@@ -1,0 +1,3 @@
+# Dölj och neka montering av allt som inte sitter på USB (datorns interna diskar, loop m.m.).
+# udisks2 ignorerar enheter med UDISKS_IGNORE=1. USB-minnen monteras som vanligt.
+SUBSYSTEM=="block", ENV{ID_BUS}!="usb", ENV{UDISKS_IGNORE}="1"

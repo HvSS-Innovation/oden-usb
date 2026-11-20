@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Obsidian (ODEN-valv)
+Comment=Öppna analysvalvet
+Exec=/usr/local/bin/oden-start-gui obsidian
+Icon=/opt/obsidian/usr/share/icons/hicolor/512x512/apps/obsidian.png
+Terminal=false
+Categories=Office;

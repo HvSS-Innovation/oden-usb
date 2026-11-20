@@ -1,0 +1,10 @@
+[Unit]
+Description=Oden (Signal -> Markdown, webbgränssnitt på 127.0.0.1:8080)
+ConditionPathExists=%h/.oden-persist
+
+[Service]
+ExecStart=/opt/oden/oden
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

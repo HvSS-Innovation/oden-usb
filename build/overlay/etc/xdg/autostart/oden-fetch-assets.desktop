@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=ODEN hämta kartor
+Comment=Hämtar kartor första gången (minimal-varianten)
+# Först när persistensen är klar (så att förstastarten inte avbryts) och bara om en lista finns.
+Exec=sh -c 'test -f "$HOME/.oden-persist" && test -s /run/live/medium/oden/assets.lock && exec /usr/local/bin/oden-fetch-assets'

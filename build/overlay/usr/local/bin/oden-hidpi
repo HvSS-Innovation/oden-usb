@@ -1,0 +1,35 @@
+#!/bin/bash
+# Skärmskala för högupplösta skärmar (t.ex. MacBook retina 2880x1800: allt blir annars mycket litet).
+#   oden-hidpi scale     skriver 1 eller 2
+#   oden-hidpi apply [N] sätter XFCE-inställningarna för skala N (standard: scale)
+# Skalan väljs per inloggning ur den första anslutna skärmen (pixlar och millimeter ur xrandr): 2 vid minst 144 dpi och minst 2000 pixlar bred.
+# Överstyrning för felsökning: kärnparametern oden.scale=1|2, eller variabeln ODEN_SCALE.
+scale() {
+  [[ "${ODEN_SCALE:-}" =~ ^[12]$ ]] && { echo "$ODEN_SCALE"; return; }
+  local a
+  for a in $(cat "${ODEN_CMDLINE:-/proc/cmdline}" 2>/dev/null); do
+    [[ "$a" =~ ^oden\.scale=([12])$ ]] && { echo "${BASH_REMATCH[1]}"; return; }
+  done
+  xrandr --current 2>/dev/null | awk '
+    / connected/ && !done {
+      w = 0; mm = 0
+      for (i = 1; i <= NF; i++) {
+        if ($i ~ /^[0-9]+x[0-9]+\+[0-9]+\+[0-9]+$/) { split($i, g, /[x+]/); w = g[1] + 0 }
+        else if ($i ~ /^[0-9]+mm$/ && !mm) mm = $i + 0
+      }
+      if (w > 0) { done = 1; dpi = mm > 0 ? w * 25.4 / mm : (w >= 2560 ? 200 : 96); r = (w >= 2000 && dpi >= 144) ? 2 : 1 }
+    }
+    END { print done ? r : 1 }'
+}
+apply() {
+  local s="${1:-$(scale)}"
+  # Fönsterskalning (heltal): GTK, Firefox m.fl. ritar allt dubbelt så stort och skarpt. DPI hålls på 96 (skalningen sköter resten).
+  xfconf-query -c xsettings -n -t int -p /Gdk/WindowScalingFactor -s "$s"
+  xfconf-query -c xsettings -n -t int -p /Xft/DPI -s 96
+  xfconf-query -c xsettings -n -t int -p /Gtk/CursorThemeSize -s $((24 * s))
+}
+case "${1:-scale}" in
+  scale) scale ;;
+  apply) shift; apply "$@" ;;
+  *) echo "användning: oden-hidpi scale|apply [1|2]" >&2; exit 2 ;;
+esac

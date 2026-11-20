@@ -1,0 +1,21 @@
+#!/bin/bash
+# Skriver tillståndet för persistens-partitionen på p4 (en rad):
+#   none      hittade inte p4
+#   empty     inget filsystem: första start
+#   pending   LUKS med etiketten oden-pending: installationen avbröts eller nyckeln raderades (oden-wipe); inget användbart data
+#   locked    färdig LUKS (etikett oden, eller äldre stick utan etikett) som inte är upplåst
+#   other:<t> annat filsystem <t>
+# oden-firstboot sätter etiketten oden-pending vid luksFormat och byter till oden som sista steg.
+# ODEN_PART (för test) kringgår sökningen i oden-persist-dev.
+set -uo pipefail
+S=sudo; [[ $EUID -eq 0 ]] && S=""
+
+part=$(oden-persist-dev 2>/dev/null) || { echo none; exit 0; }
+type=$($S blkid -s TYPE -o value "$part" 2>/dev/null || true)
+case "$type" in
+  "") echo empty ;;
+  crypto_LUKS)
+    label=$($S cryptsetup luksDump "$part" 2>/dev/null | awk '/^Label:/ {print $2}')
+    [[ "$label" == oden-pending ]] && echo pending || echo locked ;;
+  *) echo "other:$type" ;;
+esac

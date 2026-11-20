@@ -1,0 +1,15 @@
+#!/bin/sh
+# live-build-konfiguration. Körs av `lb config`.
+set -e
+lb config noauto \
+  --distribution trixie \
+  --architectures amd64 \
+  --archive-areas "main contrib non-free non-free-firmware" \
+  --apt-recommends false \
+  --debian-installer none \
+  --binary-image iso-hybrid \
+  --bootloaders grub-efi \
+  --security true --updates true \
+  --bootappend-live "boot=live components persistence persistence-media=removable-usb persistence-encryption=luks username=oden locales=sv_SE.UTF-8 keyboard-layouts=se timezone=Europe/Stockholm noswap fbcon=font:TER16x32 quiet splash" \
+  --iso-volume "ODEN" \
+  "${@}"

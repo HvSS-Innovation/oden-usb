@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Oden
+Comment=Öppna Odens webbgränssnitt
+Exec=/usr/local/bin/oden-start-gui browser
+Icon=oden
+Terminal=false
+Categories=Network;Office;

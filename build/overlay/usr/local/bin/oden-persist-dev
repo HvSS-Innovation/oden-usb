@@ -1,0 +1,22 @@
+#!/bin/bash
+# Skriver sökvägen till p4 (partitionen med GPT-namn "persistence") på den stick vi bootade från.
+# Exit 1 om den inte kan avgöras entydigt. Används av oden-firstboot och oden-wipe, som är
+# destruktiva, så vi gissar inte om flera stickor sitter i.
+# ODEN_PART (för test) kringgår sökningen.
+set -euo pipefail
+
+if [[ -n "${ODEN_PART:-}" ]]; then echo "$ODEN_PART"; exit 0; fi
+
+# Disken som live-systemet startade från (live-boot monterar mediet på /run/live/medium).
+src=$(findmnt -no SOURCE /run/live/medium 2>/dev/null || true)
+disk=""
+[[ -n "$src" ]] && disk=$(lsblk -no PKNAME "$src" 2>/dev/null | head -1 || true)
+
+mapfile -t cand < <(lsblk -nrpo NAME,PKNAME,PARTLABEL | awk -v d="${disk:+/dev/$disk}" \
+  '$3=="persistence" && (d=="" || $2==d) {print $1}')
+
+if [[ ${#cand[@]} -ne 1 ]]; then
+  echo "oden-persist-dev: hittade ${#cand[@]} kandidater för persistens-partitionen, förväntade 1" >&2
+  exit 1
+fi
+echo "${cand[0]}"

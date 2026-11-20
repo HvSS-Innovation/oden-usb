@@ -1,0 +1,7 @@
+#!/bin/bash
+# På Apple-datorer: svensk Mac-layout (se, variant mac, modell macbook79) så att tecknen hamnar där tangenterna visar dem.
+# Andra datorer behåller svensk PC-layout. Körs av /etc/X11/Xsession.d/77oden-keyboard före skrivbordet.
+# Lösenfrasen (a-z, 0-9, mellanslag) ligger på samma tangent i båda layouterna, så upplåsning vid start påverkas inte.
+vendor=$(cat "${ODEN_DMI_VENDOR:-/sys/class/dmi/id/sys_vendor}" 2>/dev/null)
+[[ "$vendor" == Apple* ]] || exit 0
+exec "${ODEN_SETXKBMAP:-setxkbmap}" -model macbook79 -layout se -variant mac

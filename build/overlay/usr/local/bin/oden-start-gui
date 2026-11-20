@@ -1,0 +1,13 @@
+#!/bin/sh
+# Autostart: bara med upplåst persistens (steg 03).
+if [ ! -f "$HOME/.oden-persist" ]; then
+  # Notisen visas bara när p4 är färdigt krypterad men inte upplåst. Är p4 tom eller ofärdig sköter
+  # oden-firstboot det och ber själv om lösenfras.
+  [ "$(oden-persist-state)" = locked ] &&
+    notify-send "Data inte upplåst" "Starta om och ange lösenfras." 2>/dev/null
+  exit 0
+fi
+case "$1" in
+  browser)  sleep 3; exec firefox-esr --new-window http://127.0.0.1:8080 ;;
+  obsidian) mkdir -p "$HOME/.cache"; exec /opt/obsidian/obsidian --force-device-scale-factor="$(oden-hidpi scale)" >>"$HOME/.cache/oden-obsidian.log" 2>&1 ;;
+esac

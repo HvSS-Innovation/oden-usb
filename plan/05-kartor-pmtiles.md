@@ -37,19 +37,21 @@ Resultat:
 Alternativ utan rendering: `protomaps-leaflet` ritar just detta vektorformat direkt i Leaflet, men Map View stöder det inte
 och skulle behöva patchas. Raster är enklare att driva.
 
+Skriptet `build/scripts/map/render-map.sh` gör samma kedja på valfri maskin; krav, tider och storlekar per zoomnivå och hur resultatet förs in i bygget står i `docs/KARTRENDERING.md`. Zoomnivån som Map View förstorar över ställs via `build/map.conf` (`MAP_MAXZOOM`, nu 14).
+
 ## Uppgifter
 1. Hämta `sverige-raster.pmtiles` från B2 (kontrollera SHA256) och lägg den på p3 som `/srv/oden-assets/maps/sverige.pmtiles`. Ny karta = ny stick.
 2. systemd-user-tjänst:
    ```
-   ExecStart=/opt/pmtiles/pmtiles serve /srv/oden-assets/maps --port 8080 --bind 127.0.0.1 --cors=app://obsidian.md
+   ExecStart=/opt/pmtiles/pmtiles serve /srv/oden-assets/maps --port 8081 --interface=127.0.0.1 --cors=app://obsidian.md
    ```
    (`serve` exponerar `/{namn}/{z}/{x}/{y}.{png|webp|jpg}` för raster; kontrollera exakt flaggsyntax mot den pinnade versionen.)
-   Kontrollera att port 8080 inte krockar med Odens webbgränssnitt.
+   Odens webbgränssnitt använder 8080, därför ligger kartservern på 8081.
 3. Ändra kartkälla i valvets `.obsidian/plugins/obsidian-map-view/data.json` (`obsidian-config/map-view-data.json` i ODEN-analys):
-   `http://127.0.0.1:8080/sverige/{z}/{x}/{y}.webp` (eller `.png`). Ta bort CartoDB-nyckelinstruktionen ur det som visas för användaren.
+   `http://127.0.0.1:8081/sverige/{z}/{x}/{y}.webp` (eller `.png`). Ta bort CartoDB-nyckelinstruktionen ur det som visas för användaren.
    Lägg in attribution (© OpenStreetMap).
 4. Bekräfta att Obsidian får hämta från `127.0.0.1`.
-5. Sätt `maxNativeZoom: 14` i Map View och en högre max-zoom (t.ex. 17) så att Leaflet skalar upp z14-rutor.
+5. Map View: `maxZoom` på kartkällan (= högsta renderade nivå) och `letZoomBeyondMax` så att Leaflet förstorar. Sätts av `stage.sh` ur `build/map.conf`.
 
 ## Klart när
 - Datorn utan nät visar kartan i Obsidian med korrekt zoomintervall och markörer.

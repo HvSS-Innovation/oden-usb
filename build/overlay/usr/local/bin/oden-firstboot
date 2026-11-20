@@ -1,0 +1,99 @@
+#!/bin/bash
+# Förstastart: skapar (vid behov) partitionen och krypterad persistens (LUKS2) om den är tom. Autostartas vid inloggning.
+# Formaterar BARA en partition utan något filsystem. Allt annat lämnas orört.
+# Testvariabler: ODEN_PART (enhet), ODEN_TEMPLATE (valvmall), ODEN_NOREBOOT=1.
+set -euo pipefail
+
+TEMPLATE="${ODEN_TEMPLATE:-/opt/oden-template}"
+MARK="$HOME/.oden-persist"
+S=sudo; [[ $EUID -eq 0 ]] && S=""
+
+note() { notify-send "$1" "${2:-}" 2>/dev/null || echo "$1 ${2:-}" >&2; }
+
+# Redan upplåst persistens: inget att göra.
+[[ -f "$MARK" ]] && exit 0
+
+# Etcher-bränd sticka: partitionen finns inte än. Skapa den i det lediga utrymmet (rör inget befintligt).
+if [[ "$(oden-persist-state)" == none ]]; then
+  err=$(oden-make-persist 2>&1) || { note "Ingen persistens" "${err#oden-make-persist: } Data sparas inte."; exit 0; }
+fi
+part=$(oden-persist-dev) || { note "Ingen persistens" "Hittade inte partitionen för lagring på stickan. Data sparas inte."; exit 0; }
+map=oden-new
+
+case "$(oden-persist-state)" in
+  empty) ;;                                # tom: första start
+  locked) note "Data inte upplåst" "Starta om och ange lösenfras."; exit 0 ;;
+  pending)
+    # Tidigare installation avbröts (strömavbrott, utdragen stick, utloggning) eller nyckeln raderades med oden-wipe.
+    # Inget användbart data finns: etiketten oden-pending byts till oden först när allt är skrivet.
+    zenity --question --text="En tidigare installation av den krypterade lagringen blev aldrig klar.\nInget data har sparats på den.\n\nGöra om den nu?" \
+      --ok-label="Gör om" --cancel-label="Inte nu" || exit 0
+    $S umount "/dev/mapper/$map" 2>/dev/null || true
+    $S cryptsetup close "$map" 2>/dev/null || true
+    $S wipefs -a "$part" >/dev/null ;;
+  other:*) note "Oväntat innehåll på lagringspartitionen" "Partitionen har ett annat filsystem och rörs inte."; exit 0 ;;
+  *) note "Ingen persistens" "Hittade inte partitionen för lagring på stickan. Data sparas inte."; exit 0 ;;
+esac
+
+# Förkontroller innan något förstörs.
+[[ "$HOME" == /home/* ]] || { note "Fel hemkatalog" "$HOME ligger inte under /home."; exit 1; }
+if [[ -z "$(ls -A "$TEMPLATE" 2>/dev/null)" ]]; then
+  note "Valvmall saknas" "$TEMPLATE är tom; bilden är ofullständig."; exit 1
+fi
+
+# Lösenfras (två gånger). Avbryt = fråga igen vid nästa inloggning.
+while :; do
+  # zenity --password visar bara en titel; --entry --hide-text har en brödtext där kraven syns ordentligt.
+  p1=$(zenity --entry --hide-text --width=480 --title="ODEN: välj lösenfras" \
+    --text="Välj en lösenfras som krypterar allt du sparar på stickan.\n\nKrav:\n  • bara bokstäverna a-z (inte å, ä, ö), siffror och mellanslag\n  • inga symboler (. , - _ ! och liknande)\n\nTips: längre är säkrare, t.ex. fyra ord med mellanslag: \"gron buss pa torsdag\".\nGlömmer du den går datat inte att få tillbaka." ) || exit 0
+  p2=$(zenity --entry --hide-text --width=480 --title="ODEN: upprepa lösenfrasen" --text="Skriv samma lösenfras igen.") || exit 0
+  # Vid boot skrivs frasen i initramfs utan säker layout: bara tecken som är samma på svensk och amerikansk layout.
+  printf '%s' "$p1" | oden-passphrase-ok && rc=0 || rc=$?
+  case $rc in
+    1) zenity --error --text="Lösenfrasen får bara innehålla bokstäverna a-z (inte å, ä, ö), siffror och mellanslag.\nSymboler och å/ä/ö kan skrivas fel när datorn startar och skulle låsa ute dig."; continue ;;
+    2) zenity --error --text="Lösenfrasen är för kort."; continue ;;
+  esac
+  [[ "$p1" == "$p2" ]] && break
+  zenity --error --text="Lösenfraserna är olika. Försök igen."
+done
+
+zenity --question --width=480 --title="ODEN: skapa krypterad lagring" \
+  --text="Skapar krypterad lagring på stickan. Det kan ta en stund.\nGlöms lösenfrasen går data inte att återfå.\n\n<b>Väljer du Nej fungerar inte stickan som tänkt:</b> då skapas ingen lagring, så inget du gör sparas och allt är borta när datorn stängs av." \
+  --ok-label="Fortsätt" --cancel-label="Nej, spara inget" || { note "Ingen persistens" "Inget sparas på stickan. Allt försvinner när datorn stängs av."; exit 0; }
+
+mnt=$(mktemp -d)
+cleanup() {
+  mountpoint -q "$mnt" && $S umount "$mnt" || true
+  [[ -e /dev/mapper/$map ]] && $S cryptsetup close "$map" || true
+  rmdir "$mnt" 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# printf utan radbrytning: samma tecken som live-boot får när lösenfrasen skrivs vid boot.
+# Etiketten oden-pending markerar ofärdig installation (se oden-persist-state); den byts till oden sist.
+printf '%s' "$p1" | $S cryptsetup luksFormat --batch-mode --type luks2 --label oden-pending --pbkdf argon2id \
+  --pbkdf-memory 524288 --iter-time 2000 --key-file=- "$part"
+printf '%s' "$p1" | $S cryptsetup open --key-file=- "$part" "$map"
+unset p1 p2
+
+$S mkfs.ext4 -q -L persistence "/dev/mapper/$map"
+$S mount -o noatime "/dev/mapper/$map" "$mnt"
+
+# live-boot: /home på persistensen bind-monteras över /home. Rotkatalogen innehåller home/ och persistence.conf.
+echo "/home bind" | $S tee "$mnt/persistence.conf" >/dev/null
+$S install -d -m 755 "$mnt/home"
+$S install -d -o "$(id -u)" -g "$(id -g)" -m 755 "$mnt$HOME"
+$S cp -a /etc/skel/. "$mnt$HOME/"
+$S cp -a "$TEMPLATE" "$mnt$HOME/ODEN-valv"
+$S touch "$mnt$HOME/.oden-persist"
+$S chown -R "$(id -u):$(id -g)" "$mnt$HOME"
+$S sync
+
+cleanup; trap - EXIT
+
+# Sista steget: först nu är installationen klar. Avbrott före detta ger oden-pending och erbjuds göras om.
+$S cryptsetup config --label oden "$part" || { note "Installationen misslyckades" "Kunde inte slutföra krypterad lagring. Starta om och försök igen."; exit 1; }
+
+if [[ "${ODEN_NOREBOOT:-}" == 1 ]]; then echo "klart (ingen omstart)"; exit 0; fi
+zenity --info --width=520 --title="ODEN: klart" --text="Klart. Datorn startar nu om.\n\n<b>Starta från stickan igen:</b> när datorn startar om, håll nere en tangent tills en startmeny visas och välj stickan (ofta \"EFI Boot\"):\n  • Mac: håll ner <b>Alt</b> (⌥ Option)\n  • PC: <b>F12</b> (ibland F2, F10, F11 eller Esc)\n\nDärefter frågar ODEN efter lösenfrasen vid varje start."
+systemctl reboot

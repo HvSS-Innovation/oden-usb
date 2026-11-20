@@ -1,0 +1,41 @@
+#!/bin/sh
+# Körs i chroot vid bygget.
+set -e
+
+# Tjänster som ska vara av
+for u in hibernate.target hybrid-sleep.target suspend-then-hibernate.target \
+         apt-daily.timer apt-daily-upgrade.timer man-db.timer \
+         avahi-daemon.service cups.service cups-browsed.service bluetooth.service; do
+  systemctl mask "$u" 2>/dev/null || true
+done
+
+# Utan user-setup hoppar live-config över 0030-user-setup: ingen användare, ingen inloggning.
+dpkg -s user-setup >/dev/null 2>&1 || { echo "FEL: user-setup saknas (live-config kan inte skapa användaren)" >&2; exit 1; }
+
+# Brandvägg och tidssynk på
+systemctl enable nftables.service systemd-timesyncd.service oden-assets.service
+
+# Användartjänster (oden/pmtiles/ollama) startas för alla användare; villkor i unit-filerna
+systemctl --global enable oden.service pmtiles.service ollama.service
+
+# Skrivskyddade installationsplatser skapas av build.sh (staging); skapa mappar här så att units inte faller på saknad sökväg
+mkdir -p /opt/oden /opt/obsidian /opt/pmtiles /opt/ollama /opt/oden-template /srv/oden-assets
+
+# Firefox läser policies.json från distribution/ (kravet: inga nätanrop utöver de tillåtna). Finns den inte där, länka;
+# saknas den helt avbryts bygget i stället för att leverera en Firefox som ringer hem.
+d=/usr/lib/firefox-esr/distribution
+[ -e "$d/policies.json" ] || { mkdir -p "$d"; ln -s /etc/firefox-esr/policies/policies.json "$d/policies.json"; }
+[ -s "$d/policies.json" ] || { echo "FEL: Firefox-policies saknas" >&2; exit 1; }
+
+# Plymouth-temat oden = spinner (snurra, lösenfrasdialog) med egen logga och färger (overlayn har oden.plymouth + watermark.png).
+t=/usr/share/plymouth/themes
+for f in "$t"/spinner/*; do [ -e "$t/oden/$(basename "$f")" ] || cp -a "$f" "$t/oden/"; done
+[ -s "$t/oden/oden.plymouth" ] && [ -s "$t/oden/watermark.png" ] && [ -s "$t/oden/entry.png" ] || { echo "FEL: plymouth-temat oden är ofullständigt" >&2; exit 1; }
+plymouth-set-default-theme oden
+
+# Initramfs byggs om efter att overlayn (keymap, krypteringsinställningar) lagts in.
+update-initramfs -u -k all
+
+# SBOM (paketdelen)
+mkdir -p /usr/share/oden
+dpkg-query -W -f='${binary:Package} ${Version}\n' | sort > /usr/share/oden/SBOM-packages.txt

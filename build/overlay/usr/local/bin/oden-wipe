@@ -1,0 +1,23 @@
+#!/bin/bash
+# Nödradering: förstör LUKS-headern på p4 (luksErase). Datat blir oåtkomligt, ingen backup finns.
+# OBS: flashminne kan behålla gamla block; detta skyddar mot åtkomst via lösenfras/nyckel, inte mot labb.
+#   oden-wipe [--yes]      (--yes hoppar över frågan)
+# Testvariabler: ODEN_PART, ODEN_NOPOWEROFF=1.
+set -euo pipefail
+S=sudo; [[ $EUID -eq 0 ]] && S=""
+
+part=$(oden-persist-dev) || { echo "Hittade inte p4." >&2; exit 1; }
+$S cryptsetup isLuks "$part" || { echo "$part är inte en LUKS-partition." >&2; exit 1; }
+
+if [[ "${1:-}" != --yes ]]; then
+  echo "RADERAR krypteringsnyckeln på $part. Data går inte att återfå."
+  read -rp "Skriv RADERA för att fortsätta: " ok
+  [[ "$ok" == RADERA ]] || { echo "Avbrutet."; exit 1; }
+fi
+
+$S cryptsetup luksErase --batch-mode "$part"
+# Markera som ofärdig så att nästa start erbjuder en ny installation i stället för att fastna i "Data inte upplåst".
+$S cryptsetup config --label oden-pending "$part" 2>/dev/null || true
+$S sync
+echo "Klart: $part kan inte längre låsas upp."
+[[ "${ODEN_NOPOWEROFF:-}" == 1 ]] || $S systemctl poweroff -f

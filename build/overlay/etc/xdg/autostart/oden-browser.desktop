@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Name=Oden-gränssnitt
+Exec=/usr/local/bin/oden-start-gui browser

@@ -1,0 +1,20 @@
+#!/bin/bash
+# Gör kartor och modeller tillgängliga under /srv/oden-assets (dit tjänsterna pekar).
+#  - Finns en monterad assets-partition (p3, fstab) på /srv/oden-assets: inget att göra.
+#  - Annars, om ISO-mediet innehåller maps/ eller ollama/ (karta- och karta-ai-varianterna):
+#    bind-montera dem skrivskyddat från /run/live/medium.
+# Testvariabler: ODEN_MEDIUM, ODEN_ASSETS, ODEN_MOUNT (standard mount).
+set -euo pipefail
+MEDIUM="${ODEN_MEDIUM:-/run/live/medium}"
+ASSETS="${ODEN_ASSETS:-/srv/oden-assets}"
+MOUNT="${ODEN_MOUNT:-mount}"
+
+if mountpoint -q "$ASSETS"; then exit 0; fi
+
+for d in maps ollama; do
+  [[ -d "$MEDIUM/$d" && -n "$(ls -A "$MEDIUM/$d" 2>/dev/null)" ]] || continue
+  mountpoint -q "$ASSETS/$d" && continue
+  mkdir -p "$ASSETS/$d"
+  $MOUNT --bind "$MEDIUM/$d" "$ASSETS/$d"
+  $MOUNT -o remount,bind,ro "$ASSETS/$d"
+done

@@ -28,15 +28,26 @@ build/
 | Ollama-modeller | `ollama pull` vid bygget | Inget versionslås |
 
 ## make-stick.sh
-1. Skriver bilden (p1 EFI + p2 live).
+1. Skriver bilden (p1 ISO-data + p2 EFI).
 2. Lägger till p3 (ext4, label `oden-assets`) och kopierar in karta och ev. modeller (`--with-ai`).
 3. Lägger till p4 som tar resten av stickan, oformaterad. Den krypteras vid första start (steg 03).
 
 ## Regler
-- `fetch.sh` är det enda som använder nät; `build.sh` kör därefter offline och misslyckas om en checksumma avviker.
+- Bygget kräver nät (fetch.sh, docker build, live-build mot Debians speglar, pip för `oden-linux`); bara den färdiga stickan ska fungera offline.
+  `build.sh --no-fetch` hoppar över `fetch.sh` när cache/ redan är komplett. Bygget misslyckas om en artefakts checksumma avviker.
+- Debian-paketen pinnas medvetet inte: releasen är den färdiga ISO:n, och ett nytt bygge är en ny release. SBOM:en dokumenterar vad som ingick.
 - Bygget skriver en SBOM (paket + artefaktversioner) till `build/out/SBOM.txt`.
 - Bygg i container (podman/docker).
 
 ## Klart när
 - `./build/build.sh` på ren maskin ger en bild, och `make-stick.sh` ger en stick.
-- Bilden bootar i QEMU/OVMF (`qemu-system-x86_64 -bios OVMF.fd -drive file=oden.img`).
+- Bilden bootar i QEMU/OVMF (`qemu-system-x86_64 -bios OVMF.fd -drive file=oden.iso,format=raw`).
+
+## Status make-stick.sh (skriven, ej körd mot riktig stick)
+Förkontroller före skrivning: flyttbar hel disk, >= 60 GB, bilden har exakt 2 partitioner, `maps/` finns
+(och `ollama/` med `--with-ai`) under `$ODEN_ASSETS` (standard `build/cache/assets`). Därefter: `sgdisk --zap-all`,
+`dd`, GPT (konverterar MBR vid behov), p2 (EFI) sätts till EF00, p3 `oden-assets` (ext4, innehåll + 5 % + 256 MiB),
+p4 `persistence` (resten, första 16 MiB nollade så att gammal LUKS-header inte blir kvar).
+Testat: syntax och sgdisk-sekvensen på en gles fil. Inte testat: dd/mount/mkfs mot en riktig enhet, och att
+bilden bootar (partitionstabellen är verifierad: p1 ISO-data + p2 EFI; `build.sh` efterbehandlar live-builds iso-hybrid med xorriso eftersom grub-efi ensam inte ger MBR/GPT).
+p3 monteras skrivskyddat på `/srv/oden-assets` via `build/overlay/etc/fstab` (`nofail`). Overifierat att live-boot lämnar raden orörd.

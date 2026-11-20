@@ -1,0 +1,13 @@
+[Unit]
+Description=Lokal kartserver (go-pmtiles) på 127.0.0.1:8081
+# Port 8080 används av Oden.
+ConditionPathExists=%h/.oden-persist
+ConditionPathExists=/srv/oden-assets/maps
+
+[Service]
+# Flaggorna kontrollerade mot go-pmtiles v1.31.2 (pmtiles serve --help). Rutorna nås som /sverige/{z}/{x}/{y}.webp (filnamn utan .pmtiles).
+ExecStart=/opt/pmtiles/pmtiles serve /srv/oden-assets/maps --port 8081 --interface=127.0.0.1 --cors=app://obsidian.md
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

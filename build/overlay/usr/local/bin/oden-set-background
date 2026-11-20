@@ -1,0 +1,18 @@
+#!/bin/sh
+# Sätter ODEN-bakgrunden på alla anslutna skärmar (xfdesktop skapar sina inställningar först vid start, och
+# skärmnamnen varierar mellan datorer, därför görs det här vid varje inloggning i stället för en fast fil).
+f=/usr/share/oden/background.png
+[ -f "$f" ] || exit 0
+sleep 3
+for m in $(xrandr --query 2>/dev/null | awk '/ connected/ {print $1}'); do
+  for w in 0 1 2 3; do
+    b="/backdrop/screen0/monitor$m/workspace$w"
+    xfconf-query -c xfce4-desktop -n -t string -p "$b/last-image" -s "$f"
+    xfconf-query -c xfce4-desktop -n -t int -p "$b/image-style" -s 5     # 5 = zoomad, fyller skärmen
+    xfconf-query -c xfce4-desktop -n -t int -p "$b/color-style" -s 0
+  done
+done
+# Äldre/andra namngivningar som redan finns
+for p in $(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep '/last-image$'); do
+  xfconf-query -c xfce4-desktop -p "$p" -s "$f"
+done

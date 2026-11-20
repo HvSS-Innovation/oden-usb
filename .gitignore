@@ -1,4 +1,5 @@
 # Kartfiler och modeller är stora och ska inte versionshanteras
 *.mbtiles
 *.pmtiles
-build/out/
+build/out
+build/cache/
