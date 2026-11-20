@@ -18,7 +18,7 @@ som exakt sådana rutor, lokalt, utan nät.
 Skriptet `build/scripts/map/render-map.sh` gör hela kedjan (källa, stil, tileserver-gl, rutor, PMTiles). Så körs det på en annan maskin,
 vilka zoomdjup som är rimliga (tider och storlekar) och hur resultatet förs in i bygget står i **`docs/KARTRENDERING.md`**.
 Prov (2026-11-20): tileserver-gl 5.7.0 renderar Protomaps-stilen med svenska namn, ca 21 rutor/s med 3 arbetare. Vektorfilen räcker till z15, men
-z14 (1,15 miljoner rutor, ca 8 GB) är målet; z12 används för PoC. Leaflet förstorar över sista nivån (`maxNativeZoom`, ställs via `build/map.conf`).
+z14 (1,15 miljoner rutor, ca 3 GB: rutorna blir mindre med zoomnivån) är målet; z12 används för PoC. Leaflet förstorar över sista nivån (`maxNativeZoom`, ställs via `build/map.conf`).
 
 ## Uppgifter
 1. Kartfilen ligger på p3: `/srv/oden-assets/maps/sverige.pmtiles`. Ny karta = ny stick.

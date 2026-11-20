@@ -27,9 +27,9 @@ say() { echo "[$(date +%H:%M:%S)] $*"; }
 for t in docker curl git python3 sha256sum tar; do command -v "$t" >/dev/null || { echo "FEL: $t saknas" >&2; exit 1; }; done
 docker info >/dev/null 2>&1 || { echo "FEL: docker går inte att nå" >&2; exit 1; }
 
-# Diskutrymme: källa 4,1 GB + rutor (grovt 1 GB per zoomnivå över z12 i storleksordning) + konvertering (lika stor till)
+# Diskutrymme: källa 4,1 GB + MBTiles + PMTiles (z14 ca 3 GB var, mätt och extrapolerat)
 avail_gb=$(( $(df -Pk "$WORK" | awk 'NR==2 {print $4}') / 1048576 ))
-need_gb=$(( ZMAX >= 14 ? 30 : ZMAX >= 13 ? 15 : 10 ))
+need_gb=$(( ZMAX >= 14 ? 15 : 10 ))
 (( avail_gb >= need_gb )) || { echo "FEL: $avail_gb GB ledigt i $WORK, räknar med minst $need_gb GB för ZMAX=$ZMAX" >&2; exit 1; }
 say "arbetsmapp $WORK, z$ZMIN-$ZMAX, $WORKERS parallella, $avail_gb GB ledigt"
 

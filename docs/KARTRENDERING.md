@@ -8,7 +8,7 @@ och konverterar till PMTiles.
 ## Krav på maskinen
 - Linux x86_64 med **Docker** (kommandot `docker` ska fungera för din användare), `git`, `curl`, `python3`, `tar`, `sha256sum`.
 - Nät (källfilen är 4,1 GB; dessutom Docker-avbildningar och npm-paket).
-- Diskutrymme (skriptet kontrollerar): minst 10 GB för z12, 15 GB för z13, 30 GB för z14.
+- Diskutrymme (skriptet kontrollerar): minst 10 GB för z12–13 och 15 GB för z14 (källa 4,1 GB + MBTiles + PMTiles).
 - Rendering är processorbunden: fler kärnor ger nästan linjärt snabbare resultat. Minne: ca 1 GB per parallell arbetare.
 
 ## Välj zoomdjup
@@ -16,15 +16,15 @@ Antal rutor inom Sveriges ram (10,54–24,17 °Ö, 55,20–69,07 °N), per nivå
 
 | Till och med | Rutor (nivån) | Rutor (totalt) | Ungefärlig tid* | Ungefärlig storlek** | Duger till |
 |---|---|---|---|---|---|
-| z10 | 3 480 | 4 770 | någon minut | ~30 MB | översikt, test |
-| z11 | 13 667 | 18 437 | ~15 min | ~100 MB | länsnivå |
-| **z12** | 54 322 | 72 759 | ~1 timme | ~400 MB | stad/kommun (**PoC**) |
-| z13 | 215 592 | 288 351 | ~4 timmar | ~1,8 GB | stadsdel |
-| **z14** | 858 360 | 1 146 711 | ~15 timmar | ~8 GB | kvarter, gator (mål) |
-| z15 | 3 425 436 | 4 572 147 | dagar | ~30 GB | ej planerat |
+| z10 | 3 480 | 4 770 | någon minut | ~25 MB | översikt, test |
+| z11 | 13 667 | 18 437 | ~7 min | ~60 MB | länsnivå |
+| **z12** | 54 322 | 72 759 | ~25 min | ~200 MB | stad/kommun (**PoC**) |
+| z13 | 215 592 | 288 351 | ~1,7 timmar | ~0,8 GB | stadsdel |
+| **z14** | 858 360 | 1 146 711 | ~7 timmar | ~3 GB (2,5–5) | kvarter, gator (mål) |
+| z15 | 3 425 436 | 4 572 147 | ~1 dygn+ | ~10–12 GB | ej planerat |
 
-\* Mätt: ca 21 rutor/s med 3 parallella arbetare på en delad 4-kärnig maskin. En stor server med 16 kärnor och `WORKERS=16` bör ge 4–5 gånger det.
-\** Uppskattning ur medelstorleken på de lägre nivåerna (5–8 kB per ruta, identiska havsrutor delas). Mät och uppdatera här efter första körningen.
+\* Mätt: 21–46 rutor/s med 3 parallella arbetare på en delad 4-kärnig maskin (högre när maskinen inte var belastad). En stor server med 16 kärnor och `WORKERS=16` bör ge 3–5 gånger det.
+\** Extrapolerat ur mätningen på z0–12: medelstorleken faller med zoomnivån (7 kB vid z0, 5,7 kB vid z9, 3,7 kB vid z11, 3,2 kB vid z12, eftersom skog, åkrar och vatten ger enkla bilder) och ca 29 % av rutorna är identiska och delas. Städer drar upp snittet, så z14 kan bli upp till ca 5 GB. Uppdatera efter första z14-körningen.
 
 Map View förstorar rutorna över sista nivån (`letZoomBeyondMax`), så z12 går att använda ända in till gatunivå, men suddigt.
 **Sätt `MAP_MAXZOOM` i `build/map.conf` till det ZMAX du renderade.**
