@@ -2,6 +2,8 @@
 live-boot
 live-config
 live-config-systemd
+# live-config skapar användaren oden bara om user-setup finns (rekommenderat paket, därför explicit)
+user-setup
 systemd-sysv
 dbus-user-session
 cryptsetup

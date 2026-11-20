@@ -23,3 +23,10 @@
 | "Hämtningen misslyckades" (nätfel) | Internet bröts under hämtningen av kartor | Anslut och logga in igen; hämtningen fortsätter där den slutade |
 | "Kontrollsumman … stämmer inte" / "fel storlek" | Skadad eller manipulerad nedladdning (filen raderas) | Försök igen; upprepas det är källan fel: meddela den som byggt stickan |
 | Kartan visas inte på Med karta-stickan | `maps/` på mediet bind-monterades inte | `systemctl status oden-assets.service`, `findmnt /srv/oden-assets/maps`, `ls /run/live/medium/maps` |
+
+## Inloggningsruta i stället för autologin; `oden`/`live` fungerar inte
+Orsak (verifierad med felsökningsbild 2026-11-20): paketet `user-setup` saknades. live-config hoppar då över steget
+`0030-user-setup`, så användaren `oden` skapas aldrig (`getent passwd oden` tomt, `sudo: unknown user oden` i
+live-config-loggen, "could not identify user (from getpwnam(oden))" i journalen). Paketet är bara rekommenderat och
+bygget använder `--apt-recommends false`. Åtgärd: `user-setup` i paketlistan, och bygghooken avbryter om det saknas.
+Felsökning: bygg med `ODEN_DEBUG=1`; rapporten visas på tty1 efter ca 60 s (Ctrl+Alt+F1).

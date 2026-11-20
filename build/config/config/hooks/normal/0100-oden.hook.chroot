@@ -9,6 +9,9 @@ for u in hibernate.target hybrid-sleep.target suspend-then-hibernate.target \
   systemctl mask "$u" 2>/dev/null || true
 done
 
+# Utan user-setup hoppar live-config över 0030-user-setup: ingen användare, ingen inloggning.
+dpkg -s user-setup >/dev/null 2>&1 || { echo "FEL: user-setup saknas (live-config kan inte skapa användaren)" >&2; exit 1; }
+
 # Brandvägg och tidssynk på
 systemctl enable nftables.service systemd-timesyncd.service oden-assets.service
 
