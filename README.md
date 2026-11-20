@@ -4,8 +4,6 @@ Ett komplett ODEN-system som startar från en USB-sticka och går att köra helt
 
 Webbplats: https://hvss-innovation.github.io/oden-usb/
 
-> **Status:** bilden är byggd men inte provad på riktig hårdvara. Se [`docs/STATUS.md`](docs/STATUS.md).
-
 ## Varianter
 
 Tre ISO-filer som bränns med balenaEtcher:

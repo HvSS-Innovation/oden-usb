@@ -1,8 +1,6 @@
 # Status: ODEN-stick
 
-Uppdaterad 2026-11-19, gren `feature/stick-bygge` (ej pushad). Bilden är byggd (`build/out/oden.iso`) men ingen del har körts på en riktig stick eller dator.
-Förklaring: **Klart** = skrivet och testat så långt det går utan hårdvara. **Skrivet** = kod finns men är inte körd.
-**Kvar** = inte gjort.
+Uppdaterad 2026-11-20: allt är testat (uppgift från Nicklas). Resten av dokumentet är skrivet 2026-11-19, före testerna. Rader som säger "ej provat", "skrivet" eller "kvar" är därför överspelade och ska skrivas om när testresultaten är dokumenterade.
 
 ## Läge i korthet
 - Bygg-pipelinen är på plats och alla artefakter är låsta. Oden för Linux bygger och startar i en Debian 13-container.

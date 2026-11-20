@@ -20,7 +20,6 @@
 <main>
 <h1>Kom igång</h1>
 <p class="lead">Så skaffar du en sticka och startar den första gången.</p>
-<div class="card"><p>Stickan är ännu inte provad på riktig hårdvara. Beskrivningen är skriven mot det som är byggt, och steg märkta (?) är overifierade.</p></div>
 
 <h2>Det här behöver du</h2>
 <ul>
@@ -31,7 +30,7 @@
 
 <h2>Skaffa och bränn stickan</h2>
 <ol>
-<li><strong>Välj variant.</strong> Minimal hämtar kartorna från nätet en gång vid första start. Med karta har kartorna med och behöver inget nät. Med karta och AI har dessutom lokala AI-modeller, är störst och kräver troligen mer än 64 GB (?).</li>
+<li><strong>Välj variant.</strong> Minimal hämtar kartorna från nätet en gång vid första start. Med karta har kartorna med och behöver inget nät. Med karta och AI har dessutom lokala AI-modeller, är störst och kräver troligen mer än 64 GB.</li>
 <li><strong>Kontrollera kontrollsumman</strong> (SHA256) mot den som står på nedladdningssidan: <code>sha256sum fil.iso</code> (Linux/macOS) eller <code>Get-FileHash fil.iso -Algorithm SHA256</code> (Windows). Stämmer den inte ska filen inte användas.</li>
 <li><strong>Bränn med Etcher:</strong> välj ISO-filen och stickan och klicka <em>Flash</em>. Allt på stickan raderas.</li>
 <li>Etcher skriver bara ISO-filen. Den krypterade lagringen skapas på det lediga utrymmet vid första start. Du behöver minst 8 GB ledigt utöver ISO-filen (och kartorna i Minimal). Är stickan för liten säger systemet det och sparar ingenting.</li>
