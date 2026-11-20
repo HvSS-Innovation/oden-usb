@@ -31,6 +31,11 @@ canvas(1920, 1200, 820, 560, 600).save(out("config/config/bootloaders/grub-pc/sp
 # Skrivbord/inloggning: logon centrerad
 os.makedirs(out("overlay/usr/share/oden"), exist_ok=True)
 canvas(1920, 1200, 760, 960, 600).save(out("overlay/usr/share/oden/background.png"), optimize=True)
+# Plymouth (uppstartsbild): loggan med genomskinliga, mjuka kanter över temats bakgrundsfärg
+os.makedirs(out("overlay/usr/share/plymouth/themes/oden"), exist_ok=True)
+im, m = feathered(560, 70)
+im = im.convert("RGBA"); im.putalpha(m)
+im.save(out("overlay/usr/share/plymouth/themes/oden/watermark.png"), optimize=True)
 # Ikon
 os.makedirs(out("overlay/usr/share/icons/hicolor/256x256/apps"), exist_ok=True)
 logo.resize((256, 256), Image.LANCZOS).save(out("overlay/usr/share/icons/hicolor/256x256/apps/oden.png"), optimize=True)

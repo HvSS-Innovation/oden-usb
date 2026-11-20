@@ -17,6 +17,9 @@ keyboard-configuration
 # Secure Boot (Debians signerade kedja)
 shim-signed
 grub-efi-amd64-signed
+# Uppstartsbild (plymouth) med ODEN-tema; spinner-temat ger lösenfrasdialogen vid upplåsning
+plymouth
+plymouth-themes
 # Skrivbord
 xorg
 xfce4

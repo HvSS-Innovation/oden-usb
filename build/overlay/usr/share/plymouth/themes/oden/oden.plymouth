@@ -1,0 +1,33 @@
+[Plymouth Theme]
+Name=ODEN
+Description=ODEN: logga på olivgrön bakgrund. Övriga filer (snurra, lösenfrasdialog) kopieras från temat spinner vid bygget.
+ModuleName=two-step
+
+[two-step]
+Font=DejaVu Sans 12
+TitleFont=DejaVu Sans 30
+ImageDir=/usr/share/plymouth/themes/oden
+DialogHorizontalAlignment=.5
+DialogVerticalAlignment=.8
+TitleHorizontalAlignment=.5
+TitleVerticalAlignment=.8
+HorizontalAlignment=.5
+VerticalAlignment=.85
+WatermarkHorizontalAlignment=.5
+WatermarkVerticalAlignment=.4
+Transition=none
+TransitionDuration=0.0
+BackgroundStartColor=0x606959
+BackgroundEndColor=0x606959
+ProgressBarBackgroundColor=0x7b8470
+ProgressBarForegroundColor=0x1f2733
+MessageBelowAnimation=true
+
+[boot-up]
+UseEndAnimation=false
+
+[shutdown]
+UseEndAnimation=false
+
+[reboot]
+UseEndAnimation=false

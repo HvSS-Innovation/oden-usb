@@ -21,10 +21,14 @@
 ## Första start
 1. Sätt i stickan, starta datorn och välj USB i startmenyn (ofta F12, F10 eller Esc).
 2. Skrivbordet startar. Första gången frågar ODEN efter en **lösenfras** (två gånger). Den krypterar allt du sparar på stickan.
-   Lösenfrasen ska vara minst 16 tecken och får bara innehålla bokstäverna a-z (inte å, ä, ö), siffror och mellanslag,
-   eftersom tangentbordet vid start inte alltid har svensk layout. Fyra ord med mellanslag är ett bra val.
+   Lösenfrasen får bara innehålla bokstäverna a-z (inte å, ä, ö), siffror och mellanslag, eftersom tangentbordet vid
+   start inte alltid har svensk layout. Det finns ingen minsta längd, men längre är säkrare; fyra ord med mellanslag är ett bra val.
+   Väljer du **Nej** på frågan om att skapa den krypterade lagringen skapas ingen lagring: inget sparas och allt är borta
+   när datorn stängs av.
    **Glömmer du lösenfrasen går datat inte att få tillbaka.** Det finns ingen återställning.
-3. Skapandet av den krypterade lagringen tar en stund. Datorn startar sedan om.
+3. Skapandet av den krypterade lagringen tar en stund. Datorn startar sedan om. **Håll då ner Alt (Mac, ⌥ Option) eller tryck F12
+   (PC; ibland F2, F10, F11 eller Esc)** tills startmenyn visas, och välj stickan igen (ofta "EFI Boot"). Den här
+   instruktionen visas också i dialogen före omstarten.
 4. **Bara Minimal:** efter omstarten och upplåsningen frågar ODEN om kartorna ska hämtas (ca storleken visas).
    Välj *Hämta nu* och låt datorn vara på och ansluten till internet tills det är klart; en förloppsruta visas.
    Avbryts det (nätfel, utdragen sladd) fortsätter hämtningen där den slutade nästa gång du loggar in. Välj du *Senare* frågar den igen vid nästa inloggning.

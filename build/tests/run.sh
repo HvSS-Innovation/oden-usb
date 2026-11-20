@@ -43,11 +43,12 @@ for j in overlay/etc/firefox-esr/policies/policies.json overlay/etc/skel/.config
   python3 -m json.tool "$j" >/dev/null 2>&1 && ok "json $j" || bad "json $j"
 done
 
-pp() { printf '%s' "$1" | ODEN_MINLEN=16 overlay/usr/local/bin/oden-passphrase-ok; }
+pp() { printf '%s' "$1" | overlay/usr/local/bin/oden-passphrase-ok; }
 pp "fyra vanliga ord pa rad" && ok "lösenfras: giltig godkänns" || bad "lösenfras: giltig godkänns"
 pp "Hemligt lösenord 12345" && bad "lösenfras: å/ö avvisas" || ok "lösenfras: å/ö avvisas"
 pp "tillrackligt-langt-men-bindestreck" && bad "lösenfras: symboler avvisas" || ok "lösenfras: symboler avvisas"
-pp "kort fras" && bad "lösenfras: för kort avvisas" || ok "lösenfras: för kort avvisas"
+pp "abc" && ok "lösenfras: kort fras godkänns utan längdkrav" || bad "lösenfras: kort fras godkänns utan längdkrav"
+printf %s "abc" | ODEN_MINLEN=16 overlay/usr/local/bin/oden-passphrase-ok && bad "lösenfras: ODEN_MINLEN kan ställa krav" || ok "lösenfras: ODEN_MINLEN kan ställa krav"
 pp "" && bad "lösenfras: tom avvisas" || ok "lösenfras: tom avvisas"
 
 if command -v sgdisk >/dev/null; then

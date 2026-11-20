@@ -24,7 +24,7 @@ Förklaring: **Klart** = skrivet och testat så långt det går utan hårdvara. 
 | 05 Kartor | Kvar | Källan (vektor, 4 GB) är låst. Rasterrendering av z0–14 är inte gjord. `pmtiles.service` är skriven men flaggsyntaxen för `serve` är overifierad. Map View-konfigurationen mot `127.0.0.1:8081` är inte gjord. p3 monteras via `fstab` (overifierat) |
 | 06 AI / Ollama | Skrivet | `ollama.service`, RAM-kontroll, NVIDIA-paket i paketlistan, Ollama låst. Modeller (`qwen3-vl:4b`, `qwen3:8b`) är inte hämtade. Inget provat |
 | 08 ISO-varianter (Etcher) | Skrivet | `oden-make-persist` (skapar partitioner efter ISO-datan, `sgdisk -e`/`partx -a`), `oden-assets-bind` (+ `oden-assets.service`), `oden-fetch-assets` (kartor vid första start), `ODEN_VARIANTS` i `build.sh`, `release-json.sh`, `site/ladda-ner.html`. Testat: filavbilder, fejkad mount/curl, xorriso i Docker med 4,3 GB-fil. Ej provat: allt på en riktig stick (partx live, mount av fil >4 GiB, bind-montering, nedladdning) |
-| 09 ODEN-utseende | Skrivet | GRUB-tema med Odens logga och svenska menyer, skrivbordsbakgrund, inloggningsbild, genvägar. Plymouth utelämnat. Ej provat på hårdvara (`plan/09-oden-utseende.md`) |
+| 09 ODEN-utseende | Skrivet | GRUB-tema med Odens logga och svenska menyer, skrivbordsbakgrund, inloggningsbild, genvägar. Plymouth-tema (uppstartsbild) tillagt. Ej provat på hårdvara (`plan/09-oden-utseende.md`) |
 | 07 Test, härdning, dokumentation | Delvis | Användarguide, adminguide, felsökning och mall för HW-matris skrivna. Kvar: maskinvarutest, E2E mot ODEN-analys, paketfångst, strömavbrott, `oden-wipe`-test |
 
 ## Artefakter (`build/artifacts.lock`)
@@ -40,7 +40,7 @@ Förklaring: **Klart** = skrivet och testat så långt det går utan hårdvara. 
 | sweden-osm.pmtiles | OSM 2026-05-20 | Låst men används inte av bilden (källa för rastret) |
 
 ## Kända problem och beslut att ta
-- Min längd 16 på lösenfrasen är ett eget val (`ODEN_MINLEN`); `KRAVSPEC` listar lösenfrasstyrka under "Senare".
+- Lösenfrasen har ingen minsta längd (beslut 2026-11-20, för test); `ODEN_MINLEN` kan sätta en. Teckenbegränsningen kvarstår. `KRAVSPEC` listar lösenfrasstyrka under "Senare".
 - AI-modeller i `minimal` (hämtas inte från nätet än; `karta-ai` täcker AI).
 - Oden är en "onefile"-binär som packar upp sig själv (ca 200 MB) i `/tmp` (RAM) vid varje start. Alternativ: bygga "onedir".
 - Oden kan öppna webbläsaren själv vid första start (`_welcome_first_start`), och stickan autostartar också en webbläsare. Ej provat.

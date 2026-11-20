@@ -18,7 +18,7 @@
 | Notisen "Ingen persistens … hittar inte boot-mediet" eller "ingen läsbar GPT" | Systemet startades från skiva/annan källa, eller bildens partitionstabell skadades | Bränn om stickan med Etcher och starta från USB |
 | Notisen "Hittade inte partitionen för lagring" efter att den skapats | Kärnan såg inte den nya partitionen (`partx`) | Starta om; finns den inte då: `sudo partx -a /dev/sdX` (stickan) och kontrollera `lsblk -o NAME,PARTLABEL`. Rapportera i HW-MATRIS |
 | Fråga "En tidigare installation av den krypterade lagringen blev aldrig klar" | Strömavbrott, utdragen stick eller `oden-wipe` | Svara *Gör om*; inget data har sparats på den |
-| Lösenfrasen avvisas | Innehåller å/ä/ö/symboler eller är kortare än 16 tecken | Använd a-z, 0-9 och mellanslag, minst 16 tecken (t.ex. fyra ord) |
+| Lösenfrasen avvisas | Innehåller å/ä/ö eller symboler | Använd a-z, 0-9 och mellanslag (t.ex. fyra ord) |
 | "Kartor kan inte hämtas: hittade ingen assets-partition" | Minimal-stickan fick ingen assets-partition (skapas vid första start) | Bränn om och gör första starten om; kontrollera `lsblk -o NAME,PARTLABEL` (ska visa `oden-assets` och `persistence`) |
 | "Hämtningen misslyckades" (nätfel) | Internet bröts under hämtningen av kartor | Anslut och logga in igen; hämtningen fortsätter där den slutade |
 | "Kontrollsumman … stämmer inte" / "fel storlek" | Skadad eller manipulerad nedladdning (filen raderas) | Försök igen; upprepas det är källan fel: meddela den som byggt stickan |

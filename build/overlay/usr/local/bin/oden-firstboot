@@ -45,19 +45,21 @@ fi
 while :; do
   # zenity --password visar bara en titel; --entry --hide-text har en brödtext där kraven syns ordentligt.
   p1=$(zenity --entry --hide-text --width=480 --title="ODEN: välj lösenfras" \
-    --text="Välj en lösenfras som krypterar allt du sparar på stickan.\n\nKrav:\n  • minst 16 tecken\n  • bara bokstäverna a-z (inte å, ä, ö), siffror och mellanslag\n  • inga symboler (. , - _ ! och liknande)\n\nTips: fyra ord med mellanslag, t.ex. \"gron buss pa torsdag\".\nGlömmer du den går datat inte att få tillbaka." ) || exit 0
+    --text="Välj en lösenfras som krypterar allt du sparar på stickan.\n\nKrav:\n  • bara bokstäverna a-z (inte å, ä, ö), siffror och mellanslag\n  • inga symboler (. , - _ ! och liknande)\n\nTips: längre är säkrare, t.ex. fyra ord med mellanslag: \"gron buss pa torsdag\".\nGlömmer du den går datat inte att få tillbaka." ) || exit 0
   p2=$(zenity --entry --hide-text --width=480 --title="ODEN: upprepa lösenfrasen" --text="Skriv samma lösenfras igen.") || exit 0
   # Vid boot skrivs frasen i initramfs utan säker layout: bara tecken som är samma på svensk och amerikansk layout.
   printf '%s' "$p1" | oden-passphrase-ok && rc=0 || rc=$?
   case $rc in
     1) zenity --error --text="Lösenfrasen får bara innehålla bokstäverna a-z (inte å, ä, ö), siffror och mellanslag.\nSymboler och å/ä/ö kan skrivas fel när datorn startar och skulle låsa ute dig."; continue ;;
-    2) zenity --error --text="Lösenfrasen är för kort. Använd minst 16 tecken, t.ex. fyra ord med mellanslag."; continue ;;
+    2) zenity --error --text="Lösenfrasen är för kort."; continue ;;
   esac
   [[ "$p1" == "$p2" ]] && break
   zenity --error --text="Lösenfraserna är olika. Försök igen."
 done
 
-zenity --question --text="Skapar krypterad lagring på stickan. Det kan ta en stund.\nGlöms lösenfrasen går data inte att återfå." --ok-label="Fortsätt" || exit 0
+zenity --question --width=480 --title="ODEN: skapa krypterad lagring" \
+  --text="Skapar krypterad lagring på stickan. Det kan ta en stund.\nGlöms lösenfrasen går data inte att återfå.\n\n<b>Väljer du Nej fungerar inte stickan som tänkt:</b> då skapas ingen lagring, så inget du gör sparas och allt är borta när datorn stängs av." \
+  --ok-label="Fortsätt" --cancel-label="Nej, spara inget" || { note "Ingen persistens" "Inget sparas på stickan. Allt försvinner när datorn stängs av."; exit 0; }
 
 mnt=$(mktemp -d)
 cleanup() {
@@ -93,5 +95,5 @@ cleanup; trap - EXIT
 $S cryptsetup config --label oden "$part" || { note "Installationen misslyckades" "Kunde inte slutföra krypterad lagring. Starta om och försök igen."; exit 1; }
 
 if [[ "${ODEN_NOREBOOT:-}" == 1 ]]; then echo "klart (ingen omstart)"; exit 0; fi
-zenity --info --text="Klart. Datorn startar om och frågar sedan efter lösenfrasen vid varje start."
+zenity --info --width=520 --title="ODEN: klart" --text="Klart. Datorn startar nu om.\n\n<b>Starta från stickan igen:</b> när datorn startar om, håll nere en tangent tills en startmeny visas och välj stickan (ofta \"EFI Boot\"):\n  • Mac: håll ner <b>Alt</b> (⌥ Option)\n  • PC: <b>F12</b> (ibland F2, F10, F11 eller Esc)\n\nDärefter frågar ODEN efter lösenfrasen vid varje start."
 systemctl reboot

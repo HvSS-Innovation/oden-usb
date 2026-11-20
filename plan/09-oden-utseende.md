@@ -30,8 +30,10 @@ bakgrunden under uppstart och inloggning.
   "Verktyg...". Svensk hjälprad. gfxmode höjd från 800x600. live-builds egen text (Built, versioner) finns i dess splash och är borta.
 - Bakgrund: `usr/share/oden/background.png` sätts på alla skärmar av `oden-set-background` (autostart); lightdm-gtk-greeter använder samma.
 - Genvägar: skrivbordet (`/etc/skel/Desktop`: Oden, Obsidian, Terminal) och programmenyn (`/usr/share/applications`). Ikon: `oden.png`.
-- **Plymouth utelämnat:** paketet ingår inte i bilden och skulle lägga till initramfs-hookar. Uppstarten är textläge tills skrivbordet
-  startar. Tas upp igen om det behövs.
+- **Plymouth (uppstartsbild):** efter första provet visade skärmen en svart ruta mellan GRUB och skrivbordet. Temat `oden` är spinner-temat
+  (två-stegs-modulen, snurra och lösenfrasdialog för upplåsning vid boot) med loggan som vattenstämpel och bakgrund `#606959`.
+  `oden.plymouth` och `watermark.png` ligger i overlayn; bygghooken kopierar resten från spinner och kör `plymouth-set-default-theme oden`.
+  Risk: lösenfrasprompten vid upplåsning ritas av temat; provas på hårdvara. Går den att missa trycker man Esc för textläge.
 
 ## Klart när
 - Startmenyn visar ODEN-logga och svenska texter, och går att läsa på MacBook-skärmen.
