@@ -3,3 +3,4 @@
 # Fyll i när den renderade rasterkartan (steg 05) är uppladdad, t.ex.:
 # maps/sverige.pmtiles  https://<bucket>/sverige.pmtiles  <sha256>  <byte>
 # build.sh avbryter minimal-bygget om raden saknas eller innehåller PENDING.
+maps/sverige.pmtiles  https://f003.backblazeb2.com/file/kartverktyget/sverige-raster.pmtiles  85659a9ed5e97e4e87c005e752177f8e07d1bed1cd4607b11d9783d0803e1d8e  2250443850
