@@ -1,0 +1,9 @@
+# ODEN: skärmskala och pekplatta-hjälp. Sourcas av Xsession före skrivbordet startar (efter dbus, därför 76).
+if command -v oden-hidpi >/dev/null 2>&1; then
+  ODEN_SCALE_NOW=$(oden-hidpi scale 2>/dev/null || echo 1)
+  oden-hidpi apply "$ODEN_SCALE_NOW" >/dev/null 2>&1 || true
+  # Program som inte läser XFCE-inställningarna (Electron, ev. andra) får skalan via miljön
+  [ "$ODEN_SCALE_NOW" = 2 ] && export GDK_SCALE=2
+fi
+# Mjuk, pixelnära rullning och bättre gester med pekplatta i Firefox
+export MOZ_USE_XINPUT2=1

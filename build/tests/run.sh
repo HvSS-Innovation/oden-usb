@@ -51,6 +51,20 @@ pp "abc" && ok "lösenfras: kort fras godkänns utan längdkrav" || bad "lösenf
 printf %s "abc" | ODEN_MINLEN=16 overlay/usr/local/bin/oden-passphrase-ok && bad "lösenfras: ODEN_MINLEN kan ställa krav" || ok "lösenfras: ODEN_MINLEN kan ställa krav"
 pp "" && bad "lösenfras: tom avvisas" || ok "lösenfras: tom avvisas"
 
+# oden-hidpi: skala ur xrandr (fejkad), överstyrning via variabel och kärnparameter
+mkdir -p "$t/xb"; hi="$PWD/overlay/usr/local/bin/oden-hidpi"
+fx() { printf '#!/bin/sh\necho "Screen 0: minimum 320 x 200, current %s"\necho "%s"\n' "$1" "$2" > "$t/xb/xrandr"; chmod +x "$t/xb/xrandr"; }
+fx "2880 x 1800" "eDP-1 connected primary 2880x1800+0+0 (normal left inverted right x axis y axis) 331mm x 207mm"
+[[ "$(PATH="$t/xb:$PATH" ODEN_CMDLINE=/dev/null "$hi" scale)" == 2 ]] && ok "hidpi: retina (2880x1800, 331 mm) ger skala 2" || bad "hidpi: retina ger skala 2"
+fx "1920 x 1080" "eDP-1 connected primary 1920x1080+0+0 (normal left inverted right x axis y axis) 344mm x 194mm"
+[[ "$(PATH="$t/xb:$PATH" ODEN_CMDLINE=/dev/null "$hi" scale)" == 1 ]] && ok "hidpi: 1080p ger skala 1" || bad "hidpi: 1080p ger skala 1"
+fx "3840 x 2160" "HDMI-1 connected 3840x2160+0+0 (normal left inverted right x axis y axis) 1600mm x 900mm"
+[[ "$(PATH="$t/xb:$PATH" ODEN_CMDLINE=/dev/null "$hi" scale)" == 1 ]] && ok "hidpi: stor 4K-TV (låg täthet) ger skala 1" || bad "hidpi: 4K-TV ger skala 1"
+[[ "$(PATH="$t/xb:$PATH" ODEN_SCALE=2 "$hi" scale)" == 2 ]] && ok "hidpi: ODEN_SCALE överstyr" || bad "hidpi: ODEN_SCALE överstyr"
+echo "boot=live oden.scale=2 quiet" > "$t/cmdline"
+[[ "$(PATH="$t/xb:$PATH" ODEN_CMDLINE="$t/cmdline" "$hi" scale)" == 2 ]] && ok "hidpi: oden.scale på kärnraden överstyr" || bad "hidpi: oden.scale på kärnraden"
+PATH="/usr/bin:/bin" ODEN_CMDLINE=/dev/null "$hi" scale 2>/dev/null | grep -qx 1 && ok "hidpi: utan xrandr blir skala 1" || bad "hidpi: utan xrandr"
+
 if command -v sgdisk >/dev/null; then
   mk() { rm -f "$t/d.img"; truncate -s "$1" "$t/d.img"; sgdisk -n 1:2048:+10M -n 2:0:+2M "$t/d.img" >/dev/null; sgdisk -e "$t/d.img" >/dev/null 2>&1 || true
          truncate -s "$2" "$t/d.img"; }

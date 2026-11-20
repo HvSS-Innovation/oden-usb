@@ -44,6 +44,10 @@
 
 ## Daglig användning
 - Obsidian öppnar ODEN-valvet automatiskt. Kartan visas utan internet (i Minimal först när kartorna har hämtats).
+- **Skärm:** på högupplösta skärmar (t.ex. MacBook retina) görs allt dubbelt så stort automatiskt vid inloggning. Passar det inte kan du
+  välja skala i startmenyn: tryck `e` på "Starta ODEN" och lägg till `oden.scale=1` (eller `oden.scale=2`) på raden som börjar med `linux`.
+- **Pekplatta:** rulla med två fingrar (naturlig riktning, som på Mac), knacka = klick, tryck med två fingrar = högerklick, tre = mittenklick,
+  dra med knackning. Vill du ha vanlig rullriktning: `NaturalScrolling` i `/etc/X11/xorg.conf.d/40-libinput-touchpad.conf` (kräver nytt bygge).
 - TAK-servrar och certifikat lägger du in själv i Odens gränssnitt. Inget är förinställt.
 - Utan nätverk fungerar analys som vanligt; mottagning av Signal-meddelanden pausar tills nät finns.
 - AI (Ollama) startar bara på datorer med minst 16 GB RAM, och bara om stickan byggts med AI.

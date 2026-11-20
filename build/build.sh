@@ -47,6 +47,7 @@ mkdir -p out/lb
 cp -r config/. out/lb/
 mkdir -p out/lb/config/includes.chroot
 cp -r overlay/. out/lb/config/includes.chroot/
+[[ "${ODEN_DEBUG:-}" == 1 ]] && { echo "OBS: felsökningsbild (ODEN_DEBUG=1), inte för utdelning" >&2; cp -a debug-overlay/. out/lb/config/includes.chroot/; }
 scripts/stage.sh out/lb/config/includes.chroot
 
 docker run --rm --privileged -e OWNER="$(id -u):$(id -g)" -v "$PWD/out/lb":/lb -w /lb oden-builder \

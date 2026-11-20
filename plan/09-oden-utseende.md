@@ -40,6 +40,11 @@ bakgrunden under uppstart och inloggning.
   (kontrollerat i Obsidians kod); annars visas dialogen "Slå på community-plugins" och valvet ser ut som en ren installation.
   Formatet på LevelDB-nyckeln är antaget (`_app://obsidian.md\0\1enable-plugin-<id>`); fungerar det inte syns dialogen som förut.
 
+- **Högupplöst skärm och pekplatta:** `oden-hidpi` (skala 1/2 ur xrandr, `oden.scale=` överstyr) sätter `Gdk/WindowScalingFactor`, Xft/DPI 96 och
+  markörstorlek via `/etc/X11/Xsession.d/76oden-hidpi` före skrivbordet; Obsidian får `--force-device-scale-factor`, Firefox `MOZ_USE_XINPUT2=1`.
+  Pekplatta (libinput): tvåfingersrullning med naturlig riktning, clickfinger (två fingrar = högerklick), knackning och dra. Kärnparametern
+  `fbcon=font:TER16x32` ger större text i textläge; GRUB provar 1440x900 först. Overifierat på hårdvara.
+
 ## Klart när
 - Startmenyn visar ODEN-logga och svenska texter, och går att läsa på MacBook-skärmen.
 - Uppstart, inloggning och skrivbord har samma utseende.

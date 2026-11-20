@@ -24,6 +24,11 @@
 | "Kontrollsumman … stämmer inte" / "fel storlek" | Skadad eller manipulerad nedladdning (filen raderas) | Försök igen; upprepas det är källan fel: meddela den som byggt stickan |
 | Kartan visas inte på Med karta-stickan | `maps/` på mediet bind-monterades inte | `systemctl status oden-assets.service`, `findmnt /srv/oden-assets/maps`, `ls /run/live/medium/maps` |
 
+## Allt är för litet eller för stort på skärmen
+`oden-hidpi` väljer skala 1 eller 2 vid varje inloggning ur skärmens pixeltäthet (minst 144 dpi och 2000 pixlar bred ger 2). Överstyr
+genom att trycka `e` i startmenyn och lägga till `oden.scale=1` eller `oden.scale=2` på `linux`-raden. Kontrollera värdet med `oden-hidpi scale`
+och vad skärmen rapporterar med `xrandr --current`.
+
 ## Inloggningsruta i stället för autologin; `oden`/`live` fungerar inte
 Orsak (verifierad med felsökningsbild 2026-11-20): paketet `user-setup` saknades. live-config hoppar då över steget
 `0030-user-setup`, så användaren `oden` skapas aldrig (`getent passwd oden` tomt, `sudo: unknown user oden` i
