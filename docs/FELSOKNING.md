@@ -24,6 +24,11 @@
 | "Kontrollsumman … stämmer inte" / "fel storlek" | Skadad eller manipulerad nedladdning (filen raderas) | Försök igen; upprepas det är källan fel: meddela den som byggt stickan |
 | Kartan visas inte på Med karta-stickan | `maps/` på mediet bind-monterades inte | `systemctl status oden-assets.service`, `findmnt /srv/oden-assets/maps`, `ls /run/live/medium/maps` |
 
+## Kartan visar "Tile Unavailable" eller hämtar från cartocdn
+Map View lägger själv tillbaka en källa som heter "CartoDB" om den saknas. Bygget byter pluginets standardkälla i `main.js` mot den lokala kartan
+(`scripts/stage.sh`). Kontrollera med Ctrl+Shift+I → Network i Obsidian att rutorna hämtas från `127.0.0.1:8081/sverige/…`. Rutor över kartans
+sista zoomnivå (`MAP_MAXZOOM` i `build/map.conf`) ger 404.
+
 ## Tecknen hamnar fel på ett Mac-tangentbord (§ och < omkastade, @ eller | saknas)
 På Apple-datorer sätts svensk Mac-layout (`se`, variant `mac`) av `oden-keyboard`. Är `§` och `<` ändå omkastade är det kärnans `hid_apple`:
 prova kärnparametern `hid_apple.iso_layout=0` (eller `1`) på `linux`-raden i startmenyn (tryck `e`). Lösenfrasen (a–z, siffror, mellanslag) påverkas inte.

@@ -35,6 +35,9 @@ bakgrunden under uppstart och inloggning.
   `oden.plymouth` och `watermark.png` ligger i overlayn; bygghooken kopierar resten från spinner och kör `plymouth-set-default-theme oden`.
   Risk: lösenfrasprompten vid upplåsning ritas av temat; provas på hårdvara. Går den att missa trycker man Esc för textläge.
 
+- **Map View och CartoDB (hittat vid första provet, "Tile Unavailable"):** pluginet lägger tillbaka en källa som heter "CartoDB" först i listan om den
+  saknas, så index 0 blev CartoDB (externa anrop) trots vår egen källa. `stage.sh` byter därför pluginets standardkälla i `main.js` mot den lokala
+  (bygget stoppas om koden inte hittas). Sök, ruttning och Google Places i pluginet ringer bara ut när användaren själv startar dem.
 - **Obsidian startläge:** `scripts/make-obsidian-state.sh` skriver `obsidian.json` (valvet `~/ODEN-valv` registrerat, id `6f64656e76616c76`) och
   förfyller Chromiums localStorage med `enable-plugin-<id>=true`. Obsidian slår på community-plugins bara om den nyckeln är `true`
   (kontrollerat i Obsidians kod); annars visas dialogen "Slå på community-plugins" och valvet ser ut som en ren installation.

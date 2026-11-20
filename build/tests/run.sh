@@ -76,6 +76,7 @@ ODEN_DMI_VENDOR="$t/vend" ODEN_SETXKBMAP="$t/fakexkb" overlay/usr/local/bin/oden
 
 # stage: Map View får bara den lokala kartkällan (inga externa tileservrar)
 fake_cache; ( cd "$w" && mkdir -p v-2/.obsidian/plugins/obsidian-map-view && echo n > v-2/note.md
+  printf "mapSources: [\\n        {\\n            name: 'CartoDB',\\n            urlLight: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',\\n            preset: true,\\n        },\\n    ],\\n" > v-2/.obsidian/plugins/obsidian-map-view/main.js
   echo '{"mapSources":[{"name":"CartoDB","urlLight":"https://a.basemaps.cartocdn.com/x/{z}/{x}/{y}.png","preset":true},{"name":"OSM","urlLight":"https://tile.openstreetmap.org/{z}/{x}/{y}.png"}],"letZoomBeyondMax":false,"cacheAllTiles":true,"defaultState":{"chosenMapSource":1,"mapZoom":14},"savedStates":[{"chosenMapSource":1,"mapZoom":9}]}' > v-2/.obsidian/plugins/obsidian-map-view/data.json
   python3 -m zipfile -c "$t/c/oden-valv" v-2 ); rm -rf "$t/root"; mkdir "$t/root"
 CACHE="$t/c" scripts/stage.sh "$t/root" >/dev/null 2>&1
@@ -87,6 +88,8 @@ assert len(d["mapSources"]) == 1 and d["mapSources"][0]["urlLight"].startswith("
 assert d["mapSources"][0]["maxZoom"] == 12 and d["letZoomBeyondMax"] is True and d["cacheAllTiles"] is False
 assert d["defaultState"]["chosenMapSource"] == 0 and d["savedStates"][0]["chosenMapSource"] == 0
 assert d["defaultState"]["mapZoom"] == 12 and d["savedStates"][0]["mapZoom"] == 9   # nedkläm bara det som är för högt
+mj = open(sys.argv[1].replace("data.json", "main.js")).read()
+assert "cartocdn" not in mj and "127.0.0.1:8081" in mj and "maxZoom: 12" in mj
 PY
 
 # stage: release-tarball med en platt binär (som Odens Linux-release) hamnar i opt/oden/oden

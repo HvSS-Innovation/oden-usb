@@ -60,6 +60,24 @@ def fix(st):
 fix(d.get("defaultState"))
 for st in d.get("savedStates", []) or []: fix(st)
 json.dump(d, open(p, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+
+# Map View lägger själv tillbaka en källa som heter som pluginets standard (CartoDB) först i listan om den saknas, och då blir
+# index 0 = CartoDB (externa anrop). Därför byts själva standardkällan i main.js mot den lokala; då räknas vår källa som den.
+mj = os.path.join(os.path.dirname(p), "main.js")
+src = open(mj, encoding="utf-8").read()
+old = ("            name: 'CartoDB',\n"
+       "            urlLight: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',\n"
+       "            preset: true,")
+new = ("            name: 'ODEN (lokal karta)',\n"
+       "            urlLight: 'http://127.0.0.1:8081/sverige/{z}/{x}/{y}.webp',\n"
+       "            maxZoom: %d,\n"
+       "            preset: true," % maxz)
+if src.count(old) != 1:
+    sys.exit("FEL: Map Views standardkälla hittades inte i main.js (pluginet har ändrats; uppdatera patchen i stage.sh)")
+src = src.replace(old, new)
+if "cartocdn" in src:
+    sys.exit("FEL: main.js innehåller fortfarande cartocdn")
+open(mj, "w", encoding="utf-8").write(src)
 PY
   grep -q 127.0.0.1:8081 "$mv_data" || { echo "FEL: kunde inte sätta lokal kartkälla i Map View" >&2; exit 1; }
   ! grep -qE "cartocdn|tile\.openstreetmap" "$mv_data" || { echo "FEL: Map View pekar fortfarande på externa kartservrar" >&2; exit 1; }
