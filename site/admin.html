@@ -19,14 +19,89 @@
 </header>
 <main>
 <h1>Bygga och admin</h1>
-<p class="lead">För den som bygger ISO-filen och skriver stickor.</p>
+<p class="lead">För den som bygger ISO-filerna och skriver stickor.</p>
+<div class="card"><p>Artefakterna är låsta och Oden för Linux bygger och startar i en Debian 13-container. Bygget av hela bilden med live-build är gjort, men ingen bild är bootad på riktig hårdvara än.</p></div>
+
+<h2>Vad som finns var</h2>
+<pre><code>build/
+  artifacts.lock        låsta artefakter: namn, URL, SHA256
+  maps.lock             kartfiler som Minimal hämtar vid första start
+  sources.conf          var varje artefakt kommer ifrån
+  build.sh              fetch, verifiera, bygg Oden, staging, live-build -> ISO + SBOM
+  fetch.sh              hämtar och verifierar artefakter
+  scripts/bump.sh       uppgradera en artefakt i lås-filen
+  scripts/build-oden.sh bygger Oden för Linux från källa (docker, PyInstaller)
+  scripts/stage.sh      packar upp artefakter i bilden under /opt
+  scripts/make-stick.sh skriver bilden till en USB-sticka
+  config/ overlay/      live-build-konfig och filer som kopieras in i bilden
+  tests/run.sh          offline-tester av skripten</code></pre>
+<p>Cache och byggresultat (<code>build/cache/</code>, <code>build/out/</code>) ligger utanför git.</p>
+
+<h2>Krav på byggmaskinen</h2>
+<p>Linux med docker, GitHub CLI (<code>gh</code>, inloggad), <code>python3</code>, <code>curl</code>, <code>tar</code>, <code>zstd</code>, <code>gdisk</code>, <code>fdisk</code>, <code>e2fsprogs</code> och <code>parted</code>. Byggmaskinen behöver nät. Bara den färdiga stickan ska gå att köra offline.</p>
+
 <h2>Bygga</h2>
-<p>Bygget körs i en Docker-container och behöver nätverk. Den färdiga stickan behöver inget.</p>
-<pre><code>cd build
-./build.sh</code></pre>
-<h2>Skriva sticka</h2>
-<pre><code>build/scripts/make-stick.sh [--with-ai] &lt;bild&gt; &lt;enhet&gt;</code></pre>
-<p><em>Platshållare: se <code>docs/ADMINGUIDE.md</code> i repot för fullständig beskrivning.</em></p>
+<pre><code>./build/tests/run.sh      # snabb kontroll av skripten (offline)
+./build/build.sh          # -> build/out/oden.iso + SBOM.txt
+
+# ISO-varianter för Etcher:
+ODEN_VARIANTS=minimal,karta,karta-ai ./build/build.sh
+# -> build/out/oden-&lt;variant&gt;-&lt;version&gt;.iso + .sha256</code></pre>
+<ul>
+<li><code>karta</code> och <code>karta-ai</code> kräver <code>ODEN_ASSETS</code> med <code>maps/</code> (och <code>ollama/</code> för AI). <code>minimal</code> kräver ifylld <code>build/maps.lock</code>.</li>
+<li><code>build.sh --no-fetch</code> hoppar bara över <code>fetch.sh</code>. Bygget behöver ändå nät.</li>
+<li>Spara <code>build/out/SBOM.txt</code> tillsammans med versionsstämpeln <code>/etc/oden-release</code> i bilden.</li>
+</ul>
+
+<h2>Publicera</h2>
+<p>Ladda upp ISO-filerna och skapa sedan listan som sidan <a href="ladda-ner.html">Ladda ner</a> visar:</p>
+<pre><code>build/scripts/release-json.sh https://&lt;bas-url&gt; &gt; site/releases.json
+git add site/releases.json &amp;&amp; git commit &amp;&amp; git push</code></pre>
+<p>Pages publicerar om sajten vid push till <code>main</code> som rör <code>site/</code>.</p>
+
+<h2>Skriva sticka direkt</h2>
+<pre><code>sudo ./build/scripts/make-stick.sh [--with-ai] build/out/oden.iso /dev/sdX</code></pre>
+<p>Kräver en flyttbar hel disk på minst 60 GB och frågar innan allt raderas. Layout: p1 ISO-data, p2 EFI, p3 <code>oden-assets</code> (ext4, skrivskyddad), p4 <code>persistence</code> (krypteras vid första start). För vanligt bruk räcker Etcher med en variant-ISO.</p>
+
+<h2>Uppgradera ett verktyg</h2>
+<p>Alla versioner står i <code>artifacts.lock</code>. Uppgradering är alltid bumpa, granska, bygg om:</p>
+<pre><code>./build/scripts/bump.sh --list
+./build/scripts/bump.sh go-pmtiles 1.32.0
+git diff build/artifacts.lock
+./build/tests/run.sh &amp;&amp; ./build/build.sh</code></pre>
+<table>
+<tr><th>Artefakt</th><th>Att kontrollera efter uppgradering</th></tr>
+<tr><td><code>oden-source</code></td><td>Oden byggs om automatiskt. Kontrollera att Oden startar och läs upstreams CHANGELOG.</td></tr>
+<tr><td><code>oden-valv</code></td><td>Valv och plugin ska vara kompatibla med Obsidian-versionen. Map View ska peka på <code>127.0.0.1:8081</code>.</td></tr>
+<tr><td><code>signal-cli</code>, <code>jre-x64</code></td><td>Bundlas in i Oden-binären, som byggs om. Matcha Java-versionen mot vad Oden kräver.</td></tr>
+<tr><td><code>obsidian-appimage</code></td><td>Obsidian ska starta med valvet och Map View.</td></tr>
+<tr><td><code>go-pmtiles</code></td><td>Kontrollera flaggorna för <code>serve</code> (se <code>pmtiles.service</code>).</td></tr>
+<tr><td><code>ollama</code></td><td>Kontrollera att modellerna i <code>ollama/</code> fortfarande laddas. Arkivet är ca 1,5 GB.</td></tr>
+</table>
+<ul>
+<li><strong>Debian-paket</strong> hämtas av live-build vid varje bygge. De är medvetet inte pinnade. <code>SBOM.txt</code> visar vilka versioner som ingick i just den ISO:n.</li>
+<li><strong>Ny artefakt:</strong> lägg en rad i <code>sources.conf</code> och en i <code>artifacts.lock</code> (<code>&lt;namn&gt; PENDING_URL PENDING</code>), kör <code>bump.sh &lt;namn&gt; latest</code>, lägg uppackning i <code>stage.sh</code> och ett testfall i <code>tests/run.sh</code>.</li>
+<li><strong>"N asset matchar":</strong> upstream har bytt filnamn. Justera regexet i <code>sources.conf</code>.</li>
+</ul>
+
+<h2>Om Oden för Linux</h2>
+<p>Upstream släpper bara Windows och macOS. <code>build-oden.sh</code> bygger Linux-binären från git-taggen med upstreams egen <code>s7_watcher.spec</code> (JRE och signal-cli inbyggda) i <code>python:3.12-bookworm</code>. Resultatet är <code>build/cache/oden-linux</code>, ca 200 MB. Radera filen för att bygga om.</p>
+
+<h2>Kartor</h2>
+<p>Rastret <code>sverige-raster.pmtiles</code> (zoom 0–14, ca 2,25 GB) renderas en gång från vektorkartan med <code>build/scripts/map/render-map.sh</code>. Se <a href="https://github.com/HvSS-Innovation/oden-usb/blob/main/docs/KARTRENDERING.md">KARTRENDERING.md</a>. Högsta zoomnivån står i <code>build/map.conf</code> (<code>MAP_MAXZOOM</code>). Fel värde ger tomma eller suddiga rutor.</p>
+
+<h2>Kända begränsningar</h2>
+<ul>
+<li>Oden-binären är inte bit-för-bit reproducerbar, eftersom Python-beroendena är angivna som <code>&gt;=</code>. <code>pip freeze</code> och SBOM dokumenterar vad som ingick.</li>
+<li>Oden är en "onefile"-binär som packar upp sig själv (ca 200 MB) i <code>/tmp</code> (RAM) vid varje start.</li>
+<li>Oden visar versionen <code>v0.0.0-dev</code>, eftersom bygget inte skickar in något versionsnummer.</li>
+<li>Obsidian körs som extraherad AppImage och kan kräva <code>--no-sandbox</code>.</li>
+<li>Ollama-modeller har inget versionslås.</li>
+</ul>
+
+<h2>Nycklar och förlorad stick</h2>
+<p>Varje stick får egen LUKS-nyckel vid första start. Det finns ingen central nyckel och ingen header-backup, så förlorad lösenfras betyder förlorad data. Vid förlorad stick: koppla bort stickans enhet i Signal och spärra dess TAK-certifikat.</p>
+<p>Den fullständiga guiden finns i <a href="https://github.com/HvSS-Innovation/oden-usb/blob/main/docs/ADMINGUIDE.md">ADMINGUIDE.md</a>.</p>
 </main>
 <footer>ODEN USB-distribution · <a href="https://github.com/HvSS-Innovation/oden-usb">källkod på GitHub</a></footer>
 </body>

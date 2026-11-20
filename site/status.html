@@ -20,8 +20,56 @@
 <main>
 <h1>Status</h1>
 <p class="lead">Läget för stick-bygget.</p>
-<div class="card"><p>Granskningen från 2026-11-19 (tio fynd) är åtgärdad i koden. Flera punkter är ännu inte provade på en riktig sticka.</p></div>
-<p><em>Platshållare: se <code>docs/STATUS.md</code> och <code>docs/GRANSKNING-2026-11-19.md</code> i repot.</em></p>
+<div class="card"><p>Bilden är byggd, men <strong>ingen del har körts på en riktig stick eller dator</strong>. Det första stickprovet är nästa stora risk. Granskningen 2026-11-19 (tio fynd) är åtgärdad i koden, flera fynd är inte verifierade på hårdvara.</p></div>
+<p>Klart betyder skrivet och testat så långt det går utan hårdvara. Skrivet betyder att koden finns men inte är körd.</p>
+
+<h2>Per steg</h2>
+<table>
+<tr><th>Steg</th><th>Status</th><th>Kvar</th></tr>
+<tr><td>Beslut och kravspec</td><td>Klart</td><td></td></tr>
+<tr><td>Bygg-pipeline</td><td>Skrivet</td><td>Boot och <code>make-stick.sh</code> mot riktig enhet</td></tr>
+<tr><td>Mjukvara i bilden</td><td>Delvis klart</td><td>Förkonfigurering av Oden och Obsidian, <code>--no-sandbox</code>, versionsnummer i Oden</td></tr>
+<tr><td>Krypterad persistens</td><td>Skrivet</td><td>cryptsetup-flödet, upplåsning vid boot, fel lösenfras, strömavbrott</td></tr>
+<tr><td>Nät, Signal, TAK</td><td>Delvis</td><td>Tydlig indikator för frånkopplat läge, provning i bilden</td></tr>
+<tr><td>Kartor</td><td>Delvis</td><td>Rastret (zoom 0–14) är renderat och låst. Map View är inte provat i Obsidian på hårdvara</td></tr>
+<tr><td>AI / Ollama</td><td>Skrivet</td><td>Modellerna är inte hämtade, inget provat</td></tr>
+<tr><td>ISO-varianter för Etcher</td><td>Skrivet</td><td>Allt på en riktig stick: partitionering, bind-montering, nedladdning</td></tr>
+<tr><td>ODEN-utseende</td><td>Skrivet</td><td>Provning på hårdvara</td></tr>
+<tr><td>Test, härdning, dokumentation</td><td>Delvis</td><td>Maskinvarutest, paketfångst, strömavbrott, <code>oden-wipe</code></td></tr>
+</table>
+
+<h2>Versioner</h2>
+<table>
+<tr><th>Artefakt</th><th>Version</th></tr>
+<tr><td>Oden (byggd från källa)</td><td>4.2.1</td></tr>
+<tr><td>signal-cli</td><td>0.14.5</td></tr>
+<tr><td>Temurin JRE</td><td>25.0.5.1+2</td></tr>
+<tr><td>ODEN-valv</td><td>1.6.3</td></tr>
+<tr><td>Obsidian</td><td>1.15.1</td></tr>
+<tr><td>go-pmtiles</td><td>1.31.2</td></tr>
+<tr><td>Ollama</td><td>0.40.16</td></tr>
+<tr><td>Karta</td><td>OSM 2026-05, raster zoom 0–14</td></tr>
+</table>
+
+<h2>Öppna frågor</h2>
+<ul>
+<li>Vad händer vid fel lösenfras vid boot: startar systemet utan persistens eller frågar det igen? Skripten förutsätter det förra.</li>
+<li>Lösenfrasen har ingen minsta längd (beslut 2026-11-20, för test).</li>
+<li>Att inga andra portar än <code>127.0.0.1:8080</code> är öppna är inte kontrollerat.</li>
+<li>Hård strömavstängning och SQLite WAL i Oden är inte undersökt.</li>
+<li>Oden är en "onefile"-binär som packar upp sig i RAM vid varje start. Alternativet är "onedir".</li>
+<li>Obsidian-pluginernas version mot Obsidian 1.15.1 är inte kontrollerad.</li>
+</ul>
+
+<h2>Nästa steg</h2>
+<ol>
+<li>Första stickprovet: bränn basbilden med Etcher och prova start, partitionering, firstboot och upplåsning.</li>
+<li>Bygg varianterna med <code>ODEN_VARIANTS=all</code> och prova Med karta (fil över 4 GiB) och Minimal (nedladdning).</li>
+<li>Förkonfigurera Oden och Obsidian och koppla kartan i Map View.</li>
+<li>Maskinvarumatris, paketfångst, strömavbrott och end-to-end mot ODEN-analys.</li>
+<li>Ladda upp ISO-filerna och fyll <code>releases.json</code>.</li>
+</ol>
+<p>Detaljer finns i <a href="https://github.com/HvSS-Innovation/oden-usb/blob/main/docs/STATUS.md">STATUS.md</a> och <a href="https://github.com/HvSS-Innovation/oden-usb/blob/main/docs/GRANSKNING-2026-11-19.md">granskningen</a>.</p>
 </main>
 <footer>ODEN USB-distribution · <a href="https://github.com/HvSS-Innovation/oden-usb">källkod på GitHub</a></footer>
 </body>
