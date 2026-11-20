@@ -30,12 +30,16 @@ while read -r name _ sha _; do
   echo "$sha  cache/$name" | sha256sum -c --quiet || { echo "FEL: $name avviker" >&2; exit 1; }
 done < artifacts.lock
 
-# Oden för Linux finns inte som release: bygg från källa (kräver nät för pip) om den saknas i cache/
-# eller om låsraderna för oden-source, jre-x64 och signal-cli ändrats sedan den byggdes.
-if [[ ! -f cache/oden-linux ]] || [[ "$(cat cache/oden-linux.inputs 2>/dev/null)" != "$(scripts/build-oden.sh --print-inputs)" ]]; then
-  [[ "${1:-}" == "--no-fetch" ]] && { echo "FEL: cache/oden-linux saknas eller är byggd från andra indata än artifacts.lock, och --no-fetch kan inte bygga den (kräver nät för pip)" >&2; exit 1; }
-  rm -f cache/oden-linux
-  scripts/build-oden.sh
+# Oden för Linux: står raden oden-linux som BUILD i artifacts.lock byggs binären från källa (kräver nät för pip) om den saknas i cache/
+# eller om låsraderna för oden-source, jre-x64 och signal-cli ändrats sedan den byggdes. Har raden en URL och checksumma är det en
+# officiell release (hämtad och verifierad ovan) och inget byggs här.
+oden_linux_src=$(awk '$1=="oden-linux" {print $2}' artifacts.lock)
+if [[ "$oden_linux_src" == BUILD ]]; then
+  if [[ ! -f cache/oden-linux ]] || [[ "$(cat cache/oden-linux.inputs 2>/dev/null)" != "$(scripts/build-oden.sh --print-inputs)" ]]; then
+    [[ "${1:-}" == "--no-fetch" ]] && { echo "FEL: cache/oden-linux saknas eller är byggd från andra indata än artifacts.lock, och --no-fetch kan inte bygga den (kräver nät för pip)" >&2; exit 1; }
+    rm -f cache/oden-linux
+    scripts/build-oden.sh
+  fi
 fi
 
 docker build -t oden-builder .
@@ -55,8 +59,12 @@ docker run --rm --privileged -e OWNER="$(id -u):$(id -g)" -v "$PWD/out/lb":/lb -
 
 # SBOM: paketdelen från bilden + artefaktlåset
 { cat out/lb/chroot/usr/share/oden/SBOM-packages.txt 2>/dev/null; echo "--- artefakter"; grep -v '^#' artifacts.lock
-  echo "--- oden-linux (byggd) sha256: $(sha256sum cache/oden-linux | cut -d' ' -f1)"
-  echo "--- Python-paket i oden-linux"; cat cache/oden-linux.pip-freeze.txt 2>/dev/null; } > out/SBOM.txt
+  if [[ "$oden_linux_src" == BUILD ]]; then
+    echo "--- oden-linux (byggd) sha256: $(sha256sum cache/oden-linux | cut -d' ' -f1)"
+    echo "--- Python-paket i oden-linux"; cat cache/oden-linux.pip-freeze.txt 2>/dev/null
+  else
+    echo "--- oden-linux (release) $oden_linux_src sha256: $(sha256sum cache/oden-linux | cut -d' ' -f1)"
+  fi; } > out/SBOM.txt
 
 # live-build (grub-efi + iso-hybrid) ger en ren El Torito-ISO utan MBR/GPT, som inte bootar från dd:ad USB.
 # Efterbehandla: GPT med p1 = ISO-data och p2 = EFI-partition (efi.img), så att bilden är USB-bootbar
