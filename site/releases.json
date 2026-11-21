@@ -1,1 +1,12 @@
-{"isos": []}
+{
+  "isos": [
+    {
+      "variant": "karta",
+      "version": "9e5e993",
+      "file": "oden-karta-9e5e993.iso",
+      "url": "https://publik.hv-sog.se/oden/9e5e993/oden-karta-9e5e993.iso",
+      "bytes": 5959909376,
+      "sha256": "99c08208c072aaeaf40bc8a82169fc705a36f7c856082834e77e77f06634fff0"
+    }
+  ]
+}

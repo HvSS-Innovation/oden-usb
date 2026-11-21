@@ -3,3 +3,4 @@
 *.pmtiles
 build/out
 build/cache/
+.env
