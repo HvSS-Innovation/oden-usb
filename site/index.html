@@ -4,11 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Start – ODEN</title>
+<link rel="icon" type="image/png" href="img/oden-mark-64.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<meta name="theme-color" content="#606959">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
-<a class="brand" href="index.html">ODEN</a>
+<a class="brand" href="index.html"><img src="img/oden-mark-64.png" width="40" height="40" alt=""><span>ODEN</span></a>
 <nav>
 <a href="index.html" aria-current="page">Start</a>
 <a href="ladda-ner.html">Ladda ner</a>
@@ -18,16 +21,21 @@
 </nav>
 </header>
 <main>
+<section class="hero">
+<img src="img/oden-logo.webp" width="220" height="220" alt="ODEN: en korp i en kompassring">
+<div>
 <h1>ODEN på USB-sticka</h1>
 <p class="lead">Ett komplett ODEN-system som startar från en USB-sticka och går att köra helt utan nätverk.</p>
-<div class="card"><p>Stickan innehåller operativsystem, program, kartor och krypterad persistens. Allt som behövs finns på stickan.</p></div>
-<h2>Läs vidare</h2>
-<ul>
-<li><a href="ladda-ner.html">Ladda ner</a>: de tre varianterna och hur de bränns med Etcher.</li>
-<li><a href="kom-igang.html">Kom igång</a>: starta stickan och välja lösenfras.</li>
-<li><a href="admin.html">Bygga och admin</a>: bygga ISO-filen och skriva sticka.</li>
-<li><a href="status.html">Status</a>: vad som är klart och vad som återstår att verifiera.</li>
-</ul>
+<div class="actions"><a class="button" href="ladda-ner.html">Ladda ner</a><a class="button alt" href="kom-igang.html">Kom igång</a></div>
+</div>
+</section>
+<p>Stickan innehåller operativsystem, program, kartor och krypterad persistens. Allt som behövs finns på stickan.</p>
+<div class="grid">
+<a class="tile" href="ladda-ner.html"><strong>Ladda ner</strong><span>De tre varianterna och hur de bränns med Etcher.</span></a>
+<a class="tile" href="kom-igang.html"><strong>Kom igång</strong><span>Starta stickan och välj lösenfras.</span></a>
+<a class="tile" href="admin.html"><strong>Bygga och admin</strong><span>Bygga ISO-filen och skriva sticka.</span></a>
+<a class="tile" href="status.html"><strong>Status</strong><span>Versioner och läget i bygget.</span></a>
+</div>
 </main>
 <footer>ODEN USB-distribution · <a href="https://github.com/HvSS-Innovation/oden-usb">källkod på GitHub</a></footer>
 </body>
