@@ -1,0 +1,5 @@
+# Kartfiler som minimal-varianten hämtar vid första start. Normalt behövs ingen fil: sätt ODEN_MAPS_URL (och valfritt
+# ODEN_MAPS_SHA256) i miljön eller .env så skapar build.sh raden ur filen i cache/assets/maps/.
+# Alternativ: kopiera den här filen till build/maps.lock (ignoreras av git) och fyll i:
+# sökväg-under-assets  url  sha256  byte
+maps/sverige-raster.pmtiles  https://exempel.se/sverige-raster.pmtiles  <sha256>  <byte>

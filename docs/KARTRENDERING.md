@@ -71,8 +71,7 @@ receptet.
    curl -s -o t.webp -w '%{http_code}\n' http://127.0.0.1:8081/sverige/8/139/74.webp     # 200, öppna t.webp
    ```
 2. **Ladda upp** filen (S3, Google Drive eller liknande med direktlänk) och notera URL, SHA256 och storlek i byte.
-3. **Minimal-varianten** (hämtar kartan vid första start): lägg en rad i `build/maps.lock`:
-   `sverige.pmtiles  <url>  <sha256>  <byte>` (`path url sha256 bytes`; se rubrikkommentaren i filen). Stickan måste hinna ha plats: partitionen för kartor räknas ur summan av byte.
+3. **Minimal-varianten** (hämtar kartan vid första start): sätt `ODEN_MAPS_URL` (och valfritt `ODEN_MAPS_SHA256`) i miljön eller `.env`. `build.sh` läser storlek och SHA256 ur filen i `build/cache/assets/maps/` och skriver `assets.lock`. Alternativ: en lokal, ignorerad `build/maps.lock` (format i `build/maps.lock.example`). Stickan måste hinna ha plats: partitionen för kartor räknas ur summan av byte.
 4. **Karta- och Karta+AI-varianterna** (kartan ligger på själva ISO:n): lägg filen i `build/cache/assets/maps/sverige.pmtiles`
    (eller i `$ODEN_ASSETS/maps/`) och bygg med `ODEN_VARIANTS=karta` (se `docs/ADMINGUIDE.md`).
 5. Sätt `MAP_MAXZOOM` i `build/map.conf` om du inte renderade z14, och bygg om. Utan ombyggnad av valvmallen blir Map View fel inställd.

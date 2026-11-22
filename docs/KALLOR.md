@@ -1,7 +1,7 @@
 # Underliggande projekt och källor
 
 ODEN-stickan är en sammansättning av andra projekt. Den här sidan visar vad som hämtas in, var det kommer ifrån och hur det versionslåses.
-Versioner och checksummor står i [`build/artifacts.lock`](../build/artifacts.lock) (programvara) och [`build/maps.lock`](../build/maps.lock) (kartor).
+Versioner och checksummor står i [`build/artifacts.lock`](../build/artifacts.lock) (programvara); kartor: se `ODEN_MAPS_URL`, `build/maps.lock.example`.
 Var varje artefakt hämtas ifrån står i [`build/sources.conf`](../build/sources.conf).
 
 ## ODEN-projekten
@@ -54,7 +54,7 @@ Debian-paketen pinnas inte. Vilka versioner som ingick i en viss ISO står i `SB
 | **TileServer GL** | Renderade vektorkartan till raster en gång (v5.7.0) | [maptiler/tileserver-gl](https://github.com/maptiler/tileserver-gl) | se repot |
 
 - Vektorkartan (4,1 GB) hämtas inte av bygget. Den renderades en gång till `sverige-raster.pmtiles` (zoom 0–14, 2,25 GB, WebP), som är det stickan använder. Så görs det: [`docs/KARTRENDERING.md`](KARTRENDERING.md) och [`plan/05-kartor-pmtiles.md`](../plan/05-kartor-pmtiles.md).
-- Kartfilerna ligger på Backblaze B2 (`kartverktyget`). Rastret är låst i `build/maps.lock` med SHA256 och storlek.
+- Kartadressen för `minimal` kommer ur `ODEN_MAPS_URL` (miljön eller ignorerad `.env`), inte ur git. SHA256 och storlek läses ur rasterfilen i cachen.
 
 ## AI-modeller (valfritt, `karta-ai`)
 

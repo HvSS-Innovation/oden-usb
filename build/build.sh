@@ -7,14 +7,32 @@ cd "$(dirname "$0")"
 mkdir -p out
 
 # Varianter ut över basbilden out/oden.iso (den används av make-stick.sh). ODEN_VARIANTS=minimal,karta,karta-ai eller all.
-#   minimal   basbilden + maps.lock (kartor hämtas vid första start)
+#   minimal   basbilden + assets.lock ur ODEN_MAPS_URL eller lokal maps.lock (kartor hämtas vid första start)
 #   karta     + $ODEN_ASSETS/maps       karta-ai  + $ODEN_ASSETS/maps och $ODEN_ASSETS/ollama
 assets="${ODEN_ASSETS:-$PWD/cache/assets}"
 variants="${ODEN_VARIANTS:-}"; [[ "$variants" == all ]] && variants=minimal,karta,karta-ai
+# Kartlåset för minimal (ingen adress till vår lagring i git, se plan/10): ODEN_MAPS_URL (+ valfritt ODEN_MAPS_SHA256) ur miljön
+# eller ../.env, annars en lokal, ignorerad build/maps.lock. Filen i cache/assets/maps/ ger byte och SHA256 om de inte anges.
+[[ -f ../.env ]] && { set -a; . ../.env; set +a; }
+resolve_maps_lock() {
+  local url="${ODEN_MAPS_URL:-}" f rel sha bytes
+  if [[ -n "$url" ]]; then
+    f=$(find "$assets/maps" -maxdepth 1 -type f -name '*.pmtiles' 2>/dev/null | head -2)
+    [[ $(wc -l <<<"$f") -eq 1 && -n "$f" ]] || { echo "FEL: ODEN_MAPS_URL kräver exakt en .pmtiles i $assets/maps (för storlek och SHA256; skapa med render-map.sh)" >&2; return 1; }
+    rel="maps/$(basename "$f")"
+    bytes=$(stat -c %s "$f"); sha="${ODEN_MAPS_SHA256:-$(sha256sum "$f" | cut -d' ' -f1)}"
+    [[ -z "${ODEN_MAPS_SHA256:-}" ]] || [[ "$sha" == "$(sha256sum "$f" | cut -d' ' -f1)" ]] || { echo "FEL: ODEN_MAPS_SHA256 stämmer inte med $f" >&2; return 1; }
+    printf '# Skapad av build.sh ur ODEN_MAPS_URL\n%s  %s  %s  %s\n' "$rel" "$url" "$sha" "$bytes" > out/assets.lock
+  elif grep -v '^[[:space:]]*#' maps.lock 2>/dev/null | grep -q '[^[:space:]]' && ! grep -q PENDING maps.lock; then
+    cp maps.lock out/assets.lock
+  else
+    echo "FEL: minimal kräver kartans adress: sätt ODEN_MAPS_URL (t.ex. i .env) eller fyll i en lokal build/maps.lock (format: maps.lock.example)" >&2; return 1
+  fi
+}
 nonempty() { [[ -d "$1" && -n "$(ls -A "$1")" ]]; }
 for v in ${variants//,/ }; do   # kontrolleras före det långa bygget
   case "$v" in
-    minimal) { grep -v '^[[:space:]]*#' maps.lock 2>/dev/null | grep -q '[^[:space:]]' && ! grep -v '^[[:space:]]*#' maps.lock | grep -q PENDING; } || { echo "FEL: minimal kräver ifyllda rader i maps.lock (inga PENDING)" >&2; exit 1; } ;;
+    minimal) resolve_maps_lock ;;
     karta) nonempty "$assets/maps" || { echo "FEL: karta kräver filer i $assets/maps" >&2; exit 1; } ;;
     karta-ai) nonempty "$assets/maps" && nonempty "$assets/ollama" || { echo "FEL: karta-ai kräver filer i $assets/maps och $assets/ollama" >&2; exit 1; } ;;
     *) echo "FEL: okänd variant $v (minimal, karta, karta-ai)" >&2; exit 1 ;;
@@ -86,7 +104,7 @@ mv out/hybrid/out.iso out/oden.iso
 version=$(git describe --tags --always --dirty 2>/dev/null || date +%Y%m%d)
 for v in ${variants//,/ }; do
   case "$v" in
-    minimal)  maps=(-map /lock/maps.lock /oden/assets.lock) ;;
+    minimal)  maps=(-map /w/assets.lock /oden/assets.lock) ;;
     karta)    maps=(-map /assets/maps /maps) ;;
     karta-ai) maps=(-map /assets/maps /maps -map /assets/ollama /ollama) ;;
   esac

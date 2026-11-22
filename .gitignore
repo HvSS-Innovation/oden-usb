@@ -4,3 +4,4 @@
 build/out
 build/cache/
 .env
+build/maps.lock

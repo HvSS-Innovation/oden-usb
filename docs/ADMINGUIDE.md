@@ -27,7 +27,7 @@ Bara den färdiga stickan ska gå att köra offline, inte byggprocessen.
 ```
 ./build/tests/run.sh                 # 1. snabb kontroll av skripten (offline)
 ./build/build.sh                     # 2. hämta, verifiera, bygg Oden, bygg bilden -> build/out/oden.iso
-# Valfria ISO-varianter för Etcher (kräver ODEN_ASSETS med maps/ och ollama/, och ifylld build/maps.lock för minimal):
+# Valfria ISO-varianter för Etcher (kräver ODEN_ASSETS med maps/ och ollama/, och ODEN_MAPS_URL (.env) för minimal):
 #   ODEN_VARIANTS=minimal,karta,karta-ai ./build/build.sh     # -> build/out/oden-<variant>-<version>.iso + .sha256
 # Publicera: ladda upp ISO-filen, .sha256 och SBOM.txt till bucketen public-hv-sog (Cloudflare R2, nås på https://publik.hv-sog.se/),
 #   under oden/<version>/ (GitHub tillåter max 2 GiB per fil, så ISO-filerna ligger inte där). Sedan:
@@ -84,7 +84,7 @@ Upstream släpper bara Windows och macOS. `build-oden.sh` bygger Linux-binären 
   misslyckas bygget (avsiktligt): kontrollera commit-hashen i kommentaren på raden och kör `bump.sh oden-source <version>` igen.
 - Oden-binären är "onefile": den packar upp sig själv (ca 200 MB) i `/tmp` vid varje start. På stickan är `/tmp` RAM.
 - `sweden-osm.pmtiles` (vektor, 4 GB) ligger medvetet utanför `artifacts.lock` och används inte av bilden; kartan i bilden är
-  den renderade rasterfilen `sverige-raster.pmtiles` (steg 05), låst i `build/maps.lock`.
+  den renderade rasterfilen `sverige-raster.pmtiles` (steg 05), adress i `ODEN_MAPS_URL` (`.env`).
 - Obsidian körs som extraherad AppImage. Bygget sätter inte `--no-sandbox`.
 - Ollama-modeller har inget versionslås.
 - **Debian-paketen i bilden är medvetet inte pinnade.** live-build hämtar aktuella paket från Debians speglar vid varje
