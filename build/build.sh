@@ -17,8 +17,8 @@ variants="${ODEN_VARIANTS:-}"; [[ "$variants" == all ]] && variants=minimal,kart
 resolve_maps_lock() {
   local url="${ODEN_MAPS_URL:-}" f rel sha bytes
   if [[ -n "$url" ]]; then
-    f=$(find "$assets/maps" -maxdepth 1 -type f -name '*.pmtiles' 2>/dev/null | head -2)
-    [[ $(wc -l <<<"$f") -eq 1 && -n "$f" ]] || { echo "FEL: ODEN_MAPS_URL kräver exakt en .pmtiles i $assets/maps (för storlek och SHA256; skapa med render-map.sh)" >&2; return 1; }
+    f="$assets/maps/sverige.pmtiles"
+    [[ -f "$f" ]] || { echo "FEL: ODEN_MAPS_URL kräver $f (för storlek och SHA256). Filen MÅSTE heta sverige.pmtiles: kartservern och Map View använder namnet (/sverige/{z}/{x}/{y}.webp). Adressen får ha ett datum i namnet, men inte den lokala filen." >&2; return 1; }
     rel="maps/$(basename "$f")"
     bytes=$(stat -c %s "$f"); sha="${ODEN_MAPS_SHA256:-$(sha256sum "$f" | cut -d' ' -f1)}"
     [[ -z "${ODEN_MAPS_SHA256:-}" ]] || [[ "$sha" == "$(sha256sum "$f" | cut -d' ' -f1)" ]] || { echo "FEL: ODEN_MAPS_SHA256 stämmer inte med $f" >&2; return 1; }
@@ -30,11 +30,13 @@ resolve_maps_lock() {
   fi
 }
 nonempty() { [[ -d "$1" && -n "$(ls -A "$1")" ]]; }
+# Kartfilen måste heta sverige.pmtiles (Map View och go-pmtiles förutsätter det; annat namn ger en karta utan rutor).
+mapname() { [[ -f "$assets/maps/sverige.pmtiles" && "$(ls -A "$assets/maps" | wc -l)" -eq 1 ]] || { echo "FEL: $assets/maps ska innehålla exakt en fil, sverige.pmtiles (nu: $(ls -A "$assets/maps" 2>/dev/null | tr '\n' ' '))" >&2; return 1; }; }
 for v in ${variants//,/ }; do   # kontrolleras före det långa bygget
   case "$v" in
     minimal) resolve_maps_lock ;;
-    karta) nonempty "$assets/maps" || { echo "FEL: karta kräver filer i $assets/maps" >&2; exit 1; } ;;
-    karta-ai) nonempty "$assets/maps" && nonempty "$assets/ollama" || { echo "FEL: karta-ai kräver filer i $assets/maps och $assets/ollama" >&2; exit 1; } ;;
+    karta) nonempty "$assets/maps" || { echo "FEL: karta kräver filer i $assets/maps" >&2; exit 1; }; mapname || exit 1 ;;
+    karta-ai) mapname || exit 1; nonempty "$assets/maps" && nonempty "$assets/ollama" || { echo "FEL: karta-ai kräver filer i $assets/maps och $assets/ollama" >&2; exit 1; } ;;
     *) echo "FEL: okänd variant $v (minimal, karta, karta-ai)" >&2; exit 1 ;;
   esac
 done

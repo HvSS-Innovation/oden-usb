@@ -6,7 +6,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 - Bygg-pipelinen är klar: artefakterna är låsta, Oden för Linux byggs i en Debian 13-container och bilden byggs med live-build (Debian 13, XFCE).
 - Systemet är testat på stickor (uppgift från Nicklas, 2026-11-20): start, krypterad persistens, upplåsning vid boot, Oden, Obsidian och den lokala kartan i Map View.
   Resultaten är inte dokumenterade i detalj; maskinvarumatrisen (`HW-MATRIS.md`) är ännu tom.
-- Kartan är klar: rasterkartan `sverige-raster-20261120.pmtiles` (zoom 0–14, 1 914 774 924 byte, OSM 2026-11-20) är renderad och uppladdad till R2 (`oden/maps/`). Adress: <https://publik.hv-sog.se/oden/maps/sverige-raster-20261120.pmtiles> (sätts som `ODEN_MAPS_URL` i `.env`).
+- Kartan är klar: rasterkartan `sverige-raster-20261120.pmtiles` (zoom 0–14, 1 914 774 924 byte, OSM 2026-11-20) är renderad och uppladdad till R2 (`oden/maps/`). Adress: <https://publik.hv-sog.se/oden/maps/sverige-raster-20261120.pmtiles> (sätts som `ODEN_MAPS_URL` i `.env`). Lokalt och på ISO:n heter filen `sverige.pmtiles` (Map View och kartservern förutsätter namnet).
   `MAP_MAXZOOM=14` i `build/map.conf`.
 - ISO-varianterna är ombyggda med den nya kartan (OSM 2026-11-20) och publicerade på `https://publik.hv-sog.se/oden/b81c7d6/`, med kontrollsumma och SBOM (kontrollerade mot de lokala filerna efter uppladdning). Nedladdningssidan på Pages visar dem. Inte provstartade.
   - **karta**: `oden-karta-b81c7d6.iso`, 5 625 151 488 byte, SHA256 `27d6e2c5…e549`.

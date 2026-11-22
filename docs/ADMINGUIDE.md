@@ -84,7 +84,7 @@ Upstream släpper bara Windows och macOS. `build-oden.sh` bygger Linux-binären 
   misslyckas bygget (avsiktligt): kontrollera commit-hashen i kommentaren på raden och kör `bump.sh oden-source <version>` igen.
 - Oden-binären är "onefile": den packar upp sig själv (ca 200 MB) i `/tmp` vid varje start. På stickan är `/tmp` RAM.
 - `sweden-osm.pmtiles` (vektor, 4 GB) ligger medvetet utanför `artifacts.lock` och används inte av bilden; kartan i bilden är
-  den renderade rasterfilen `sverige-raster.pmtiles` (steg 05), adress i `ODEN_MAPS_URL` (`.env`).
+  den renderade rasterfilen (steg 05), adress i `ODEN_MAPS_URL` (`.env`). Lokalt måste den heta `build/cache/assets/maps/sverige.pmtiles` (även om adressen har ett datum i namnet), annars avbryter `build.sh`.
 - Obsidian körs som extraherad AppImage. Bygget sätter inte `--no-sandbox`.
 - Ollama-modeller har inget versionslås.
 - **Debian-paketen i bilden är medvetet inte pinnade.** live-build hämtar aktuella paket från Debians speglar vid varje
