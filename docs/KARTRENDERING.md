@@ -12,7 +12,7 @@ och konverterar till PMTiles.
 - Rendering är processorbunden: fler kärnor ger nästan linjärt snabbare resultat. Minne: ca 1 GB per parallell arbetare.
 
 ## Skaffa kartan (välj ett sätt)
-Kartan är en enda fil, `sverige.pmtiles` (rasterrutor, z0–14, 2,25 GB). Den ligger inte i repot.
+Kartan är en enda fil, `sverige.pmtiles` (rasterrutor, z0–14, ca 1,8–2,25 GB). Den ligger inte i repot.
 1. **Du har redan filen eller en adress till den** (snabbast). Lägg filen i `build/cache/assets/maps/sverige.pmtiles`
    för `karta` och `karta-ai`. För `minimal` sätter du dessutom `ODEN_MAPS_URL` (och helst `ODEN_MAPS_SHA256`) i `.env`.
    Hämta och kontrollera: `curl -fL -o build/cache/assets/maps/sverige.pmtiles "$ODEN_MAPS_URL"` och
@@ -21,22 +21,24 @@ Kartan är en enda fil, `sverige.pmtiles` (rasterrutor, z0–14, 2,25 GB). Den l
    Det ger samma sorts fil men med dagens data, så SHA256 blir en annan.
    **Färsk data:** sätt `PLANET_DATE=ÅÅÅÅMMDD` (ett datum som finns på `build.protomaps.com`, dagsbygge). Skriptet beskär då Sverige
    ur det bygget med `pmtiles extract` (prövat 2026-11-22 mot 20261120: ca 4,7 GB nedladdat, några minuter) i stället för den låsta
-   källfilen från 2026-05. Använd en **ny, tom `WORK`-mapp**: redan renderade rutor i en gammal `WORK` återanvänds och skulle ge gammal data.
+   källfilen från 2026-05. Beskärningen tog 2026-11-22 ca 13 min (snabb till 98 %, sedan långsamt från Protomaps), inte några minuter. Använd en **ny, tom `WORK`-mapp**: redan renderade rutor i en gammal `WORK` återanvänds och skulle ge gammal data.
    Källans datum, storlek och SHA256 skrivs ut; anteckna dem. Exempel:
    `PLANET_DATE=20261120 ZMAX=14 WORKERS=16 WORK=/data/karta-ny build/scripts/map/render-map.sh`
 
 ## Behöver du mer kraft? Hyr en tillfällig server
-Renderingen z0–14 tog ca 50 minuter (rutorna) på den stora servern; på en vanlig dator räkna med flera timmar (tabellen nedan
+Renderingen z0–14 gick 2026-11-22 med ca 550 rutor/s (`SERVERS=3 WORKERS=48`) på cpx62; de sista ca 950 000 rutorna tog under 30 minuter; på en vanlig dator räkna med flera timmar (tabellen nedan
 visar ca 7 timmar för z14), och 15 GB disk behövs. Gör den på en tillfällig molnserver och radera den direkt efteråt (så gjordes kartan 2026-11-20: Hetzner cpx62,
 Ubuntu 24.04, Docker). Kostnaden är liten men kolla Hetzners aktuella pris.
 ```bash
 # Skapa (kräver hcloud CLI och ett Hetzner-projekt med API-token; eller gör det i konsolen)
-hcloud server create --name karta --type cpx62 --image ubuntu-24.04 --ssh-key <din-nyckel>
+# --location hel1 är billigast (ca 0,22 EUR/h; 0,26 i fsn1/nbg1). cpx62 har 640 GB disk, så /data på rotdisken räcker.
+hcloud server create --name karta --type cpx62 --location hel1 --image ubuntu-24.04 --ssh-key <nyckel-id>
+# Hetzner återanvänder IP-adresser: använd -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no, annars stoppar en gammal host-nyckel.
 ssh root@<ip>
 curl -fsSL https://get.docker.com | sh && apt-get install -y git tmux python3
 git clone https://github.com/HvSS-Innovation/oden-usb.git && cd oden-usb
 tmux new -s karta
-ZMAX=14 WORKERS=16 WORK=/data/karta build/scripts/map/render-map.sh
+ZMAX=14 WORKERS=48 SERVERS=3 WORK=/data/karta build/scripts/map/render-map.sh
 # Hämta hem resultatet och kontrollera:
 scp root@<ip>:/data/karta/sverige.pmtiles build/cache/assets/maps/ && sha256sum build/cache/assets/maps/sverige.pmtiles
 # RADERA servern så snart du har filen (annars fortsätter fakturan):
@@ -44,6 +46,7 @@ hcloud server delete karta
 ```
 Rekommendation: `cpx62` (16 vCPU) för full rendering; en mindre server (t.ex. 8 vCPU) fungerar men tar dubbelt så lång tid.
 Minne räcker med ca 1 GB per arbetare. Lägg filen sedan på er publika lagring och sätt `ODEN_MAPS_URL` (se ovan).
+**Slipp ladda ned filen till din egen maskin:** kopiera `.env` (R2-nycklarna) till servern, ladda upp därifrån med `rclone` (`RCLONE_CONFIG_R2_*` ur miljön, `copyto` till `oden/maps/`), verifiera med `rclone cat … | sha256sum` mot `sha256sum` av originalet, och radera servern.
 Samma upplägg går att använda för ISO-bygget om din dator är för svag. Bygget av `karta-ai` ger en 14,5 GB stor ISO och cachen är 13 GB, så ta en server med gott om disk (hundratals GB) och mät själv.
 
 ## Välj zoomdjup
@@ -77,9 +80,11 @@ stilen återanvänds och redan renderade rutor hoppas över (de ligger i `$WORK/
 
 | Variabel | Standard | Betydelse |
 |---|---|---|
+| `SERVERS` | kärnor/6 | Antal tileserver-containrar. En container utnyttjar bara ca 6 kärnor; mätt på 16 kärnor: ca 205 rutor/s med 1, ca 550 med 3 |
+| `PLANET_DATE` | (låst källa) | ÅÅÅÅMMDD, färsk data ur Protomaps dagsbygge (se ovan) |
 | `ZMAX` | 14 | Högsta zoomnivå som renderas |
 | `ZMIN` | 0 | Lägsta |
-| `WORKERS` | antal kärnor | Parallella arbetare (och renderar-pool i tileservern) |
+| `WORKERS` | antal kärnor | Parallella arbetare totalt (renderar-poolen delas på `SERVERS`). Med `SERVERS=3` på 16 kärnor: `WORKERS=48` |
 | `WORK` | `./map-work` | Arbetsmapp; här hamnar allt |
 | `PORT` | 18081 | Lokal port för tileservern (bara 127.0.0.1) |
 | `BOUNDS` | Sverige | `väst,syd,öst,nord` i grader, t.ex. för en testregion |
@@ -90,8 +95,8 @@ Provkör på en liten region först, t.ex. Uppsala–Stockholm: `BOUNDS=17.0,59.
 1. Hämtar `sweden-osm.pmtiles` (4 092 223 980 byte) och kontrollerar SHA256 (`59fe0b51…3027a`, OSM-data 2026-05-20).
 2. Skapar MapLibre-stilen `oden` med **@protomaps/basemaps 5.7.2** (tema *light*, svenska namn) i en `node:22-slim`-container.
 3. Hämtar typsnitt och sprites från `protomaps/basemaps-assets` (låst commit `028c18f`).
-4. Startar **tileserver-gl v5.7.0** (Docker) som läser PMTiles direkt och renderar rutor som WebP (kvalitet 85, 256 px).
-5. `fetch-tiles.py` hämtar varje ruta inom ramen och skriver dem till en MBTiles-fil (SQLite, identiska rutor delas, återupptagbar).
+4. Startar `SERVERS` st **tileserver-gl v5.7.0** (Docker) som läser PMTiles direkt och renderar rutor som WebP (kvalitet 85, 256 px).
+5. `fetch-tiles.py` hämtar (jämnt fördelat över servrarna) varje ruta inom ramen och skriver dem till en MBTiles-fil (SQLite, identiska rutor delas, återupptagbar).
 6. Hämtar **go-pmtiles v1.31.2** (SHA256-kontrollerad) och konverterar MBTiles till `sverige.pmtiles`.
 7. Skriver ut storlek och SHA256 för resultatet.
 
@@ -101,7 +106,7 @@ receptet.
 ## Efter renderingen
 1. **Kontrollera** (valfritt men bra):
    ```bash
-   build/cache/map-work/pmtiles-bin/pmtiles show $WORK/sverige.pmtiles        # zoomnivåer, bounds, antal rutor
+   $WORK/pmtiles-bin/pmtiles show $WORK/sverige.pmtiles        # zoomnivåer, bounds, antal rutor
    mkdir -p /tmp/k && cp $WORK/sverige.pmtiles /tmp/k/ && $WORK/pmtiles-bin/pmtiles serve /tmp/k --port=8081 --interface=127.0.0.1 &
    curl -s -o t.webp -w '%{http_code}\n' http://127.0.0.1:8081/sverige/8/139/74.webp     # 200, öppna t.webp
    ```

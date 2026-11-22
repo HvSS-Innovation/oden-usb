@@ -6,7 +6,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 - Bygg-pipelinen är klar: artefakterna är låsta, Oden för Linux byggs i en Debian 13-container och bilden byggs med live-build (Debian 13, XFCE).
 - Systemet är testat på stickor (uppgift från Nicklas, 2026-11-20): start, krypterad persistens, upplåsning vid boot, Oden, Obsidian och den lokala kartan i Map View.
   Resultaten är inte dokumenterade i detalj; maskinvarumatrisen (`HW-MATRIS.md`) är ännu tom.
-- Kartan är klar: rasterkartan `sverige-raster.pmtiles` (zoom 0–14, 2 250 443 850 byte, OSM 2026-05) är renderad, uppladdad. Adressen ligger i `.env` (`ODEN_MAPS_URL`), inte i git.
+- Kartan är klar: rasterkartan `sverige-raster-20261120.pmtiles` (zoom 0–14, 1 914 774 924 byte, OSM 2026-11-20) är renderad och uppladdad till R2 (`oden/maps/`). Adress: <https://publik.hv-sog.se/oden/maps/sverige-raster-20261120.pmtiles> (sätts som `ODEN_MAPS_URL` i `.env`).
   `MAP_MAXZOOM=14` i `build/map.conf`.
 - ISO-varianten **karta** är byggd (`oden-karta-9e5e993.iso`, 5 959 909 376 byte) och publicerad på `https://publik.hv-sog.se/oden/9e5e993/`, med kontrollsumma och SBOM.
   Nedladdningssidan på Pages visar den.
@@ -37,7 +37,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 | Obsidian | 1.15.1 | Låst |
 | go-pmtiles | 1.31.2 | Låst |
 | Ollama | 0.40.16 | Låst via GitHubs digest |
-| sverige-raster.pmtiles | OSM 2026-05, z0–14 | SHA256 `85659a9e…`; adress i `.env` (`ODEN_MAPS_URL`) |
+| sverige-raster-20261120.pmtiles | OSM 2026-11-20, z0–14 | SHA256 `8434482de33755c1b1fdc7fdb7b41003b416aefbdf821cf4312d15d11f019250`; adress https://publik.hv-sog.se/oden/maps/sverige-raster-20261120.pmtiles (den äldre `sverige-raster.pmtiles`, SHA256 `85659a9e…`, 2 250 443 850 byte, finns kvar för äldre ISO-filer) adress i `.env` (`ODEN_MAPS_URL`) |
 | sweden-osm.pmtiles | OSM 2026-05-20 | Vektorkälla till rastret, medvetet ur `artifacts.lock` |
 
 ## Öppna frågor och beslut
