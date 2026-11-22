@@ -4,10 +4,13 @@
 #   build/scripts/map/render-map.sh                      # z0-14, hela Sverige
 #   ZMAX=12 WORK=/data/karta build/scripts/map/render-map.sh
 # Kan avbrytas (Ctrl+C) och köras om: nedladdning, stil och redan renderade rutor återanvänds.
-# Miljövariabler: ZMAX (14), ZMIN (0), WORKERS (antal kärnor), WORK (./map-work), PORT (18081), BOUNDS (Sverige).
+# Miljövariabler: ZMAX (14), ZMIN (0), WORKERS (antal kärnor), SERVERS (tileservrar, standard kärnor/6), WORK (./map-work),
+#   PORT (18081, och uppåt för fler servrar), BOUNDS (Sverige).
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 ZMAX="${ZMAX:-14}"; ZMIN="${ZMIN:-0}"; WORKERS="${WORKERS:-$(nproc)}"; WORK="$(mkdir -p "${WORK:-$PWD/map-work}" && cd "${WORK:-$PWD/map-work}" && pwd)"
+# En tileserver-gl-container utnyttjade bara ca 6 kärnor (mätt på 16 kärnor), så fler kärnor kräver fler containrar.
+SERVERS="${SERVERS:-$(( (WORKERS + 5) / 6 ))}"; (( SERVERS >= 1 )) || SERVERS=1
 PORT="${PORT:-18081}"; BOUNDS="${BOUNDS:-10.54,55.20,24.17,69.07}"
 
 # Allt som påverkar resultatet är låst här (versionerna är de som provats):
@@ -31,7 +34,7 @@ docker info >/dev/null 2>&1 || { echo "FEL: docker går inte att nå" >&2; exit 
 avail_gb=$(( $(df -Pk "$WORK" | awk 'NR==2 {print $4}') / 1048576 ))
 need_gb=$(( ZMAX >= 14 ? 15 : 10 ))
 (( avail_gb >= need_gb )) || { echo "FEL: $avail_gb GB ledigt i $WORK, räknar med minst $need_gb GB för ZMAX=$ZMAX" >&2; exit 1; }
-say "arbetsmapp $WORK, z$ZMIN-$ZMAX, $WORKERS parallella, $avail_gb GB ledigt"
+say "arbetsmapp $WORK, z$ZMIN-$ZMAX, $WORKERS parallella på $SERVERS tileservrar, $avail_gb GB ledigt"
 
 pm="$WORK/pmtiles-bin"; mkdir -p "$pm"
 if [[ ! -x "$pm/pmtiles" ]]; then
@@ -76,28 +79,34 @@ fi
 git -C "$WORK/assets" checkout -q "$ASSETS_COMMIT"
 cp -r "$WORK/assets/fonts/." "$data/fonts/"
 for f in .json .png @2x.json @2x.png; do cp "$WORK/assets/sprites/v4/light$f" "$data/styles/sprite$f"; done
-ln -sf "$src" "$data/pmtiles/sweden-osm.pmtiles"
+rm -f "$data/pmtiles/sweden-osm.pmtiles"; : > "$data/pmtiles/sweden-osm.pmtiles"  # tom platshållare; själva filen bind-monteras över den (symlänk gav "read-only file system")
 cat > "$data/config.json" <<J
 {
   "options": { "paths": { "root": "/data", "fonts": "fonts", "styles": "styles", "pmtiles": "pmtiles" },
-               "formatQuality": { "webp": 85 }, "maxRendererPoolSizes": [$WORKERS, 1, 1] },
+               "formatQuality": { "webp": 85 }, "maxRendererPoolSizes": [$(( (WORKERS + SERVERS - 1) / SERVERS )), 1, 1] },
   "styles": { "oden": { "style": "oden.json" } },
   "data": { "sweden": { "pmtiles": "sweden-osm.pmtiles" } }
 }
 J
 
 # 3. Tileserver (renderar rutor ur vektorfilen) och hämtning av alla rutor till MBTiles
-cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }; trap cleanup EXIT
-say "startar tileserver-gl ($TILESERVER_IMAGE)"
-docker run -d --name "$NAME" -p "127.0.0.1:$PORT:8080" -v "$data":/data:ro -v "$src":/data/pmtiles/sweden-osm.pmtiles:ro \
-  "$TILESERVER_IMAGE" --config /data/config.json >/dev/null
-for i in $(seq 1 60); do
-  [[ "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/styles/oden/0/0/0.webp")" == 200 ]] && break
-  sleep 2; [[ $i -lt 60 ]] || { docker logs "$NAME" 2>&1 | tail -20; echo "FEL: tileservern kom aldrig upp" >&2; exit 1; }
+cleanup() { for i in $(seq 0 $((SERVERS - 1))); do docker rm -f "$NAME-$i" >/dev/null 2>&1 || true; done; }; trap cleanup EXIT
+say "startar $SERVERS x tileserver-gl ($TILESERVER_IMAGE)"
+urls=()
+for k in $(seq 0 $((SERVERS - 1))); do
+  docker run -d --name "$NAME-$k" -p "127.0.0.1:$((PORT + k)):8080" -v "$data":/data:ro -v "$src":/data/pmtiles/sweden-osm.pmtiles:ro \
+    "$TILESERVER_IMAGE" --config /data/config.json >/dev/null
+  urls+=(--url "http://127.0.0.1:$((PORT + k))/styles/oden")
+done
+for k in $(seq 0 $((SERVERS - 1))); do
+  for i in $(seq 1 60); do
+    [[ "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$((PORT + k))/styles/oden/0/0/0.webp")" == 200 ]] && break
+    sleep 2; [[ $i -lt 60 ]] || { docker logs "$NAME-$k" 2>&1 | tail -20; echo "FEL: tileservern kom aldrig upp" >&2; exit 1; }
+  done
 done
 mb="$WORK/sverige-z$ZMIN-$ZMAX.mbtiles"
 say "renderar rutor till $mb"
-python3 -I "$here/fetch-tiles.py" --url "http://127.0.0.1:$PORT/styles/oden" --out "$mb" --zmin "$ZMIN" --zmax "$ZMAX" \
+python3 -I "$here/fetch-tiles.py" "${urls[@]}" --out "$mb" --zmin "$ZMIN" --zmax "$ZMAX" \
   --workers "$WORKERS" --bounds "$BOUNDS"
 cleanup; trap - EXIT
 

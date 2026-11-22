@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Hämtar rasterrutor från en tileserver-gl och skriver dem till MBTiles (deduplicerat; återupptar där det slutade).
   fetch-tiles.py --url http://127.0.0.1:18081/styles/oden --out sverige.mbtiles --zmin 0 --zmax 12 [--workers 6] [--bounds w,s,e,n]
+--url kan anges flera gånger (flera tileservrar): rutorna fördelas jämnt, resultatet hamnar i samma MBTiles-fil.
 Rutor som redan finns hämtas inte igen. Avbryt med Ctrl+C och kör om för att fortsätta."""
 import argparse, hashlib, math, os, sqlite3, sys, threading, time, urllib.request, urllib.error
 from concurrent.futures import ThreadPoolExecutor
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--url", required=True, help="bas-URL, t.ex. http://127.0.0.1:18081/styles/oden")
+ap.add_argument("--url", required=True, action="append", help="bas-URL, t.ex. http://127.0.0.1:18081/styles/oden (kan upprepas)")
 ap.add_argument("--out", required=True)
 ap.add_argument("--zmin", type=int, default=0)
 ap.add_argument("--zmax", type=int, required=True)
@@ -54,7 +55,7 @@ def get(t):
     z, x, y = t
     for attempt in range(4):
         try:
-            with urllib.request.urlopen(f"{a.url}/{z}/{x}/{y}.{a.ext}", timeout=120) as r: return t, r.read()
+            with urllib.request.urlopen(f"{a.url[(x + y) % len(a.url)]}/{z}/{x}/{y}.{a.ext}", timeout=120) as r: return t, r.read()
         except urllib.error.HTTPError as ex:
             if ex.code == 404: return t, None
         except Exception: pass
