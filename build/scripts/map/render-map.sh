@@ -33,15 +33,33 @@ need_gb=$(( ZMAX >= 14 ? 15 : 10 ))
 (( avail_gb >= need_gb )) || { echo "FEL: $avail_gb GB ledigt i $WORK, räknar med minst $need_gb GB för ZMAX=$ZMAX" >&2; exit 1; }
 say "arbetsmapp $WORK, z$ZMIN-$ZMAX, $WORKERS parallella, $avail_gb GB ledigt"
 
-# 1. Källfilen (återupptar delvis nedladdning)
+pm="$WORK/pmtiles-bin"; mkdir -p "$pm"
+if [[ ! -x "$pm/pmtiles" ]]; then
+  curl -fL --retry 3 -o "$pm/g.tgz" "$GOPM_URL"; [[ "$(sha256sum "$pm/g.tgz" | cut -d' ' -f1)" == "$GOPM_SHA" ]] || { echo "FEL: go-pmtiles avviker" >&2; exit 1; }
+  tar -xzf "$pm/g.tgz" -C "$pm" pmtiles
+fi
+
+# 1. Källfilen. PLANET_DATE=ÅÅÅÅMMDD: färsk data, Sverige beskuret ur Protomaps publika dagsbygge (OSM, ODbL); kräver inget av oss.
+#    Utan PLANET_DATE: den låsta filen ovan (OSM 2026-05-20), kontrollerad mot SHA256. Återupptar delvis nedladdning.
 src="$WORK/sweden-osm.pmtiles"
-if [[ ! -f "$src" ]] || [[ "$(stat -c %s "$src")" != "$SRC_BYTES" ]]; then
+if [[ -n "${PLANET_DATE:-}" ]]; then
+  [[ "$PLANET_DATE" =~ ^[0-9]{8}$ ]] || { echo "FEL: PLANET_DATE ska vara ÅÅÅÅMMDD" >&2; exit 1; }
+  src="$WORK/sweden-osm-$PLANET_DATE.pmtiles"
+  if [[ ! -f "$src.ok" ]]; then
+    say "beskär Sverige ur build.protomaps.com/$PLANET_DATE.pmtiles (bara de delar som behövs hämtas)"
+    rm -f "$src"; "$pm/pmtiles" extract "https://build.protomaps.com/$PLANET_DATE.pmtiles" "$src" --bbox="$BOUNDS"
+    touch "$src.ok"
+  fi
+  say "källa: OSM $PLANET_DATE, $(stat -c %s "$src") byte, sha256 $(sha256sum "$src" | cut -d' ' -f1)"
+elif [[ ! -f "$src" ]] || [[ "$(stat -c %s "$src")" != "$SRC_BYTES" ]]; then
   say "hämtar källfilen (4,1 GB)"; curl -fL --retry 5 -C - -o "$src" "$SRC_URL"
 fi
+if [[ -z "${PLANET_DATE:-}" ]]; then
 [[ "$(stat -c %s "$src")" == "$SRC_BYTES" ]] || { echo "FEL: fel storlek på $src" >&2; exit 1; }
 if [[ ! -f "$src.ok" ]]; then
   say "kontrollerar checksumma"; [[ "$(sha256sum "$src" | cut -d' ' -f1)" == "$SRC_SHA" ]] || { echo "FEL: checksumman för $src stämmer inte" >&2; exit 1; }
   touch "$src.ok"
+fi
 fi
 
 # 2. Stil, typsnitt och sprites -> $WORK/data (tileserver-gl:s rotkatalog)
@@ -84,11 +102,6 @@ python3 -I "$here/fetch-tiles.py" --url "http://127.0.0.1:$PORT/styles/oden" --o
 cleanup; trap - EXIT
 
 # 4. MBTiles -> PMTiles
-pm="$WORK/pmtiles-bin"; mkdir -p "$pm"
-if [[ ! -x "$pm/pmtiles" ]]; then
-  curl -fL --retry 3 -o "$pm/g.tgz" "$GOPM_URL"; [[ "$(sha256sum "$pm/g.tgz" | cut -d' ' -f1)" == "$GOPM_SHA" ]] || { echo "FEL: go-pmtiles avviker" >&2; exit 1; }
-  tar -xzf "$pm/g.tgz" -C "$pm" pmtiles
-fi
 out="$WORK/sverige.pmtiles"; rm -f "$out"
 say "konverterar till PMTiles"
 "$pm/pmtiles" convert "$mb" "$out"

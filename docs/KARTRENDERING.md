@@ -19,6 +19,11 @@ Kartan är en enda fil, `sverige.pmtiles` (rasterrutor, z0–14, 2,25 GB). Den l
    `sha256sum build/cache/assets/maps/sverige.pmtiles` (ska stämma med `ODEN_MAPS_SHA256`).
 2. **Rendera själv** från OpenStreetMap-data (Protomaps, ca 4,1 GB): `build/scripts/map/render-map.sh`, se "Så kör du" nedan.
    Det ger samma sorts fil men med dagens data, så SHA256 blir en annan.
+   **Färsk data:** sätt `PLANET_DATE=ÅÅÅÅMMDD` (ett datum som finns på `build.protomaps.com`, dagsbygge). Skriptet beskär då Sverige
+   ur det bygget med `pmtiles extract` (prövat 2026-11-22 mot 20261120: ca 4,7 GB nedladdat, några minuter) i stället för den låsta
+   källfilen från 2026-05. Använd en **ny, tom `WORK`-mapp**: redan renderade rutor i en gammal `WORK` återanvänds och skulle ge gammal data.
+   Källans datum, storlek och SHA256 skrivs ut; anteckna dem. Exempel:
+   `PLANET_DATE=20261120 ZMAX=14 WORKERS=16 WORK=/data/karta-ny build/scripts/map/render-map.sh`
 
 ## Behöver du mer kraft? Hyr en tillfällig server
 Renderingen z0–14 tog ca 50 minuter (rutorna) på den stora servern; på en vanlig dator räkna med flera timmar (tabellen nedan
@@ -119,3 +124,9 @@ receptet.
 ## Licens
 Kartdata © OpenStreetMap-bidragsgivare, ODbL. Protomaps Basemap-stilen är BSD-3, typsnitten (Noto Sans) OFL. Attribution ska synas för användaren
 (inte ännu inlagd i Map View; se `plan/05-kartor-pmtiles.md`).
+
+## Efter en ny rendering: publicera
+1. Kontrollera filen (`pmtiles show`, öppna några rutor) och notera SHA256 och byte.
+2. Ladda upp till den publika lagringen under ett nytt namn (skriv inte över den gamla filen som äldre ISO-filer pekar på).
+3. Uppdatera `ODEN_MAPS_URL` och `ODEN_MAPS_SHA256` i `.env`, lägg filen i `build/cache/assets/maps/sverige.pmtiles` och bygg om
+   (`ODEN_VARIANTS=minimal,karta,karta-ai`). Uppdatera datum, storlek och SHA256 i `docs/STATUS.md` och `docs/KALLOR.md`.
