@@ -9,7 +9,7 @@
 1. **Välj variant** på nedladdningssidan:
    - **Minimal:** kartorna hämtas från nätet en enda gång vid första start. Kräver internet då.
    - **Med karta:** kartorna ingår. Inget nätbehov alls, men en stor fil.
-   - **Med karta och AI:** kartor och lokala AI-modeller ingår. Störst fil; kräver troligen mer än 64 GB (?).
+   - **Med karta och AI:** kartor och lokala AI-modeller ingår. Störst fil (13,5 GiB); kräver minst en 32 GB-sticka, 64 GB rekommenderas.
 2. **Kontrollera kontrollsumman** (SHA256) mot det som står på sidan: `sha256sum fil.iso` (Linux/macOS) eller
    `Get-FileHash fil.iso -Algorithm SHA256` (Windows). Stämmer den inte ska filen inte användas.
 3. **Bränn** med balenaEtcher: välj ISO-filen, välj stickan, klicka *Flash*. **Allt på stickan raderas.** Det tar en stund för de stora varianterna.

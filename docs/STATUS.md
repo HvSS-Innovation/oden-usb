@@ -10,7 +10,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
   `MAP_MAXZOOM=14` i `build/map.conf`.
 - ISO-varianten **karta** är byggd (`oden-karta-9e5e993.iso`, 5 959 909 376 byte) och publicerad på `https://publik.hv-sog.se/oden/9e5e993/`, med kontrollsumma och SBOM.
   Nedladdningssidan på Pages visar den.
-- ISO-varianten **minimal** är byggd och publicerad (`oden-minimal-9773511.iso`, 3 710 320 640 byte, SHA256 `6bc97902…2542`) på `https://publik.hv-sog.se/oden/9773511/`. Den hämtar kartan vid första start från adressen i `assets.lock` i ISO-filen. **karta-ai** är inte byggd.
+- ISO-varianten **minimal** är byggd och publicerad (`oden-minimal-9773511.iso`, 3 710 320 640 byte, SHA256 `6bc97902…2542`) på `https://publik.hv-sog.se/oden/9773511/`. Den hämtar kartan vid första start från adressen i `assets.lock` i ISO-filen. **karta-ai** är byggd och publicerad (`oden-karta-ai-4b33379.iso`, 14 522 908 672 byte, SHA256 `613e3e20…97b5`) på `https://publik.hv-sog.se/oden/4b33379/`; inte provstartad.
 - Sajten (GitHub Pages, https://hvss-innovation.github.io/oden-usb/) publiceras från `site/` vid push till `main`. Pages-jobbet kan ibland falla på ett tillfälligt artefaktfel; kör då om jobbet.
 
 ## Per steg (se `plan/`)
@@ -22,9 +22,9 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 | 03 Krypterad persistens | Klart | `oden-firstboot`, `oden-wipe`, `oden-persist-dev`, `oden-persist-state`, `oden-passphrase-ok` (a-z, A-Z, 0-9 och mellanslag, ingen minsta längd), LUKS-etikett `oden-pending` → `oden` som sista steg |
 | 04 Nät, Signal, TAK | Delvis | NetworkManager, nftables, timesyncd och wifi-firmware ingår. Signal-länkning och TAK sköts av Odens eget gränssnitt. Tydlig statusindikator för frånkopplat läge finns inte |
 | 05 Kartor | Klart | Raster z0–14 renderat och låst. Map View använder bara den lokala kartan (`stage.sh`, `build/map.conf`) och är provad i Obsidian |
-| 06 AI / Ollama | Delvis | `ollama.service`, RAM-kontroll (16 GB) och NVIDIA-paket finns. Modellerna (`qwen3-vl:4b`, `qwen3:8b`) ligger inte i `build/cache/assets/`, så `karta-ai` kan inte byggas än |
+| 06 AI / Ollama | Delvis | `ollama.service`, RAM-kontroll (16 GB) och NVIDIA-paket finns. Modellerna (`qwen3-vl:4b`, `qwen3:8b`, 8 GB) ligger i `build/cache/assets/ollama/` och ingår i `karta-ai`. Inte provkörda på en sticka |
 | 07 Test, härdning, dokumentation | Delvis | Användarguide, adminguide, felsökning och HW-mall är skrivna. Kvar att dokumentera: maskinvarumatris, paketfångst, strömavbrott och `oden-wipe` |
-| 08 ISO-varianter (Etcher) | Delvis | `karta` och `minimal` byggda och publicerade. `karta-ai` saknas (modeller). AI-modeller i `minimal` är inte gjorda; `karta-ai` täcker AI |
+| 08 ISO-varianter (Etcher) | Delvis | `karta`, `minimal` och `karta-ai` byggda och publicerade (`karta-ai` inte provstartad). AI-modeller i `minimal` är inte gjorda; `karta-ai` täcker AI |
 | 09 ODEN-utseende | Klart | GRUB-tema, Plymouth, bakgrund, inloggning, genvägar, högupplöst skärm och pekplatta |
 
 ## Artefakter (`build/artifacts.lock`)
@@ -49,7 +49,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 - GitHub tillåter högst 2 GiB per fil i en release, så ISO-filerna ligger på `publik.hv-sog.se` (Cloudflare R2, bucketen `public-hv-sog`).
 
 ## Nästa steg
-1. Hämta AI-modellerna till `build/cache/assets/ollama/` och bygg `karta-ai`.
+1. Provstarta `karta-ai` på en sticka (minst 32 GB) och kontrollera att Ollama laddar modellerna.
 2. Dokumentera testresultaten: `HW-MATRIS.md` (minst fyra datorer, med och utan Secure Boot), paketfångst, strömavbrott och `oden-wipe`.
 3. Statusindikator för frånkopplat läge (steg 04).
 4. Bygge utan vår infrastruktur: se `plan/10-oberoende-bygge.md`.

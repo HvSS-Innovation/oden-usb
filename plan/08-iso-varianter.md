@@ -73,7 +73,7 @@ Etcher skriver bara ISO-storleken; resten av stickan är oallokerad. `oden-first
 8. Dokumentation: ANVANDARGUIDE (bränn med Etcher, första start, nätbehov i minimal), ADMINGUIDE (bygga varianter, ladda upp, uppdatera Pages), STATUS.
 
 ## Risker och öppna frågor
-- Stickstorlek: ISO + minst ca 8 GB persistens. `karta-ai` kräver troligen 128 GB-stickor; mät.
+- Stickstorlek: ISO + minst ca 8 GB persistens. `karta-ai` (ISO 13,5 GiB) kräver minst 32 GB (13,5 + 8 GiB persistens, räknat ur `oden-make-persist`, inte provat på en riktig sticka); 64 GB rekommenderas.
 - Etcher-verifiering av en ISO på tiotals GB tar lång tid; ange förväntad tid i guiden.
 - Nedladdningen kräver nät och tillräckligt ledigt utrymme; en avbruten hämtning ska kunna återupptas.
 - Secure Boot och p1/p2-layout påverkas inte.
