@@ -31,8 +31,7 @@ Resultat:
 - Uppladdad till `https://kartverktyget.s3.eu-central-003.backblazeb2.com/sverige-raster.pmtiles` (verifierad storlek,
   range-requests fungerar). Källfilen `sweden-osm.pmtiles` ligger kvar oförändrad på samma bucket.
 - Leaflet skalar upp z14 (`maxNativeZoom: 14`).
-- Oklart: i en testruta (z12, skogsområde) syntes raka diagonala linjer i landcover. Kontrollera visuellt i Obsidian
-  innan filen frysts som slutlig.
+- Rastret är låst i `build/maps.lock` och provat i Obsidian med den lokala kartan. Under renderingen syntes raka diagonala linjer i landcover i en testruta (z12, skogsområde); om de finns kvar i slutfilen är inte dokumenterat.
 
 Alternativ utan rendering: `protomaps-leaflet` ritar just detta vektorformat direkt i Leaflet, men Map View stöder det inte
 och skulle behöva patchas. Raster är enklare att driva.

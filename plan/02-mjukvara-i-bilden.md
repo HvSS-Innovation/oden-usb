@@ -39,4 +39,4 @@ Assets (p3) monteras skrivskyddat på `/srv/oden-assets` (karta, modeller).
 - Oden för Linux saknar upstream-release och byggs av `build/scripts/build-oden.sh` från git-taggen (PyInstaller i docker).
   Binären (`/opt/oden/oden`, ca 197 MB, onefile) startar i Debian 13-container med medföljande JRE och signal-cli. Se `docs/ADMINGUIDE.md`.
 - Alla artefakter är låsta i `artifacts.lock`; uppgradering med `build/scripts/bump.sh`.
-- Kvar: `config.ini`- och Obsidian-förkonfiguration (uppgift 7), kontroll av `--no-sandbox`, versionsnummer i binären, live-build-bygget av bilden.
+- Versionsnumret stämplas ur `artifacts.lock` av `build-oden.sh`, live-build-bygget av bilden är gjort och Obsidian startar med valvet registrerat (se steg 09). Ingen kod för `config.ini`-förkonfiguration eller `--no-sandbox` finns i bygget.

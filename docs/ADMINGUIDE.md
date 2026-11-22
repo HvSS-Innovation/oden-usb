@@ -1,8 +1,6 @@
 # Adminguide: bygga och skriva ODEN-stickor
 
-> Status 2026-11-19: artefakterna är låsta, Oden för Linux byggs och startar i en Debian 13-container, `stage.sh` är
-> testad mot riktiga artefakter. **Inte körda än:** live-build-bygget av hela bilden, `make-stick.sh` mot en riktig stick
-> och boot. Se "Kända begränsningar" nedan.
+> Underliggande projekt och var de hämtas: se [`KALLOR.md`](KALLOR.md).
 
 ## Översikt: vad som finns var
 ```
@@ -31,8 +29,9 @@ Bara den färdiga stickan ska gå att köra offline, inte byggprocessen.
 ./build/build.sh                     # 2. hämta, verifiera, bygg Oden, bygg bilden -> build/out/oden.iso
 # Valfria ISO-varianter för Etcher (kräver ODEN_ASSETS med maps/ och ollama/, och ifylld build/maps.lock för minimal):
 #   ODEN_VARIANTS=minimal,karta,karta-ai ./build/build.sh     # -> build/out/oden-<variant>-<version>.iso + .sha256
-# Publicera: ladda upp ISO-filerna (S3/Drive), sedan
-#   build/scripts/release-json.sh https://<bas-url> > site/releases.json   # och committa; Pages-sidan Ladda ner visar länkar och SHA256
+# Publicera: ladda upp ISO-filen, .sha256 och SBOM.txt till bucketen public-hv-sog (Cloudflare R2, nås på https://publik.hv-sog.se/),
+#   under oden/<version>/ (GitHub tillåter max 2 GiB per fil, så ISO-filerna ligger inte där). Sedan:
+#   build/scripts/release-json.sh https://publik.hv-sog.se/oden/<version> > site/releases.json   # och committa; Pages-sidan Ladda ner visar länkar och SHA256
 ls build/cache/assets/maps           # 3. lägg assets: maps/ (krävs), ollama/ (bara för --with-ai)
 sudo ./build/scripts/make-stick.sh [--with-ai] build/out/oden.iso /dev/sdX     # 4. skriv stickan
 ```
@@ -84,10 +83,9 @@ Upstream släpper bara Windows och macOS. `build-oden.sh` bygger Linux-binären 
 - GitHubs källtarball för en tagg har normalt samma checksumma över tid, men det garanteras inte. Avviker den
   misslyckas bygget (avsiktligt): kontrollera commit-hashen i kommentaren på raden och kör `bump.sh oden-source <version>` igen.
 - Oden-binären är "onefile": den packar upp sig själv (ca 200 MB) i `/tmp` vid varje start. På stickan är `/tmp` RAM.
-- Oden visar versionen `v0.0.0-dev`, eftersom bygget inte skickar in något versionsnummer.
-- `sweden-osm.pmtiles` (vektor, 4 GB) står i lås-filen men används inte av bilden; kartan på p3 måste vara en
-  renderad raster-fil (steg 05, ännu inte gjort).
-- Obsidian körs som extraherad AppImage; `chrome-sandbox` kan kräva `--no-sandbox` (verifieras vid första boot).
+- `sweden-osm.pmtiles` (vektor, 4 GB) ligger medvetet utanför `artifacts.lock` och används inte av bilden; kartan i bilden är
+  den renderade rasterfilen `sverige-raster.pmtiles` (steg 05), låst i `build/maps.lock`.
+- Obsidian körs som extraherad AppImage. Bygget sätter inte `--no-sandbox`.
 - Ollama-modeller har inget versionslås.
 - **Debian-paketen i bilden är medvetet inte pinnade.** live-build hämtar aktuella paket från Debians speglar vid varje
   bygge, och `artifacts.lock` täcker dem inte. Releasen är den färdiga ISO:n, inte byggreceptet: behövs ett nytt bygge

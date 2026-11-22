@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Källor – ODEN</title>
+<link rel="icon" type="image/png" href="img/oden-mark-64.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<meta name="theme-color" content="#606959">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+<a class="brand" href="index.html"><img src="img/oden-mark-64.png" width="40" height="40" alt=""><span>ODEN</span></a>
+<nav>
+<a href="index.html">Start</a>
+<a href="ladda-ner.html">Ladda ner</a>
+<a href="kom-igang.html">Kom igång</a>
+<a href="admin.html">Bygga och admin</a>
+<a href="status.html">Status</a>
+<a href="kallor.html" aria-current="page">Källor</a>
+</nav>
+</header>
+<main>
+<h1>Källor</h1>
+<p class="lead">ODEN-stickan är en sammansättning av andra projekt. Här ser du vad som hämtas in och var det kommer ifrån.</p>
+<p>Versioner och checksummor ligger i <a href="https://github.com/HvSS-Innovation/oden-usb/blob/main/build/artifacts.lock"><code>artifacts.lock</code></a> och <a href="https://github.com/HvSS-Innovation/oden-usb/blob/main/build/maps.lock"><code>maps.lock</code></a>. Samma uppgifter finns i <a href="https://github.com/HvSS-Innovation/oden-usb/blob/main/docs/KALLOR.md"><code>docs/KALLOR.md</code></a>.</p>
+
+<h2>ODEN-projekten</h2>
+<div class="scroll"><table>
+<tr><th>Projekt</th><th>Används till</th><th>Källa</th><th>Version</th><th>Licens</th></tr>
+<tr><td><strong>Oden</strong></td><td>Tar emot Signal-meddelanden och skriver Markdown. Webbgränssnitt på localhost, TAK-stöd</td><td><a href="https://github.com/NicklasAndersson/oden">NicklasAndersson/oden</a></td><td>v4.2.1</td><td>MIT</td></tr>
+<tr><td><strong>ODEN-analys</strong></td><td>Obsidian-valv och plugin för analys. Innehåller Map View och AI-pluginet</td><td><a href="https://github.com/larsnor/ODEN-analys">larsnor/ODEN-analys</a></td><td>v1.6.3</td><td>MIT</td></tr>
+</table></div>
+<p>Upstream släpper bara Oden för Windows och macOS. Linux-binären byggs från källkoden med Odens egen <code>s7_watcher.spec</code> (PyInstaller).</p>
+
+<h2>Ingår i Oden-binären</h2>
+<div class="scroll"><table>
+<tr><th>Projekt</th><th>Används till</th><th>Källa</th><th>Version</th><th>Licens</th></tr>
+<tr><td><strong>signal-cli</strong></td><td>Signal-klient (länkad enhet)</td><td><a href="https://github.com/AsamK/signal-cli">AsamK/signal-cli</a></td><td>v0.14.5</td><td>GPL-3.0</td></tr>
+<tr><td><strong>Temurin JRE</strong></td><td>Java som signal-cli kräver</td><td><a href="https://github.com/adoptium/temurin25-binaries">adoptium/temurin25-binaries</a></td><td>jdk-25.0.5.1+2</td><td>GPLv2 med Classpath Exception</td></tr>
+</table></div>
+
+<h2>Program på stickan</h2>
+<div class="scroll"><table>
+<tr><th>Projekt</th><th>Används till</th><th>Källa</th><th>Version</th><th>Licens</th></tr>
+<tr><td><strong>Obsidian</strong></td><td>Läser ODEN-valvet</td><td><a href="https://github.com/obsidianmd/obsidian-releases">obsidianmd/obsidian-releases</a></td><td>v1.15.1</td><td>Proprietär, gratis</td></tr>
+<tr><td><strong>Map View</strong></td><td>Karta i Obsidian (plugin, ingår i valvet)</td><td><a href="https://github.com/esm7/obsidian-map-view">esm7/obsidian-map-view</a></td><td>enligt valvet</td><td>MIT</td></tr>
+<tr><td><strong>go-pmtiles</strong></td><td>Serverar kartan lokalt</td><td><a href="https://github.com/protomaps/go-pmtiles">protomaps/go-pmtiles</a></td><td>v1.31.2</td><td>BSD-3-Clause</td></tr>
+<tr><td><strong>Ollama</strong></td><td>Kör AI-modeller lokalt (valfritt)</td><td><a href="https://github.com/ollama/ollama">ollama/ollama</a></td><td>v0.40.16</td><td>MIT</td></tr>
+</table></div>
+
+<h2>Operativsystem</h2>
+<p><a href="https://www.debian.org/">Debian 13 &quot;trixie&quot;</a> är basen. Bilden byggs med <a href="https://live-team.pages.debian.net/live-manual/">live-build</a>, och <code>live-boot</code> sköter krypterad persistens. Skrivbord (XFCE, LightDM), nät (NetworkManager, nftables) och Secure Boot (signerade <code>shim</code> och <code>grub</code>) kommer från Debians paket, liksom NVIDIA-drivrutinen (<code>non-free</code>, osignerad). Debian-paketen låses inte, och <code>SBOM.txt</code> bredvid varje ISO listar vilka versioner som ingick.</p>
+
+<h2>Kartor</h2>
+<div class="scroll"><table>
+<tr><th>Projekt</th><th>Används till</th><th>Källa</th><th>Licens</th></tr>
+<tr><td><strong>OpenStreetMap</strong></td><td>Kartdata (OSM 2026-05-20)</td><td><a href="https://www.openstreetmap.org/copyright">openstreetmap.org</a></td><td>ODbL, © OpenStreetMap-bidragsgivare</td></tr>
+<tr><td><strong>Protomaps Basemap</strong></td><td>Vektorkarta för Sverige och kartstil</td><td><a href="https://github.com/protomaps/basemaps">protomaps/basemaps</a></td><td>Se repot</td></tr>
+<tr><td><strong>basemaps-assets</strong></td><td>Typsnitt och symboler</td><td><a href="https://github.com/protomaps/basemaps-assets">protomaps/basemaps-assets</a></td><td>Se repot</td></tr>
+<tr><td><strong>Planetiler</strong></td><td>Byggde vektorkartan</td><td><a href="https://github.com/onthegomap/planetiler">onthegomap/planetiler</a></td><td>Apache-2.0</td></tr>
+<tr><td><strong>TileServer GL</strong></td><td>Renderade vektorkartan till raster en gång</td><td><a href="https://github.com/maptiler/tileserver-gl">maptiler/tileserver-gl</a></td><td>Se repot</td></tr>
+</table></div>
+<p>Stickan använder den färdigrenderade rasterkartan (zoom 0–14, 2,25 GB). Så renderades den: <a href="https://github.com/HvSS-Innovation/oden-usb/blob/main/docs/KARTRENDERING.md">KARTRENDERING.md</a>.</p>
+
+<h2>AI-modeller (valfritt)</h2>
+<ul>
+<li><a href="https://ollama.com/library/qwen3-vl"><code>qwen3-vl:4b</code></a>: bildanalys</li>
+<li><a href="https://ollama.com/library/qwen3"><code>qwen3:8b</code></a>: text, chatt och djupanalys</li>
+</ul>
+
+<h2>Bygg och publicering</h2>
+<p>Docker och xorriso bygger ISO-filerna. <a href="https://etcher.balena.io/">balenaEtcher</a> bränner dem. GitHub Pages visar den här sajten, och ISO-filerna ligger på Cloudflare R2 (<code>publik.hv-sog.se</code>) eftersom GitHub tillåter högst 2 GiB per fil.</p>
+</main>
+<footer>ODEN USB-distribution · <a href="https://github.com/HvSS-Innovation/oden-usb">källkod på GitHub</a></footer>
+</body>
+</html>

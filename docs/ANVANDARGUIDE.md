@@ -1,7 +1,5 @@
 # Användarguide: ODEN-stick
 
-> Status: skriven mot det som är byggt, men stickan är inte körd på riktig hårdvara än. Punkter märkta (?) är overifierade. Flödet med Etcher-bränd sticka är oprovat.
-
 ## Det här behöver du
 - En USB-sticka på minst 64 GB och en dator med UEFI. 8 GB RAM räcker för grundsystemet; AI kräver 16 GB.
 - En ISO-fil (se nedan) och ett program som bränner den till stickan, t.ex. balenaEtcher.

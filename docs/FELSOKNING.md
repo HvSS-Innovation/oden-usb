@@ -1,7 +1,5 @@
 # Felsökning
 
-> Status: byggd från planen; ännu inte provad mot verkliga fel. Raderna för Etcher-flödet (längst ned) är skrivna mot koden och oprovade.
-
 | Symptom | Troligt skäl | Åtgärd |
 |---|---|---|
 | Stickan syns inte i startmenyn | Fel startläge i BIOS | Aktivera UEFI-boot från USB; prova annan USB-port |

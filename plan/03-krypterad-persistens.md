@@ -23,7 +23,7 @@ den krypterade partitionen första gången.
    startar inte och en notis säger "Data inte upplåst, starta om". (Verifiera live-boots beteende vid fel lösenfras.)
 
 ## Säkerhet
-- **Avbrottssäker första start:** `luksFormat --label oden-pending`; etiketten byts till `oden` som sista steg. `oden-pending` (avbruten installation eller efter `oden-wipe`) erbjuder ny installation (`oden-persist-state`, `oden-firstboot`). Overifierat mot riktig cryptsetup.
+- **Avbrottssäker första start:** `luksFormat --label oden-pending`; etiketten byts till `oden` som sista steg. `oden-pending` (avbruten installation eller efter `oden-wipe`) erbjuder ny installation (`oden-persist-state`, `oden-firstboot`).
 - **Nödradering:** `oden-wipe` kör `cryptsetup luksErase`. Hur den startas beslutas senare. Ingen header-backup, så raderingen är slutgiltig.
   Dokumentera att flashminne kan behålla gamla block.
 - Ingen swap på disk (zram ok), ingen hibernation, core dumps av.
@@ -35,13 +35,12 @@ den krypterade partitionen första gången.
 - `oden-wipe` gör data oåtkomlig (verifierat med försök att öppna).
 - Hård strömavstängning mitt i skrivning ger ingen korrupt DB (testa 10 gånger).
 
-## Status (skript skrivna, ej körtestade)
-Skrivna i `build/overlay/usr/local/bin/`: `oden-persist-dev` (hittar p4 på boot-stickan), `oden-firstboot`
-(+ autostart i `etc/xdg/autostart/`), `oden-wipe`. Endast `bash -n` körd; cryptsetup-flödet är inte testat.
+## Status
+Finns i `build/overlay/usr/local/bin/`: `oden-persist-dev` (hittar p4 på boot-stickan), `oden-firstboot`
+(+ autostart i `etc/xdg/autostart/`), `oden-wipe`. Flödet är testat på stickor (Nicklas, 2026-11-20); testprotokollet är inte dokumenterat.
 Bakom skripten:
-- p4 måste ha **GPT-partitionsnamn `persistence`** (sätts av `make-stick.sh`, som ännu är TODO). Live-boot
+- p4 måste ha **GPT-partitionsnamn `persistence`** (sätts av `make-stick.sh` och av `oden-make-persist`). Live-boot
   hittar krypterade partitioner via det namnet, filsystemets label inuti LUKS är `persistence`.
 - `oden-firstboot` formaterar bara en partition utan filsystem, och avbryter före formatering om `/opt/oden-template` är tom.
 - Lösenfrasen skickas utan radbrytning (`printf '%s'`) så att den är identisk med vad live-boot får vid boot.
-- Att verifiera på riktig stick: att live-boot-prompten accepterar frasen, beteendet vid fel fras, `noatime` på p4
-  (live-boot monterar själv), 10 hårda strömavbrott.
+- Att dokumentera: beteendet vid fel lösenfras vid boot och resultatet av strömavbrottstesterna (10 hårda avbrott).

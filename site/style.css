@@ -52,3 +52,4 @@ th{background:var(--card)}
 .tile span{color:var(--muted);font-size:.95rem}
 
 footer{color:var(--muted);font-size:.9rem;padding:2rem 16px;margin-top:3rem;border-top:1px solid var(--line)}
+.scroll{overflow-x:auto}

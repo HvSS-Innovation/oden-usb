@@ -14,7 +14,7 @@ variants="${ODEN_VARIANTS:-}"; [[ "$variants" == all ]] && variants=minimal,kart
 nonempty() { [[ -d "$1" && -n "$(ls -A "$1")" ]]; }
 for v in ${variants//,/ }; do   # kontrolleras före det långa bygget
   case "$v" in
-    minimal) grep -qv '^#' maps.lock 2>/dev/null && ! grep -q PENDING maps.lock || { echo "FEL: minimal kräver ifyllda rader i maps.lock (inga PENDING)" >&2; exit 1; } ;;
+    minimal) { grep -v '^[[:space:]]*#' maps.lock 2>/dev/null | grep -q '[^[:space:]]' && ! grep -v '^[[:space:]]*#' maps.lock | grep -q PENDING; } || { echo "FEL: minimal kräver ifyllda rader i maps.lock (inga PENDING)" >&2; exit 1; } ;;
     karta) nonempty "$assets/maps" || { echo "FEL: karta kräver filer i $assets/maps" >&2; exit 1; } ;;
     karta-ai) nonempty "$assets/maps" && nonempty "$assets/ollama" || { echo "FEL: karta-ai kräver filer i $assets/maps och $assets/ollama" >&2; exit 1; } ;;
     *) echo "FEL: okänd variant $v (minimal, karta, karta-ai)" >&2; exit 1 ;;

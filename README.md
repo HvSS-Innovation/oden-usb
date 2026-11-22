@@ -1,6 +1,6 @@
 # ODEN-stick
 
-Ett komplett ODEN-system som startar från en USB-sticka och går att köra helt utan nätverk. Stickan innehåller Debian 13 (XFCE), Oden, Obsidian med ODEN-valvet, lokal karta (Sverige, zoom 0–14) och krypterad persistens (LUKS2). AI (Ollama) är valfritt.
+Ett komplett ODEN-system som startar från en USB-sticka och går att köra helt utan nätverk. Stickan innehåller Debian 13 (XFCE), [Oden](https://github.com/NicklasAndersson/oden), Obsidian med [ODEN-valvet](https://github.com/larsnor/ODEN-analys), lokal karta (Sverige, zoom 0–14) och krypterad persistens (LUKS2). AI ([Ollama](https://github.com/ollama/ollama)) är valfritt. Alla underliggande projekt och var de hämtas står i [`docs/KALLOR.md`](docs/KALLOR.md).
 
 Webbplats: https://hvss-innovation.github.io/oden-usb/
 
@@ -37,3 +37,5 @@ Kräver Linux med Docker och nät. Se [`docs/ADMINGUIDE.md`](docs/ADMINGUIDE.md)
 - [Adminguide](docs/ADMINGUIDE.md)
 - [Felsökning](docs/FELSOKNING.md)
 - [Kravspec och hotmodell](docs/KRAVSPEC.md)
+- [Underliggande projekt och källor](docs/KALLOR.md): vad som hämtas in och varifrån
+- [Status](docs/STATUS.md)

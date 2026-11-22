@@ -43,11 +43,11 @@ build/
 - `./build/build.sh` på ren maskin ger en bild, och `make-stick.sh` ger en stick.
 - Bilden bootar i QEMU/OVMF (`qemu-system-x86_64 -bios OVMF.fd -drive file=oden.iso,format=raw`).
 
-## Status make-stick.sh (skriven, ej körd mot riktig stick)
+## Status make-stick.sh
 Förkontroller före skrivning: flyttbar hel disk, >= 60 GB, bilden har exakt 2 partitioner, `maps/` finns
 (och `ollama/` med `--with-ai`) under `$ODEN_ASSETS` (standard `build/cache/assets`). Därefter: `sgdisk --zap-all`,
 `dd`, GPT (konverterar MBR vid behov), p2 (EFI) sätts till EF00, p3 `oden-assets` (ext4, innehåll + 5 % + 256 MiB),
 p4 `persistence` (resten, första 16 MiB nollade så att gammal LUKS-header inte blir kvar).
-Testat: syntax och sgdisk-sekvensen på en gles fil. Inte testat: dd/mount/mkfs mot en riktig enhet, och att
-bilden bootar (partitionstabellen är verifierad: p1 ISO-data + p2 EFI; `build.sh` efterbehandlar live-builds iso-hybrid med xorriso eftersom grub-efi ensam inte ger MBR/GPT).
-p3 monteras skrivskyddat på `/srv/oden-assets` via `build/overlay/etc/fstab` (`nofail`). Overifierat att live-boot lämnar raden orörd.
+Kontrollerat: syntax, sgdisk-sekvensen på en gles fil och partitionstabellen. Bilden är bootad och testad på stickor (Nicklas, 2026-11-20).
+(Partitionstabellen: : p1 ISO-data + p2 EFI; `build.sh` efterbehandlar live-builds iso-hybrid med xorriso eftersom grub-efi ensam inte ger MBR/GPT).
+p3 monteras skrivskyddat på `/srv/oden-assets` via `build/overlay/etc/fstab` (`nofail`).
