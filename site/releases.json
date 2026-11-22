@@ -7,6 +7,14 @@
       "url": "https://publik.hv-sog.se/oden/9e5e993/oden-karta-9e5e993.iso",
       "bytes": 5959909376,
       "sha256": "99c08208c072aaeaf40bc8a82169fc705a36f7c856082834e77e77f06634fff0"
+    },
+    {
+      "variant": "minimal",
+      "version": "9773511",
+      "file": "oden-minimal-9773511.iso",
+      "url": "https://publik.hv-sog.se/oden/9773511/oden-minimal-9773511.iso",
+      "bytes": 3710320640,
+      "sha256": "6bc97902f5d1d32095f930363ec4feec68061ee44339ae0b06e933c922121542"
     }
   ]
 }

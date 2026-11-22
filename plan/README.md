@@ -41,6 +41,7 @@ Hellre en funktion mindre än en rörlig del till.
 | `07-test-harda-dokumentera.md` | Test, härdning, dokumentation |
 | `08-iso-varianter.md` | Tre ISO-varianter som går att bränna med Etcher |
 | `09-oden-utseende.md` | Startmeny, uppstartsbild och bakgrund med ODEN-styling |
+| `10-oberoende-bygge.md` | Bygge utan vår infrastruktur: inga egna adresser i git, indata låsta efter innehåll |
 
 Aktuell status: se `docs/STATUS.md`.
 
