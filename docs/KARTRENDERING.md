@@ -11,6 +11,36 @@ och konverterar till PMTiles.
 - Diskutrymme (skriptet kontrollerar): minst 10 GB för z12–13 och 15 GB för z14 (källa 4,1 GB + MBTiles + PMTiles).
 - Rendering är processorbunden: fler kärnor ger nästan linjärt snabbare resultat. Minne: ca 1 GB per parallell arbetare.
 
+## Skaffa kartan (välj ett sätt)
+Kartan är en enda fil, `sverige.pmtiles` (rasterrutor, z0–14, 2,25 GB). Den ligger inte i repot.
+1. **Du har redan filen eller en adress till den** (snabbast). Lägg filen i `build/cache/assets/maps/sverige.pmtiles`
+   för `karta` och `karta-ai`. För `minimal` sätter du dessutom `ODEN_MAPS_URL` (och helst `ODEN_MAPS_SHA256`) i `.env`.
+   Hämta och kontrollera: `curl -fL -o build/cache/assets/maps/sverige.pmtiles "$ODEN_MAPS_URL"` och
+   `sha256sum build/cache/assets/maps/sverige.pmtiles` (ska stämma med `ODEN_MAPS_SHA256`).
+2. **Rendera själv** från OpenStreetMap-data (Protomaps, ca 4,1 GB): `build/scripts/map/render-map.sh`, se "Så kör du" nedan.
+   Det ger samma sorts fil men med dagens data, så SHA256 blir en annan.
+
+## Behöver du mer kraft? Hyr en tillfällig server
+Renderingen z0–14 tog ca 50 minuter (rutorna) på den stora servern; på en vanlig dator räkna med flera timmar (tabellen nedan
+visar ca 7 timmar för z14), och 15 GB disk behövs. Gör den på en tillfällig molnserver och radera den direkt efteråt (så gjordes kartan 2026-11-20: Hetzner cpx62,
+Ubuntu 24.04, Docker). Kostnaden är liten men kolla Hetzners aktuella pris.
+```bash
+# Skapa (kräver hcloud CLI och ett Hetzner-projekt med API-token; eller gör det i konsolen)
+hcloud server create --name karta --type cpx62 --image ubuntu-24.04 --ssh-key <din-nyckel>
+ssh root@<ip>
+curl -fsSL https://get.docker.com | sh && apt-get install -y git tmux python3
+git clone https://github.com/HvSS-Innovation/oden-usb.git && cd oden-usb
+tmux new -s karta
+ZMAX=14 WORKERS=16 WORK=/data/karta build/scripts/map/render-map.sh
+# Hämta hem resultatet och kontrollera:
+scp root@<ip>:/data/karta/sverige.pmtiles build/cache/assets/maps/ && sha256sum build/cache/assets/maps/sverige.pmtiles
+# RADERA servern så snart du har filen (annars fortsätter fakturan):
+hcloud server delete karta
+```
+Rekommendation: `cpx62` (16 vCPU) för full rendering; en mindre server (t.ex. 8 vCPU) fungerar men tar dubbelt så lång tid.
+Minne räcker med ca 1 GB per arbetare. Lägg filen sedan på er publika lagring och sätt `ODEN_MAPS_URL` (se ovan).
+Samma upplägg går att använda för ISO-bygget om din dator är för svag. Bygget av `karta-ai` ger en 14,5 GB stor ISO och cachen är 13 GB, så ta en server med gott om disk (hundratals GB) och mät själv.
+
 ## Välj zoomdjup
 Antal rutor inom Sveriges ram (10,54–24,17 °Ö, 55,20–69,07 °N), per nivå och sammanlagt:
 
