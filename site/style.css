@@ -53,3 +53,6 @@ th{background:var(--card)}
 
 footer{color:var(--muted);font-size:.9rem;padding:2rem 16px;margin-top:3rem;border-top:1px solid var(--line)}
 .scroll{overflow-x:auto}
+figure.skarm{margin:1.2rem 0}
+figure.skarm img{max-width:100%;height:auto;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.25);display:block}
+figure.skarm figcaption{font-size:.9rem;opacity:.8;margin-top:.4rem}
