@@ -10,7 +10,7 @@ Bekräftade beslut. Detaljer per steg finns i `plan/`.
 
 ## Krav
 - **Karta:** Protomaps-basemap för Sverige (vektor-PMTiles, OSM 2026-05, ODbL), renderas en gång till raster. Se steg 05.
-- **Minimikrav:** 8 GB RAM för grundsystemet; AI kräver >=16 GB RAM. Stickstorlek: 16 GB fungerar för Minimal och Med karta (provat med Med karta), 32 GB eller mer rekommenderas; Med karta och AI kräver minst 32 GB (ej provat), 64 GB rekommenderas.
+- **Minimikrav:** 8 GB RAM för grundsystemet; AI kräver >=16 GB RAM. Stickstorlek: 16 GB fungerar för Minimal och Med karta, 32 GB eller mer rekommenderas; Med karta och AI kräver minst 32 GB, 64 GB rekommenderas.
   Live-systemets egna skrivningar hamnar i RAM.
 - Ingen hibernation, ingen swap på disk (zram ok).
 - Ingen brandväggsvitlista: inkommande blockeras, utgående öppet.

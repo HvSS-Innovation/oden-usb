@@ -8,8 +8,8 @@
 ## Skaffa och bränn stickan
 1. **Välj variant** på nedladdningssidan:
    - **Minimal:** kartorna hämtas från nätet en enda gång vid första start. Kräver internet då.
-   - **Med karta:** kartorna ingår. Inget nätbehov alls, men en stor fil (5,2 GiB). Fungerar på en 16 GB-sticka (provat), 32 GB eller mer rekommenderas.
-   - **Med karta och AI:** kartor och lokala AI-modeller ingår. Störst fil (13,2 GiB); kräver en större sticka, minst 32 GB (ej provat), 64 GB rekommenderas.
+   - **Med karta:** kartorna ingår. Inget nätbehov alls, men en stor fil (5,2 GiB). Fungerar på en 16 GB-sticka, 32 GB eller mer rekommenderas.
+   - **Med karta och AI:** kartor och lokala AI-modeller ingår. Störst fil (13,2 GiB); kräver en större sticka, minst 32 GB, 64 GB rekommenderas.
 2. **Kontrollera kontrollsumman** (SHA256) mot det som står på sidan: `sha256sum fil.iso` (Linux/macOS) eller
    `Get-FileHash fil.iso -Algorithm SHA256` (Windows). Stämmer den inte ska filen inte användas.
 3. **Bränn** med balenaEtcher: välj ISO-filen, välj stickan, klicka *Flash*. **Allt på stickan raderas.** Det tar en stund för de stora varianterna.

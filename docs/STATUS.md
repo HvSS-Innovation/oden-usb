@@ -50,7 +50,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 - GitHub tillåter högst 2 GiB per fil i en release, så ISO-filerna ligger på `publik.hv-sog.se` (Cloudflare R2, bucketen `public-hv-sog`).
 
 ## Nästa steg
-1. Provstarta `karta-ai` på en sticka (minst 32 GB; 16 GB räcker för `karta`, provat) och kontrollera att Ollama laddar modellerna.
+1. Provstarta `karta-ai` på en sticka (minst 32 GB; 16 GB räcker för `karta`) och kontrollera att Ollama laddar modellerna.
 2. Dokumentera testresultaten: `HW-MATRIS.md` (minst fyra datorer, med och utan Secure Boot), paketfångst, strömavbrott och `oden-wipe`.
 3. Statusindikator för frånkopplat läge (steg 04).
 4. Bygge utan vår infrastruktur: se `plan/10-oberoende-bygge.md`.
