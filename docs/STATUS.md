@@ -14,7 +14,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
   - **karta-ai**: `oden-karta-ai-4012904.iso`, 14 187 364 352 byte, SHA256 `708ee6eb…4c75`.
 - Sajten (GitHub Pages, https://hvss-innovation.github.io/oden-usb/) publiceras från `site/` vid push till `main`. Pages-jobbet kan ibland falla på ett tillfälligt artefaktfel; kör då om jobbet.
 
-## Per steg (se `plan/`)
+## Per steg (se `plan/arkiv/`)
 | Steg | Status | Detaljer |
 |---|---|---|
 | 00 Beslut och kravspec | Klart | `KRAVSPEC.md`, hotmodell beslutad |
