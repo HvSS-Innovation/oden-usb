@@ -38,7 +38,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 | Obsidian | 1.15.1 | Låst |
 | go-pmtiles | 1.31.2 | Låst |
 | Ollama | 0.40.16 | Låst via GitHubs digest |
-| sverige-raster-20261120.pmtiles | OSM 2026-11-20, z0–14 | SHA256 `8434482de33755c1b1fdc7fdb7b41003b416aefbdf821cf4312d15d11f019250`; adress https://publik.hv-sog.se/oden/maps/sverige-raster-20261120.pmtiles (den äldre `sverige-raster.pmtiles`, SHA256 `85659a9e…`, 2 250 443 850 byte, finns kvar för äldre ISO-filer) adress i `.env` (`ODEN_MAPS_URL`) |
+| sverige-raster-20261120.pmtiles | OSM 2026-11-20, z0–14 | SHA256 `8434482de33755c1b1fdc7fdb7b41003b416aefbdf821cf4312d15d11f019250`; adress https://publik.hv-sog.se/oden/maps/sverige-raster-20261120.pmtiles (den äldre `sverige-raster.pmtiles` är borttagen från R2) adress i `.env` (`ODEN_MAPS_URL`) |
 | sweden-osm.pmtiles | OSM 2026-05-20 | Vektorkälla till rastret, medvetet ur `artifacts.lock` |
 
 ## Öppna frågor och beslut
@@ -50,7 +50,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 - GitHub tillåter högst 2 GiB per fil i en release, så ISO-filerna ligger på `publik.hv-sog.se` (Cloudflare R2, bucketen `public-hv-sog`).
 
 ## Nästa steg
-1. Provstarta `karta-ai` på en sticka (minst 32 GB) och kontrollera att Ollama laddar modellerna.
+1. Provstarta `karta-ai` på en sticka (minst 32 GB; 16 GB räcker för `karta`, provat) och kontrollera att Ollama laddar modellerna.
 2. Dokumentera testresultaten: `HW-MATRIS.md` (minst fyra datorer, med och utan Secure Boot), paketfångst, strömavbrott och `oden-wipe`.
 3. Statusindikator för frånkopplat läge (steg 04).
 4. Bygge utan vår infrastruktur: se `plan/10-oberoende-bygge.md`.
