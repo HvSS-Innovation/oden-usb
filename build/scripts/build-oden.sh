@@ -9,8 +9,9 @@ cd "$(dirname "$0")/.."
 # Hash av de låsrader (namn, url, sha256) binären byggs från. build.sh jämför den med cache/oden-linux.inputs.
 # stamp-version-N: ändras när byggsteget ändras så att cache/oden-linux byggs om.
 inputs_hash() { { awk '$1 ~ /^(oden-source|jre-x64|signal-cli)$/ {print $1, $2, $3}' artifacts.lock; echo stamp-version-2; } | sha256sum | cut -d' ' -f1; }
-# Version = taggen i oden-source-URL:en (…/tags/v4.2.1.tar.gz -> 4.2.1).
-ODEN_VERSION=$(awk '$1=="oden-source" {print $2}' artifacts.lock | sed -E 's#.*/tags/v?##; s#\.tar\.gz$##')
+# Version = "version=X" i kommentaren på oden-source-raden (används för commit-tarballs), annars taggen i URL:en
+# (…/tags/v4.2.1.tar.gz -> 4.2.1).
+ODEN_VERSION=$(awk '$1=="oden-source" { for (i=4;i<=NF;i++) if ($i ~ /^version=/) { sub(/^version=/,"",$i); print $i; exit } print $2 }' artifacts.lock | sed -E 's#.*/tags/v?##; s#\.tar\.gz$##')
 [[ "$ODEN_VERSION" =~ ^[0-9][0-9A-Za-z.+-]*$ ]] || { echo "FEL: kunde inte läsa version ur oden-source-URL:en ($ODEN_VERSION)" >&2; exit 1; }
 [[ "${1:-}" == "--print-inputs" ]] && { inputs_hash; exit 0; }
 for n in oden-source jre-x64 signal-cli; do
