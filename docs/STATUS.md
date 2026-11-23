@@ -8,10 +8,10 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
   Resultaten är inte dokumenterade i detalj; maskinvarumatrisen (`HW-MATRIS.md`) är ännu tom.
 - Kartan är klar: rasterkartan `sverige-raster-20261120.pmtiles` (zoom 0–14, 1 914 774 924 byte, OSM 2026-11-20) är renderad och uppladdad till R2 (`oden/maps/`). Adress: <https://publik.hv-sog.se/oden/maps/sverige-raster-20261120.pmtiles> (sätts som `ODEN_MAPS_URL` i `.env`). Lokalt och på ISO:n heter filen `sverige.pmtiles` (Map View och kartservern förutsätter namnet).
   `MAP_MAXZOOM=14` i `build/map.conf`.
-- ISO-varianterna är ombyggda och publicerade på `https://publik.hv-sog.se/oden/4012904/`, med kontrollsumma och SBOM (kontrollerade mot de lokala filerna efter uppladdning). De tidigare filerna (`b81c7d6`) hade en karta som inte visades: Map View pekar på `/sverige/…` men kartfilen hette `sverige-raster-20261120.pmtiles`. Nu heter den lokalt `sverige.pmtiles`, och `build.sh` avbryter om namnet är fel. Kartan är provad i Obsidian på `karta` (provstartad i qemu utan KVM, med kartservern startad manuellt); `karta-ai` är provad i begränsad omfattning; `minimal` är inte provstartad.
-  - **karta**: `oden-karta-4012904.iso`, 5 625 282 560 byte, SHA256 `9eb0508a…f833`.
-  - **minimal**: `oden-minimal-4012904.iso`, 3 710 517 248 byte, SHA256 `fd8eab6d…f755`. Hämtar kartan vid första start från adressen i `assets.lock` i ISO-filen.
-  - **karta-ai**: `oden-karta-ai-4012904.iso`, 14 187 364 352 byte, SHA256 `708ee6eb…4c75`.
+- ISO-varianterna: `minimal` och `karta` är byggda med Oden 4.2.2+ac2ebc3 (onedir) och publicerade på `https://publik.hv-sog.se/oden/e529877/` 2026-11-23, med kontrollsumma och SBOM (kontrollerade mot de lokala filerna efter uppladdning). `karta-ai` ligger kvar på den förra versionen (`4012904`) tills den byggts om. Lokalt och på ISO:n heter kartfilen `sverige.pmtiles` (Map View och kartservern förutsätter namnet) och `build.sh` avbryter om namnet är fel. Kartan är provad i Obsidian på `karta`; `minimal` är inte provstartad.
+  - **karta**: `oden-karta-e529877.iso`, 5 605 949 440 byte, SHA256 `51369387…90e1`.
+  - **minimal**: `oden-minimal-e529877.iso`, 3 691 184 128 byte, SHA256 `33f6c887…6a91`. Hämtar kartan vid första start från adressen i `assets.lock` i ISO-filen.
+  - **karta-ai**: `oden-karta-ai-4012904.iso`, 14 187 364 352 byte, SHA256 `708ee6eb…4c75` (äldre Oden, onefile).
 - Sajten (GitHub Pages, https://hvss-innovation.github.io/oden-usb/) publiceras från `site/` vid push till `main`. Pages-jobbet kan ibland falla på ett tillfälligt artefaktfel; kör då om jobbet.
 
 ## Per steg (se `plan/arkiv/`)
