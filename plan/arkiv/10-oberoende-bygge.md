@@ -1,4 +1,4 @@
-# Steg 10: Bygge utan vår infrastruktur
+# Steg 10: Bygge utan vår infrastruktur (avstyrt 2026-11-23, genomförs inte)
 
 ## Mål
 Vem som helst ska kunna bygga ODEN-stickan **utan åtkomst till vår infrastruktur**, med enbart det som finns i git och publika källor på nätet.

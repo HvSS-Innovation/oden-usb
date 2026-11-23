@@ -1,6 +1,6 @@
 # Kravspec: ODEN-stick
 
-Bekräftade beslut. Detaljer per steg finns i `plan/arkiv/` (steg 00–09) och `plan/10-oberoende-bygge.md`.
+Bekräftade beslut. Detaljer per steg finns i `plan/arkiv/` (steg 00–10; steg 10 är avstyrt).
 
 ## Bas
 - Debian 13 live (`live-build`), XFCE, x86_64 UEFI, med eller utan Secure Boot (Debians signerade shim/grub). ARM utanför scope.

@@ -53,7 +53,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 1. Provkör `karta-ai` fullt ut på en sticka (minst 32 GB; 16 GB räcker för `karta`): Ollama ska ladda modellerna och svara.
 2. Dokumentera testresultaten: `HW-MATRIS.md` (minst fyra datorer, med och utan Secure Boot), paketfångst, strömavbrott och `oden-wipe`.
 3. Statusindikator för frånkopplat läge (steg 04).
-4. Bygge utan vår infrastruktur: se `plan/10-oberoende-bygge.md`.
+
 
 ## Publicera en ny ISO
 1. `ODEN_VARIANTS=<variant> ./build/build.sh` (se `ADMINGUIDE.md`).

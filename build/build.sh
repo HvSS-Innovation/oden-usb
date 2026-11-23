@@ -11,7 +11,7 @@ mkdir -p out
 #   karta     + $ODEN_ASSETS/maps       karta-ai  + $ODEN_ASSETS/maps och $ODEN_ASSETS/ollama
 assets="${ODEN_ASSETS:-$PWD/cache/assets}"
 variants="${ODEN_VARIANTS:-}"; [[ "$variants" == all ]] && variants=minimal,karta,karta-ai
-# Kartlåset för minimal (ingen adress till vår lagring i git, se plan/10): ODEN_MAPS_URL (+ valfritt ODEN_MAPS_SHA256) ur miljön
+# Kartlåset för minimal (ingen adress till vår lagring i git, se plan/arkiv/10): ODEN_MAPS_URL (+ valfritt ODEN_MAPS_SHA256) ur miljön
 # eller ../.env, annars en lokal, ignorerad build/maps.lock. Filen i cache/assets/maps/ ger byte och SHA256 om de inte anges.
 [[ -f ../.env ]] && { set -a; . ../.env; set +a; }
 resolve_maps_lock() {

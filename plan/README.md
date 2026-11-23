@@ -29,7 +29,7 @@ Hellre en funktion mindre än en rörlig del till.
 - 7s-rapport: endast referens, ingår inte.
 
 ## Steg
-Steg 00–09 är genomförda och ligger i `arkiv/`. Steg 10 är öppet.
+Steg 00–09 är genomförda och ligger i `arkiv/`. Steg 10 är avstyrt och ligger också i `arkiv/`.
 
 | Fil | Steg |
 |---|---|
@@ -43,7 +43,7 @@ Steg 00–09 är genomförda och ligger i `arkiv/`. Steg 10 är öppet.
 | `arkiv/07-test-harda-dokumentera.md` | Test, härdning, dokumentation |
 | `arkiv/08-iso-varianter.md` | Tre ISO-varianter som går att bränna med Etcher |
 | `arkiv/09-oden-utseende.md` | Startmeny, uppstartsbild och bakgrund med ODEN-styling |
-| `10-oberoende-bygge.md` | Bygge utan vår infrastruktur: inga egna adresser i git, indata låsta efter innehåll |
+| `arkiv/10-oberoende-bygge.md` (avstyrt) | Bygge utan vår infrastruktur: inga egna adresser i git, indata låsta efter innehåll |
 
 Aktuell status: se `docs/STATUS.md`.
 
