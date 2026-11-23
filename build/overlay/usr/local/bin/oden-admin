@@ -1,0 +1,283 @@
+#!/bin/bash
+# oden-admin: interaktiv felsökning och administration på ODEN-stickan (nätverk, tjänster, versioner, maskinvara).
+#   oden-admin                 meny
+#   oden-admin status|nat|tjanster|versioner|hw|rapport|hjalp     (utan meny, för skript och fjärrhjälp)
+# Ändrar bara det du ber om: starta om tjänster, ansluta wifi, starta om eller stänga av datorn. Kräver inga extra paket.
+set -u
+
+S=sudo; SN="sudo -n"; [[ $EUID -eq 0 ]] && { S=""; SN=""; }   # SN: aldrig lösenordsfråga (rapporter)
+USER_SVC=(oden pmtiles ollama)
+SYS_SVC=(NetworkManager nftables oden-assets systemd-timesyncd)
+
+have() { command -v "$1" >/dev/null 2>&1; }
+hdr()  { printf '\n== %s ==\n' "$*"; }
+run()  { printf '$ %s\n' "$*"; "$@" 2>&1 || true; }
+pause() { [[ -t 0 ]] && { printf '\nTryck Enter för att fortsätta... '; read -r _; } || true; }
+ask()  { local a; read -rp "$1 [j/N] " a || return 1; [[ "$a" == [jJyY]* ]]; }
+
+svc_state() { # svc_state user|system namn
+  if [[ $1 == user ]]; then systemctl --user is-active "$2" 2>/dev/null || true
+  else systemctl is-active "$2" 2>/dev/null || true; fi
+}
+
+# ---------- Rapportdelar (skriver till stdout) ----------
+sec_status() {
+  hdr "Översikt"
+  [[ -f /etc/oden-release ]] && cat /etc/oden-release
+  echo "Datum: $(date '+%Y-%m-%d %H:%M')"
+  echo "Kärna: $(uname -r)   Uppetid: $(uptime -p 2>/dev/null)"
+  free -h 2>/dev/null | sed -n 1,2p
+  hdr "Persistens (krypterad lagring)"
+  if have oden-persist-state; then echo "tillstånd: $(oden-persist-state 2>&1)"; fi
+  if [[ -f $HOME/.oden-persist ]]; then echo "upplåst: ja"; else echo "upplåst: nej (data sparas inte)"; fi
+  hdr "Tjänster"
+  local s
+  for s in "${USER_SVC[@]}"; do printf '%-18s %s\n' "$s (användare)" "$(svc_state user "$s")"; done
+  for s in "${SYS_SVC[@]}"; do printf '%-18s %s\n' "$s" "$(svc_state system "$s")"; done
+  hdr "Diskutrymme"
+  df -h / /home /srv/oden-assets 2>/dev/null | awk '!seen[$0]++'
+  sec_net_short
+}
+
+sec_net_short() {
+  hdr "Nätverk (kort)"
+  if have nmcli; then run nmcli -t -f DEVICE,TYPE,STATE,CONNECTION device; else echo "nmcli saknas"; fi
+  run ip -br addr
+  run ip route
+}
+
+sec_net() {
+  sec_net_short
+  hdr "Nätverkskort (maskinvara)"
+  if have lspci; then lspci -nn 2>/dev/null | grep -i -E 'ethernet|network|wireless|thunderbolt' || echo "(inga nätverkskort syns som PCI-enheter)"; fi
+  if have lsusb; then lsusb 2>/dev/null | grep -i -E 'ethernet|network|wireless|wlan|lan|802\.11|gigabit' || echo "(inga USB-nätverksenheter syns)"; fi
+  hdr "Drivrutiner i kärnan"
+  lsmod 2>/dev/null | grep -i -E 'wl|iwlwifi|ath|brcm|b43|rtw|rtl|mt76|tg3|r8152|ax88179|cdc_ncm|r8169|e1000|igb|thunderbolt' || echo "(inga kända nätverksmoduler laddade)"
+  hdr "rfkill"
+  if have rfkill; then run rfkill list; else echo "rfkill saknas"; fi
+  hdr "Kärnmeddelanden om nät och firmware"
+  ($SN dmesg || dmesg) 2>/dev/null | grep -i -E 'firmware|iwlwifi|brcm|wl:|b43|tg3|thunderbolt|eth[0-9]|wlan|r8152|ax88179|cdc_ncm|usb.*(ethernet|lan)' | tail -40 || true
+}
+
+sec_net_test() {
+  hdr "Test av nätet (skickar några få ping och en DNS-fråga)"
+  local gw; gw=$(ip route 2>/dev/null | awk '/^default/ {print $3; exit}')
+  if [[ -z "$gw" ]]; then echo "Ingen standardrutt: inget nätverk är anslutet."; return; fi
+  echo "Standardrutt (router): $gw"
+  run ping -c 2 -W 2 "$gw"
+  echo; echo "Internet (1.1.1.1):"; run ping -c 2 -W 2 1.1.1.1
+  echo; echo "Namnuppslag (deb.debian.org):"; run getent hosts deb.debian.org
+}
+
+sec_services() {
+  hdr "Tjänster"
+  local s
+  for s in "${USER_SVC[@]}"; do
+    printf '%-18s %-10s' "$s (användare)" "$(svc_state user "$s")"
+    systemctl --user show -p Description --value "$s" 2>/dev/null || echo
+  done
+  for s in "${SYS_SVC[@]}"; do
+    printf '%-18s %-10s' "$s" "$(svc_state system "$s")"
+    systemctl show -p Description --value "$s" 2>/dev/null || echo
+  done
+  echo
+  echo "Obs: oden, pmtiles och ollama startar bara när lagringen är upplåst; ollama kräver också minst 16 GB RAM och modeller."
+}
+
+sec_versions() {
+  hdr "ODEN-stickan"
+  [[ -f /etc/oden-release ]] && cat /etc/oden-release || echo "(/etc/oden-release saknas)"
+  if [[ -f /etc/oden-versions ]]; then hdr "Inbyggd programvara (artifacts.lock)"; column -t /etc/oden-versions 2>/dev/null || cat /etc/oden-versions; fi
+  hdr "System"
+  echo "Debian: $(cat /etc/debian_version 2>/dev/null)"
+  echo "Kärna: $(uname -r)"
+  hdr "Utvalda paket"
+  local p
+  for p in network-manager nftables firefox-esr linux-image-amd64 firmware-linux-nonfree firmware-iwlwifi firmware-realtek firmware-atheros firmware-brcm80211 broadcom-sta-dkms nvidia-driver dkms; do
+    v=$(dpkg -s "$p" 2>/dev/null | awk '/^Status: install ok installed/ {ok=1} /^Version:/ {v=$2} END {if (ok) print v}')
+    [[ -n "$v" ]] && printf '%-24s %s\n' "$p" "$v"
+  done
+  hdr "DKMS-moduler"
+  if have dkms; then run dkms status; else echo "dkms saknas"; fi
+  hdr "Oden-gränssnittet"
+  if have curl; then
+    v=$(curl -s -m 3 http://127.0.0.1:8080 2>/dev/null | grep -o -E 'v[0-9]+(\.[0-9]+)+[^<"]*' | head -1)
+    echo "Oden svarar: ${v:-nej (tjänsten är stoppad eller startar fortfarande)}"
+  fi
+}
+
+sec_hw() {
+  hdr "Dator"
+  have lscpu && lscpu 2>/dev/null | grep -E 'Model name|^CPU\(s\)' || true
+  free -h 2>/dev/null | sed -n 1,2p
+  [[ -r /sys/class/dmi/id/product_name ]] && echo "Modell: $(cat /sys/class/dmi/id/sys_vendor 2>/dev/null) $(cat /sys/class/dmi/id/product_name 2>/dev/null)"
+  echo "Start: $([[ -d /sys/firmware/efi ]] && echo UEFI || echo BIOS)"
+  have mokutil && run mokutil --sb-state
+  hdr "Grafik"
+  have lspci && lspci -nn 2>/dev/null | grep -i -E 'vga|3d|display' || true
+  have nvidia-smi && run nvidia-smi -L
+  hdr "Lagring"
+  run lsblk -o NAME,SIZE,TYPE,FSTYPE,LABEL,MOUNTPOINT
+  hdr "Ljud och bluetooth"
+  have rfkill && rfkill list 2>/dev/null | grep -E '^[0-9]+:' || true
+}
+
+sec_report_all() { sec_status; sec_net; sec_services; sec_versions; sec_hw; }
+
+make_report() {
+  local f="$HOME/oden-felsok-$(date +%Y%m%d-%H%M%S).txt"
+  { echo "ODEN felsökningsrapport"; sec_report_all; } > "$f" 2>&1
+  echo "Rapport sparad: $f"
+  echo "Den innehåller maskinuppgifter och namn på wifi-nät i närheten, men inga lösenord. Läs igenom den innan du delar den."
+  echo "Utan upplåst lagring försvinner filen när datorn stängs av: kopiera den till ett USB-minne."
+}
+
+# ---------- Menyer ----------
+menu_net() {
+  while :; do
+    cat <<'E'
+
+NÄTVERK
+  1) Visa anslutningar och adresser
+  2) Lista wifi-nät
+  3) Anslut till wifi
+  4) Slå på/av wifi
+  5) Testa nätet
+  6) Nätverkskort, drivrutiner och kärnmeddelanden
+  7) Starta om nätverkstjänsten
+  8) Visa brandväggen
+  0) Tillbaka
+E
+    read -rp "Val: " c || return
+    case "$c" in
+      1) sec_net_short; pause ;;
+      2) if have nmcli; then nmcli radio wifi on 2>/dev/null; nmcli device wifi list --rescan yes 2>&1 || true; else echo "nmcli saknas"; fi; pause ;;
+      3) have nmcli || { echo "nmcli saknas"; pause; continue; }
+         nmcli -t -f SSID device wifi list --rescan yes 2>/dev/null | awk 'NF && !s[$0]++' | head -20
+         read -rp "Nätverksnamn (SSID): " ssid; [[ -n "$ssid" ]] || continue
+         read -rsp "Lösenord (tomt för öppet nät): " pw; echo
+         if [[ -n "$pw" ]]; then nmcli device wifi connect "$ssid" password "$pw" 2>&1 || true
+         else nmcli device wifi connect "$ssid" 2>&1 || true; fi
+         unset pw; pause ;;
+      4) have nmcli || continue
+         echo "wifi är nu: $(nmcli radio wifi)"
+         if ask "Slå om (på <-> av)?"; then
+           if [[ "$(nmcli radio wifi)" == enabled ]]; then nmcli radio wifi off; else nmcli radio wifi on; fi
+           echo "wifi är nu: $(nmcli radio wifi)"; fi
+         have rfkill && rfkill list; pause ;;
+      5) sec_net_test; pause ;;
+      6) sec_net; pause ;;
+      7) ask "Starta om NetworkManager? Pågående anslutningar bryts en stund." && { $S systemctl restart NetworkManager && echo "Klart." || echo "Misslyckades."; }; pause ;;
+      8) $S nft list ruleset 2>&1 || true; pause ;;
+      0|q) return ;;
+      *) echo "Ogiltigt val." ;;
+    esac
+  done
+}
+
+svc_action() { # kind namn
+  local kind=$1 s=$2 c sc=(systemctl) jc=(journalctl)
+  [[ $kind == user ]] && { sc=(systemctl --user); jc=(journalctl --user); } || { sc=($S systemctl); jc=($S journalctl); }
+  while :; do
+    printf '\n%s (%s): %s\n' "$s" "$kind" "$(svc_state "$kind" "$s")"
+    echo "  1) Status   2) Starta   3) Stoppa   4) Starta om   5) Logg (senaste 50 raderna)   0) Tillbaka"
+    read -rp "Val: " c || return
+    case "$c" in
+      1) "${sc[@]}" status "$s" --no-pager -l 2>&1 | head -30 ;;
+      2) "${sc[@]}" start "$s" 2>&1 && echo "Startad." ;;
+      3) "${sc[@]}" stop "$s" 2>&1 && echo "Stoppad." ;;
+      4) "${sc[@]}" restart "$s" 2>&1 && echo "Omstartad." ;;
+      5) "${jc[@]}" -u "$s" -n 50 --no-pager 2>&1 ;;
+      0|q) return ;;
+      *) echo "Ogiltigt val." ;;
+    esac
+  done
+}
+
+menu_services() {
+  while :; do
+    sec_services
+    local i=1 names=() kinds=() s
+    echo "Välj tjänst:"
+    for s in "${USER_SVC[@]}"; do names+=("$s"); kinds+=(user); echo "  $i) $s"; i=$((i+1)); done
+    for s in "${SYS_SVC[@]}"; do names+=("$s"); kinds+=(system); echo "  $i) $s"; i=$((i+1)); done
+    echo "  0) Tillbaka"
+    read -rp "Val: " c || return
+    case "$c" in
+      0|q) return ;;
+      ''|*[!0-9]*) echo "Ogiltigt val." ;;
+      *) if (( c >= 1 && c <= ${#names[@]} )); then svc_action "${kinds[c-1]}" "${names[c-1]}"; else echo "Ogiltigt val."; fi ;;
+    esac
+  done
+}
+
+menu_power() {
+  cat <<'E'
+
+STARTA OM / STÄNG AV
+  1) Starta om datorn
+  2) Stäng av datorn
+  0) Tillbaka
+E
+  read -rp "Val: " c || return
+  case "$c" in
+    1) ask "Starta om datorn nu? Osparat arbete går förlorat." && $S systemctl reboot ;;
+    2) ask "Stäng av datorn nu? Osparat arbete går förlorat." && $S systemctl poweroff ;;
+  esac
+}
+
+main_menu() {
+  while :; do
+    cat <<'E'
+
+ODEN ADMIN
+  1) Status (översikt)
+  2) Nätverk
+  3) Tjänster (Oden, kartserver, AI, nät, brandvägg)
+  4) Versioner
+  5) Maskinvara
+  6) Spara felsökningsrapport
+  7) Starta om / stäng av datorn
+  0) Avsluta
+E
+    read -rp "Val: " c || { echo; return 0; }
+    case "$c" in
+      1) sec_status; pause ;;
+      2) menu_net ;;
+      3) menu_services ;;
+      4) sec_versions; pause ;;
+      5) sec_hw; pause ;;
+      6) make_report; pause ;;
+      7) menu_power ;;
+      0|q) return 0 ;;
+      *) echo "Ogiltigt val." ;;
+    esac
+  done
+}
+
+usage() {
+  cat <<'E'
+oden-admin: felsökning och administration på ODEN-stickan.
+  oden-admin            interaktiv meny
+  oden-admin status     översikt (persistens, tjänster, disk, nät)
+  oden-admin nat        nätverk, kort, drivrutiner och kärnmeddelanden
+  oden-admin nattest    testa nätet (ping och DNS)
+  oden-admin tjanster   tjänsternas status
+  oden-admin versioner  versioner av system och inbyggd programvara
+  oden-admin hw         maskinvara
+  oden-admin rapport    spara allt i en textfil i hemkatalogen
+E
+}
+
+case "${1:-}" in
+  "")        main_menu ;;
+  status)    sec_status ;;
+  nat)       sec_net ;;
+  nattest)   sec_net_test ;;
+  tjanster)  sec_services ;;
+  versioner) sec_versions ;;
+  hw)        sec_hw ;;
+  rapport)   make_report ;;
+  hjalp|help|-h|--help) usage ;;
+  *) usage; exit 2 ;;
+esac

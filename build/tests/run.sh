@@ -101,6 +101,16 @@ CACHE="$t/c" scripts/stage.sh "$t/root" >/dev/null 2>&1 && [[ -x "$t/root/opt/od
 # stage: onedir-tarball (katalogen oden/ med binären oden och _internal/) -> opt/oden/oden och opt/oden/_internal
 fake_cache; ( cd "$w" && rm -rf od && mkdir -p od/oden/_internal && printf '#!/bin/sh\n' > od/oden/oden && chmod +x od/oden/oden && echo x > od/oden/_internal/lib.so && tar -C od -czf "$t/c/oden-linux" oden ); rm -rf "$t/root"; mkdir "$t/root"
 CACHE="$t/c" scripts/stage.sh "$t/root" >/dev/null 2>&1 && [[ -x "$t/root/opt/oden/oden" && -f "$t/root/opt/oden/_internal/lib.so" ]] && ok "stage: onedir-tarball" || bad "stage: onedir-tarball"
+[[ -s "$t/root/etc/oden-versions" ]] && ! grep -q BUILD "$t/root/etc/oden-versions" && grep -q '^oden-source ' "$t/root/etc/oden-versions" \
+  && ok "stage: /etc/oden-versions ur artifacts.lock" || bad "stage: /etc/oden-versions"
+
+# oden-admin: hjälp, menyn avslutas med 0, delkommandon kör utan att kräva nätverk eller root
+oa=overlay/usr/local/bin/oden-admin
+"$oa" hjalp | grep -q "oden-admin rapport" && ok "oden-admin: hjälp" || bad "oden-admin: hjälp"
+printf '0\n' | "$oa" | grep -q "ODEN ADMIN" && ok "oden-admin: meny och avsluta" || bad "oden-admin: meny"
+"$oa" versioner >/dev/null 2>&1 && "$oa" tjanster >/dev/null 2>&1 && ok "oden-admin: versioner och tjänster" || bad "oden-admin: delkommandon"
+rc=0; "$oa" okandkommando >/dev/null 2>&1 || rc=$?; [[ $rc -eq 2 ]] && ok "oden-admin: okänt kommando ger 2" || bad "oden-admin: okänt kommando"
+(HOME="$t" "$oa" rapport >/dev/null 2>&1; ls "$t"/oden-felsok-*.txt >/dev/null 2>&1) && ok "oden-admin: rapport skrivs" || bad "oden-admin: rapport"
 
 if command -v sgdisk >/dev/null; then
   mk() { rm -f "$t/d.img"; truncate -s "$1" "$t/d.img"; sgdisk -n 1:2048:+10M -n 2:0:+2M "$t/d.img" >/dev/null; sgdisk -e "$t/d.img" >/dev/null 2>&1 || true

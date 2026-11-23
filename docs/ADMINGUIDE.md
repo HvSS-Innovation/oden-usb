@@ -43,6 +43,9 @@ sudo ./build/scripts/make-stick.sh [--with-ai] build/out/oden.iso /dev/sdX     #
 - Spara `build/out/SBOM.txt` tillsammans med stickans versionsstämpel (`/etc/oden-release` i bilden).
 - Test på en riktig stick: se `plan/arkiv/07-test-harda-dokumentera.md` och fyll i `docs/HW-MATRIS.md`.
 
+## Felsökning på stickan
+`oden-admin` (`build/overlay/usr/local/bin/oden-admin`, ikon på skrivbordet) är en meny för nätverk, tjänster, versioner och maskinvara, och `oden-admin rapport` samlar allt i en fil. Det går också att köra delarna direkt: `status`, `nat`, `nattest`, `tjanster`, `versioner`, `hw`. Versionslistan läser `/etc/oden-versions` och `/etc/oden-release`, som `stage.sh` skriver vid bygget.
+
 ## Uppgradera ett verktyg
 Alla versioner står i `artifacts.lock`. Uppgradering är alltid samma tre steg: bumpa, granska, bygg om.
 ```

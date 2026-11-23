@@ -108,5 +108,8 @@ mkdir -p "$root/etc"
 {
   echo "ODEN-stick $(date -u +%Y-%m-%d)"
   echo "artifacts.lock sha256: $(sha256sum "$here/../artifacts.lock" | cut -d' ' -f1)"
+  echo "bygge: $(git -C "$here/.." describe --tags --always --dirty 2>/dev/null || echo okänt)"
 } > "$root/etc/oden-release"
+# Inbyggd programvara och version, läses av oden-admin (namn och version ur kommentaren i artifacts.lock; BUILD-rader hoppas över).
+awk '!/^#/ && NF && $2 != "BUILD" { v="-"; for (i=4; i<=NF; i++) { if ($i ~ /^version=/) { sub(/^version=/, "", $i); v=$i; break } if ($i ~ /^v[0-9]/) { v=$i; break } } print $1, v }' "$here/../artifacts.lock" > "$root/etc/oden-versions"
 echo "stage: OK"

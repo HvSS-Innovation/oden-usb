@@ -50,6 +50,9 @@
 - Utan nätverk fungerar analys som vanligt; mottagning av Signal-meddelanden pausar tills nät finns.
 - AI (Ollama) startar bara på datorer med minst 16 GB RAM, och bara om stickan byggts med AI.
 
+## Felsökning och inställningar
+Ikonen *ODEN Admin* på skrivbordet (eller `oden-admin` i en terminal) öppnar en meny för nätverk (anslut wifi, testa nätet), tjänster (starta om Oden), versioner och maskinvara. Välj *Spara felsökningsrapport* om du behöver hjälp.
+
 ## Avsluta
 Stäng av datorn via menyn och dra ur stickan först när datorn är avstängd.
 

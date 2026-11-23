@@ -1,5 +1,8 @@
 # Felsökning
 
+**Verktyget `oden-admin`:** dubbelklicka på ikonen *ODEN Admin* på skrivbordet, eller skriv `oden-admin` i en terminal. Menyn har nätverk (wifi, test, nätverkskort och drivrutiner), tjänster (status, start, stopp, omstart, logg), versioner, maskinvara och omstart av datorn. `oden-admin rapport` sparar allt i en textfil i hemkatalogen som du kan skicka vidare.
+
+
 | Symptom | Troligt skäl | Åtgärd |
 |---|---|---|
 | Stickan syns inte i startmenyn | Fel startläge i BIOS | Aktivera UEFI-boot från USB; prova annan USB-port |
