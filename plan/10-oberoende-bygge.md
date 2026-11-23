@@ -17,8 +17,8 @@ Externa adresser i spårade filer: github.com (55), ollama.com, openstreetmap.or
 
 | Beroende | Var | Problem | Mål |
 |---|---|---|---|
-| Rasterkartan `sverige-raster.pmtiles` på Backblaze B2 | `build/maps.lock`, `plan/05` | Vår lagring i git. Utomstående kan inte bygga `minimal`; `karta` kräver filen i `cache/assets/maps` utan att säga hur man får den | Kartan byggs ur publika data (uppgift 2) eller anges utifrån (uppgift 3) |
-| Vektorkartan `sweden-osm.pmtiles` på B2 | `build/scripts/map/render-map.sh`, `artifacts.lock` (kommentar), `plan/05` | Samma | Hämtas ur publik källa, låst på innehåll (uppgift 2) |
+| Rasterkartan `sverige-raster.pmtiles` på Backblaze B2 | `build/maps.lock`, `plan/arkiv/05` | Vår lagring i git. Utomstående kan inte bygga `minimal`; `karta` kräver filen i `cache/assets/maps` utan att säga hur man får den | Kartan byggs ur publika data (uppgift 2) eller anges utifrån (uppgift 3) |
+| Vektorkartan `sweden-osm.pmtiles` på B2 | `build/scripts/map/render-map.sh`, `artifacts.lock` (kommentar), `plan/arkiv/05` | Samma | Hämtas ur publik källa, låst på innehåll (uppgift 2) |
 | ISO-filer på `publik.hv-sog.se` (R2) | `site/releases.json`, `docs/` | Publiceringsmål, inte byggindata | Kvar, men som parameter, inte hårdkodat i skript och docs (uppgift 4) |
 | Debian, Docker-bilder, pip, Ollama-modeller | live-build, taggar, `>=`, `ollama pull` | Inte bit-reproducerbart | Accepteras. Bara versionslås där det är enkelt (uppgift 5, lågprioriterat) |
 

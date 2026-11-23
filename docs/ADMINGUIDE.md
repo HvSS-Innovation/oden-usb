@@ -41,7 +41,7 @@ sudo ./build/scripts/make-stick.sh [--with-ai] build/out/oden.iso /dev/sdX     #
 - Layout: p1 ISO-data (live), p2 EFI, p3 `oden-assets` (ext4, skrivskyddad på `/srv/oden-assets`), p4 `persistence` (krypteras
   vid första start).
 - Spara `build/out/SBOM.txt` tillsammans med stickans versionsstämpel (`/etc/oden-release` i bilden).
-- Test på en riktig stick: se `plan/07-test-harda-dokumentera.md` och fyll i `docs/HW-MATRIS.md`.
+- Test på en riktig stick: se `plan/arkiv/07-test-harda-dokumentera.md` och fyll i `docs/HW-MATRIS.md`.
 
 ## Uppgradera ett verktyg
 Alla versioner står i `artifacts.lock`. Uppgradering är alltid samma tre steg: bumpa, granska, bygg om.

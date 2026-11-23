@@ -29,18 +29,20 @@ Hellre en funktion mindre än en rörlig del till.
 - 7s-rapport: endast referens, ingår inte.
 
 ## Steg
+Steg 00–09 är genomförda och ligger i `arkiv/`. Steg 10 är öppet.
+
 | Fil | Steg |
 |---|---|
-| `00-beslut-och-kravspec.md` | Beslut och kravspec |
-| `01-bygg-pipeline.md` | Bygg-pipeline och artefaktlås |
-| `02-mjukvara-i-bilden.md` | Oden, signal-cli, Obsidian, valv, skrivbord |
-| `03-krypterad-persistens.md` | Krypterad persistens med live-boot, förstastart |
-| `04-signal-tak-och-nat.md` | Nätverk, Signal-länkning, TAK |
-| `05-kartor-pmtiles.md` | go-pmtiles + Map View |
-| `06-ai-ollama.md` | Ollama, modeller, resurskontroll |
-| `07-test-harda-dokumentera.md` | Test, härdning, dokumentation |
-| `08-iso-varianter.md` | Tre ISO-varianter som går att bränna med Etcher |
-| `09-oden-utseende.md` | Startmeny, uppstartsbild och bakgrund med ODEN-styling |
+| `arkiv/00-beslut-och-kravspec.md` | Beslut och kravspec |
+| `arkiv/01-bygg-pipeline.md` | Bygg-pipeline och artefaktlås |
+| `arkiv/02-mjukvara-i-bilden.md` | Oden, signal-cli, Obsidian, valv, skrivbord |
+| `arkiv/03-krypterad-persistens.md` | Krypterad persistens med live-boot, förstastart |
+| `arkiv/04-signal-tak-och-nat.md` | Nätverk, Signal-länkning, TAK |
+| `arkiv/05-kartor-pmtiles.md` | go-pmtiles + Map View |
+| `arkiv/06-ai-ollama.md` | Ollama, modeller, resurskontroll |
+| `arkiv/07-test-harda-dokumentera.md` | Test, härdning, dokumentation |
+| `arkiv/08-iso-varianter.md` | Tre ISO-varianter som går att bränna med Etcher |
+| `arkiv/09-oden-utseende.md` | Startmeny, uppstartsbild och bakgrund med ODEN-styling |
 | `10-oberoende-bygge.md` | Bygge utan vår infrastruktur: inga egna adresser i git, indata låsta efter innehåll |
 
 Aktuell status: se `docs/STATUS.md`.
@@ -48,7 +50,7 @@ Aktuell status: se `docs/STATUS.md`.
 MVP: steg 00–03, minimal 04 (nätverk + Signal-länkning, utan TAK) och 05.
 
 ## Målbild: stickans layout (minst 64 GB)
-Gäller `make-stick.sh`. Layouten för Etcher-brända varianter beskrivs i `08-iso-varianter.md`.
+Gäller `make-stick.sh`. Layouten för Etcher-brända varianter beskrivs i `arkiv/08-iso-varianter.md`.
 
 ```
 p1  ISO-data      ~3,6 GB          live-ISO (squashfs): Debian, XFCE, Oden (+signal-cli, JRE), Obsidian, go-pmtiles, Ollama-binär

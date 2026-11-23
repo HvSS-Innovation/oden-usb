@@ -26,7 +26,7 @@ Kräver Linux med Docker och nät. Se [`docs/ADMINGUIDE.md`](docs/ADMINGUIDE.md)
 | Mapp | Innehåll |
 |---|---|
 | `build/` | Bygg-pipeline: live-build-konfig, overlay, låsta artefakter, skript och tester |
-| `plan/` | Plan per steg (00–09) |
+| `plan/` | Plan per steg (00–09 i `plan/arkiv/`, öppet steg 10) |
 | `docs/` | Kravspec, status, användarguide, adminguide, felsökning, kartrendering, granskning |
 | `site/` | Webbplatsen (statisk HTML), publiceras med GitHub Pages från `main` |
 | `maps/` | Kartkälla (vektor), används för att rendera rastret |

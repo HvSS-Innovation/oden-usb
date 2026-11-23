@@ -128,7 +128,7 @@ receptet.
 
 ## Licens
 Kartdata © OpenStreetMap-bidragsgivare, ODbL. Protomaps Basemap-stilen är BSD-3, typsnitten (Noto Sans) OFL. Attribution ska synas för användaren
-(inte ännu inlagd i Map View; se `plan/05-kartor-pmtiles.md`).
+(inte ännu inlagd i Map View; se `plan/arkiv/05-kartor-pmtiles.md`).
 
 ## Efter en ny rendering: publicera
 1. Kontrollera filen (`pmtiles show`, öppna några rutor) och notera SHA256 och byte.

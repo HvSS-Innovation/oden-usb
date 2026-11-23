@@ -53,7 +53,7 @@ Debian-paketen pinnas inte. Vilka versioner som ingick i en viss ISO står i `SB
 | **Planetiler** | Byggde vektorkartan (planetiler 0.10.1) | [onthegomap/planetiler](https://github.com/onthegomap/planetiler) | Apache-2.0 |
 | **TileServer GL** | Renderade vektorkartan till raster en gång (v5.7.0) | [maptiler/tileserver-gl](https://github.com/maptiler/tileserver-gl) | se repot |
 
-- Vektorkartan (4,1 GB) hämtas inte av bygget. Den renderades en gång till `sverige-raster-20261120.pmtiles` (zoom 0–14, 1,8 GB, WebP, OSM 2026-11-20 ur Protomaps dagsbygge), som är det stickan använder. Så görs det: [`docs/KARTRENDERING.md`](KARTRENDERING.md) och [`plan/05-kartor-pmtiles.md`](../plan/05-kartor-pmtiles.md).
+- Vektorkartan (4,1 GB) hämtas inte av bygget. Den renderades en gång till `sverige-raster-20261120.pmtiles` (zoom 0–14, 1,8 GB, WebP, OSM 2026-11-20 ur Protomaps dagsbygge), som är det stickan använder. Så görs det: [`docs/KARTRENDERING.md`](KARTRENDERING.md) och [`plan/arkiv/05-kartor-pmtiles.md`](../plan/arkiv/05-kartor-pmtiles.md).
 - Kartadressen för `minimal` kommer ur `ODEN_MAPS_URL` (miljön eller ignorerad `.env`); aktuell fil: <https://publik.hv-sog.se/oden/maps/sverige-raster-20261120.pmtiles>. SHA256 och storlek läses ur rasterfilen i cachen. **Lokalt (i cachen och på ISO:n) heter filen alltid `sverige.pmtiles`**, även om adressen har ett datum i namnet: kartservern och Map View använder namnet (`/sverige/{z}/{x}/{y}.webp`), och `build.sh` avbryter om filen heter något annat.
 
 ## AI-modeller (valfritt, `karta-ai`)

@@ -1,4 +1,4 @@
-# Osignerad NVIDIA-drivrutin. Med Secure Boot på laddas modulen inte (se plan/06).
+# Osignerad NVIDIA-drivrutin. Med Secure Boot på laddas modulen inte (se plan/arkiv/06).
 linux-headers-amd64
 dkms
 nvidia-driver
