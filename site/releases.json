@@ -11,12 +11,12 @@
     },
     {
       "variant": "karta-ai",
-      "version": "4012904",
-      "file": "oden-karta-ai-4012904.iso",
-      "published": "2026-11-22",
-      "url": "https://publik.hv-sog.se/oden/4012904/oden-karta-ai-4012904.iso",
-      "bytes": 14187364352,
-      "sha256": "708ee6eb72e221df84ffa6ffee2c25ac7dc7f155b47f60222750850dbc714c75"
+      "version": "46b74ca",
+      "file": "oden-karta-ai-46b74ca.iso",
+      "published": "2026-11-23",
+      "url": "https://publik.hv-sog.se/oden/46b74ca/oden-karta-ai-46b74ca.iso",
+      "bytes": 14168096768,
+      "sha256": "2e7256894610bb3fb67ad97580a2e4a7a878de65dd914ca37ae2e616a05ba8f1"
     },
     {
       "variant": "minimal",
