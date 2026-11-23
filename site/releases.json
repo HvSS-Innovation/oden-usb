@@ -2,12 +2,12 @@
   "isos": [
     {
       "variant": "karta",
-      "version": "e529877",
-      "file": "oden-karta-e529877.iso",
+      "version": "c3fd543",
+      "file": "oden-karta-c3fd543.iso",
       "published": "2026-11-23",
-      "url": "https://publik.hv-sog.se/oden/e529877/oden-karta-e529877.iso",
-      "bytes": 5605949440,
-      "sha256": "513693878e8276a189a9a70502fa8dc894f3565af9ccbbf45e4a319bb0f290e1"
+      "url": "https://publik.hv-sog.se/oden/c3fd543/oden-karta-c3fd543.iso",
+      "bytes": 5609619456,
+      "sha256": "5bd240c66c1960664539c3b62a9c94918edc97fd9be6886cdae56f3bc87bc61d"
     },
     {
       "variant": "karta-ai",
