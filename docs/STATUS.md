@@ -31,7 +31,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 ## Artefakter (`build/artifacts.lock`)
 | Artefakt | Version | Status |
 |---|---|---|
-| Oden (byggd) | 4.2.1, commit c10db739 | Byggd lokalt, ej bit-för-bit reproducerbar (pip `>=`) |
+| Oden (byggd, onedir) | 4.2.2+ac2ebc3, commit ac2ebc38 (snapshot-ac2ebc3) | Byggd lokalt, ej bit-för-bit reproducerbar (pip `>=`) |
 | signal-cli | 0.14.5 | Låst, inbyggd i Oden |
 | Temurin JRE | 25.0.5.1+2 | Låst, inbyggd i Oden |
 | ODEN-valv | 1.6.3 | Låst |
@@ -44,7 +44,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 ## Öppna frågor och beslut
 - Lösenfrasen har ingen minsta längd (beslut 2026-11-20, för test); `ODEN_MINLEN` kan sätta en. Teckenbegränsningen kvarstår. Krav på lösenfrasens styrka ligger under "Senare" i `KRAVSPEC.md`.
 - AI-modeller i `minimal` (hämtas inte från nätet än).
-- Oden är en "onefile"-binär som packar upp sig själv (ca 200 MB) i `/tmp` (RAM) vid varje start. Alternativ: "onedir".
+- Oden byggs som onedir (`/opt/oden/oden` + `_internal/`, Oden PR #304) och packar inte upp något i `/tmp` vid start. Provad i qemu på `karta`.
 - Fel lösenfras vid boot: `oden-firstboot` frågar vid inloggning om användaren vill starta om och skriva lösenfrasen igen eller radera lagringen och börja om med ny lösenfras (RADERA måste skrivas). Finns i källan, ingår i nästa ISO-bygge.
 - Obsidian-pluginernas version mot Obsidian 1.15.1.
 - GitHub tillåter högst 2 GiB per fil i en release, så ISO-filerna ligger på `publik.hv-sog.se` (Cloudflare R2, bucketen `public-hv-sog`).
