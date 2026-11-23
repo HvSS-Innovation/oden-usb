@@ -122,7 +122,46 @@ sec_hw() {
   have rfkill && rfkill list 2>/dev/null | grep -E '^[0-9]+:' || true
 }
 
-sec_report_all() { sec_status; sec_net; sec_services; sec_versions; sec_hw; }
+sec_wifi() {
+  hdr "Wifi: kort och drivrutin"
+  if have lspci; then lspci -nnk 2>/dev/null | grep -i -A3 -E 'network controller|wireless|802\.11' || echo "(inget wifi-kort syns som PCI-enhet)"; fi
+  if have lsusb; then lsusb 2>/dev/null | grep -i -E 'wireless|wlan|802\.11' || true; fi
+  hdr "Moduler (wl är Broadcoms drivrutin; b43, bcma, ssb och brcmsmac kan stå i vägen)"
+  lsmod 2>/dev/null | grep -E '^(wl|b43|bcma|ssb|brcmsmac|brcmfmac|cfg80211|iwlwifi|ath[0-9a-z_]*|rtw[0-9a-z_]*|mt76[0-9a-z_]*) ' || echo "(inga wifi-moduler laddade)"
+  hdr "rfkill"
+  if have rfkill; then run rfkill list; else echo "rfkill saknas"; fi
+  hdr "Gränssnitt och NetworkManager"
+  if have iw; then run iw dev; fi
+  if have nmcli; then run nmcli radio; run nmcli device status; fi
+  if have iw; then run iw reg get; fi
+  hdr "Skanning (iw)"
+  if have iw; then
+    local ifc; ifc=$(iw dev 2>/dev/null | awk '$1=="Interface"{print $2; exit}')
+    if [[ -n "${ifc:-}" ]]; then ($SN iw dev "$ifc" scan || iw dev "$ifc" scan) 2>&1 | grep -E 'SSID:|freq:|signal:' | head -30 || true
+    else echo "(inget wifi-gränssnitt)"; fi
+  fi
+  hdr "Kärnmeddelanden om wifi"
+  ($SN dmesg || dmesg) 2>/dev/null | grep -i -E 'wl[: ]|brcm|bcma|b43|firmware|regulatory|cfg80211|wlan|wlp|iwlwifi|ath[0-9]|rtw' | tail -40 || true
+}
+
+# Försöker laga vanliga wifi-fel i tur och ordning och visar läget efter varje steg.
+wifi_fix() {
+  echo "Stegen: lås upp rfkill, ladda om drivrutinen (Broadcom: ta bort b43/bcma/ssb/brcmsmac först), landskod SE, slå på wifi, skanna."
+  ask "Köra dem nu? Wifi kopplas ned en stund." || return 0
+  have rfkill && { echo "- rfkill unblock all"; $S rfkill unblock all; }
+  if lsmod 2>/dev/null | grep -q -E '^(wl|b43|bcma|brcmsmac) '; then
+    echo "- laddar om Broadcom-drivrutinen"
+    $S modprobe -r wl b43 brcmsmac bcma ssb 2>&1 || true
+    $S modprobe cfg80211 2>&1 || true
+    $S modprobe wl 2>&1 || echo "  wl kunde inte laddas (se kärnmeddelanden)"
+  fi
+  have iw && { echo "- landskod SE"; $S iw reg set SE 2>&1 || true; }
+  local ifc; ifc=$(iw dev 2>/dev/null | awk '$1=="Interface"{print $2; exit}')
+  [[ -n "${ifc:-}" ]] && { echo "- ip link set $ifc up"; $S ip link set "$ifc" up 2>&1 || true; }
+  have nmcli && { echo "- nmcli radio wifi on"; $S nmcli radio wifi on 2>&1 || true; sleep 2; nmcli device wifi rescan 2>&1 || true; sleep 4; run nmcli device status; nmcli -f SSID,SIGNAL,CHAN device wifi list 2>&1 | head -15 || true; }
+  echo "Hjälpte det inte: välj 'Wifi-felsökning' och skicka resultatet, eller spara en rapport."
+}
+sec_report_all() { sec_status; sec_net; sec_wifi; sec_services; sec_versions; sec_hw; }
 
 make_report() {
   local f="$HOME/oden-felsok-$(date +%Y%m%d-%H%M%S).txt"
@@ -146,6 +185,8 @@ NÄTVERK
   6) Nätverkskort, drivrutiner och kärnmeddelanden
   7) Starta om nätverkstjänsten
   8) Visa brandväggen
+  9) Wifi-felsökning (kort, drivrutin, rfkill, skanning)
+  10) Försök laga wifi (rfkill, drivrutin, landskod)
   0) Tillbaka
 E
     read -rp "Val: " c || return
@@ -169,6 +210,8 @@ E
       6) sec_net; pause ;;
       7) ask "Starta om NetworkManager? Pågående anslutningar bryts en stund." && { $S systemctl restart NetworkManager && echo "Klart." || echo "Misslyckades."; }; pause ;;
       8) $S nft list ruleset 2>&1 || true; pause ;;
+      9) sec_wifi; pause ;;
+      10) wifi_fix; pause ;;
       0|q) return ;;
       *) echo "Ogiltigt val." ;;
     esac
@@ -261,6 +304,8 @@ oden-admin: felsökning och administration på ODEN-stickan.
   oden-admin            interaktiv meny
   oden-admin status     översikt (persistens, tjänster, disk, nät)
   oden-admin nat        nätverk, kort, drivrutiner och kärnmeddelanden
+  oden-admin wifi       wifi-felsökning (kort, drivrutin, rfkill, skanning)
+  oden-admin wififix    försök laga vanliga wifi-fel
   oden-admin nattest    testa nätet (ping och DNS)
   oden-admin tjanster   tjänsternas status
   oden-admin versioner  versioner av system och inbyggd programvara
@@ -274,6 +319,8 @@ case "${1:-}" in
   status)    sec_status ;;
   nat)       sec_net ;;
   nattest)   sec_net_test ;;
+  wifi)      sec_wifi ;;
+  wififix)   wifi_fix ;;
   tjanster)  sec_services ;;
   versioner) sec_versions ;;
   hw)        sec_hw ;;

@@ -110,6 +110,8 @@ oa=overlay/usr/local/bin/oden-admin
 printf '0\n' | "$oa" | grep -q "ODEN ADMIN" && ok "oden-admin: meny och avsluta" || bad "oden-admin: meny"
 "$oa" versioner >/dev/null 2>&1 && "$oa" tjanster >/dev/null 2>&1 && ok "oden-admin: versioner och tjänster" || bad "oden-admin: delkommandon"
 rc=0; "$oa" okandkommando >/dev/null 2>&1 || rc=$?; [[ $rc -eq 2 ]] && ok "oden-admin: okänt kommando ger 2" || bad "oden-admin: okänt kommando"
+[[ -x overlay/etc/skel/Desktop/oden-admin.desktop ]] && ok "oden-admin: skrivbordsgenväg är körbar" || bad "oden-admin: skrivbordsgenväg saknar körrättighet"
+"$oa" wifi >/dev/null 2>&1 && ok "oden-admin: wifi-felsökning" || bad "oden-admin: wifi"
 (HOME="$t" "$oa" rapport >/dev/null 2>&1; ls "$t"/oden-felsok-*.txt >/dev/null 2>&1) && ok "oden-admin: rapport skrivs" || bad "oden-admin: rapport"
 
 if command -v sgdisk >/dev/null; then
