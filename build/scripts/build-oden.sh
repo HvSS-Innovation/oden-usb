@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# Bygger Oden för Linux (PyInstaller, en enda körbar fil) -> build/cache/oden-linux
+# Bygger Oden för Linux (PyInstaller) -> build/cache/oden-linux. Onedir (tarball med katalogen oden/) om källan stöder ODEN_ONEDIR=1
+# (Oden efter PR #304), annars en enda körbar fil (onefile, packar upp ca 200 MB i RAM vid varje start).
 # Indata (låsta i artifacts.lock, hämtade av fetch.sh): oden-source, jre-x64, signal-cli.
 # Kräver nät (pip) och docker. Bygget sker i Debian bookworm: binären kräver glibc <= bildens (trixie).
 # build.sh bygger om automatiskt när låsraderna för indata ändrats (cache/oden-linux.inputs); radera cache/oden-linux för att tvinga.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 # Hash av de låsrader (namn, url, sha256) binären byggs från. build.sh jämför den med cache/oden-linux.inputs.
-# stamp-version-1: ändras när byggsteget ändras så att cache/oden-linux byggs om.
-inputs_hash() { { awk '$1 ~ /^(oden-source|jre-x64|signal-cli)$/ {print $1, $2, $3}' artifacts.lock; echo stamp-version-1; } | sha256sum | cut -d' ' -f1; }
+# stamp-version-N: ändras när byggsteget ändras så att cache/oden-linux byggs om.
+inputs_hash() { { awk '$1 ~ /^(oden-source|jre-x64|signal-cli)$/ {print $1, $2, $3}' artifacts.lock; echo stamp-version-2; } | sha256sum | cut -d' ' -f1; }
 # Version = taggen i oden-source-URL:en (…/tags/v4.2.1.tar.gz -> 4.2.1).
 ODEN_VERSION=$(awk '$1=="oden-source" {print $2}' artifacts.lock | sed -E 's#.*/tags/v?##; s#\.tar\.gz$##')
 [[ "$ODEN_VERSION" =~ ^[0-9][0-9A-Za-z.+-]*$ ]] || { echo "FEL: kunde inte läsa version ur oden-source-URL:en ($ODEN_VERSION)" >&2; exit 1; }
@@ -17,7 +18,7 @@ for n in oden-source jre-x64 signal-cli; do
 done
 work=$(mktemp -d); trap 'rm -rf "$work"' EXIT
 
-docker run --rm -v "$PWD/cache":/cache:ro -v "$work":/work -e OWNER="$(id -u):$(id -g)" -e ODEN_VERSION="$ODEN_VERSION" \
+docker run --rm -v "$PWD/cache":/cache:ro -v "$work":/work -e OWNER="$(id -u):$(id -g)" -e ODEN_VERSION="$ODEN_VERSION" -e ODEN_ONEDIR=1 \
   python:3.12-bookworm bash -euc '
   trap '"'"'chown -R "$OWNER" /work'"'"' EXIT   # även vid fel: värdens städning ska fungera
   cd /work
@@ -35,10 +36,11 @@ docker run --rm -v "$PWD/cache":/cache:ro -v "$work":/work -e OWNER="$(id -u):$(
   pip install --no-cache-dir ".[tak]" pyinstaller
   pyinstaller --clean --noconfirm s7_watcher.spec
   pip freeze > /work/pip-freeze.txt
-  cp dist/oden /work/oden-linux
+  if [ -d dist/oden ]; then tar -C dist -czf /work/oden-linux oden; echo onedir > /work/oden-linux.kind; else cp dist/oden /work/oden-linux; echo onefile > /work/oden-linux.kind; fi
 '
-[[ -x "$work/oden-linux" ]] || { echo "FEL: bygget gav ingen dist/oden" >&2; exit 1; }
+[[ -s "$work/oden-linux" ]] || { echo "FEL: bygget gav ingen dist/oden" >&2; exit 1; }
 mv "$work/pip-freeze.txt" cache/oden-linux.pip-freeze.txt
 mv "$work/oden-linux" cache/oden-linux
+kind=$(cat "$work/oden-linux.kind")
 inputs_hash > cache/oden-linux.inputs
-echo "build-oden: OK ($(du -h cache/oden-linux | cut -f1))"
+echo "build-oden: OK ($kind, $(du -h cache/oden-linux | cut -f1))"
