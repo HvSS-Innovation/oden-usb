@@ -98,6 +98,10 @@ PY
 fake_cache; ( cd "$w" && mkdir flat && printf '#!/bin/sh\n' > flat/oden && chmod +x flat/oden && tar -C flat -czf "$t/c/oden-linux" oden ); rm -rf "$t/root"; mkdir "$t/root"
 CACHE="$t/c" scripts/stage.sh "$t/root" >/dev/null 2>&1 && [[ -x "$t/root/opt/oden/oden" ]] && ok "stage: release-tarball med platt binär" || bad "stage: release-tarball med platt binär"
 
+# stage: onedir-tarball (katalogen oden/ med binären oden och _internal/) -> opt/oden/oden och opt/oden/_internal
+fake_cache; ( cd "$w" && rm -rf od && mkdir -p od/oden/_internal && printf '#!/bin/sh\n' > od/oden/oden && chmod +x od/oden/oden && echo x > od/oden/_internal/lib.so && tar -C od -czf "$t/c/oden-linux" oden ); rm -rf "$t/root"; mkdir "$t/root"
+CACHE="$t/c" scripts/stage.sh "$t/root" >/dev/null 2>&1 && [[ -x "$t/root/opt/oden/oden" && -f "$t/root/opt/oden/_internal/lib.so" ]] && ok "stage: onedir-tarball" || bad "stage: onedir-tarball"
+
 if command -v sgdisk >/dev/null; then
   mk() { rm -f "$t/d.img"; truncate -s "$1" "$t/d.img"; sgdisk -n 1:2048:+10M -n 2:0:+2M "$t/d.img" >/dev/null; sgdisk -e "$t/d.img" >/dev/null 2>&1 || true
          truncate -s "$2" "$t/d.img"; }

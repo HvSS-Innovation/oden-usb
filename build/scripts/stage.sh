@@ -16,9 +16,11 @@ flatten() {
   local d="$1" n
   n=$(find "$d" -mindepth 1 -maxdepth 1 | wc -l)
   if [[ $n -eq 1 && -d "$(find "$d" -mindepth 1 -maxdepth 1)" ]]; then
-    local sub; sub=$(find "$d" -mindepth 1 -maxdepth 1)
-    mv "$sub"/* "$sub"/.[!.]* "$d"/ 2>/dev/null || true
-    rmdir "$sub"
+    # Via en temporär katalog: toppkatalogen kan heta samma som något i den (onedir: oden/oden).
+    local sub tmp; sub=$(find "$d" -mindepth 1 -maxdepth 1); tmp="$d.flatten.$$"
+    mv "$sub" "$tmp"
+    mv "$tmp"/* "$tmp"/.[!.]* "$d"/ 2>/dev/null || true
+    rmdir "$tmp"
   fi
 }
 
