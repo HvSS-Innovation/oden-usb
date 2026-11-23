@@ -8,3 +8,7 @@ firmware-brcm80211
 firmware-intel-graphics
 amd64-microcode
 intel-microcode
+
+# Broadcom BCM43xx som brcm80211 inte stödjer (t.ex. BCM4360 i MacBook Pro 2013/2014): proprietär wl-drivrutin via DKMS.
+# Byggs mot kärnan i bilden (dkms och linux-headers-amd64 finns via nvidia.list.chroot). Paketet blacklistar b43, bcma och ssb.
+broadcom-sta-dkms
