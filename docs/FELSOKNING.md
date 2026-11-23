@@ -5,7 +5,7 @@
 | Stickan syns inte i startmenyn | Fel startläge i BIOS | Aktivera UEFI-boot från USB; prova annan USB-port |
 | Startar inte med Secure Boot på | Misslyckad signaturkedja | Stickan använder Debians signerade shim/grub; prova Secure Boot av för att utesluta |
 | Skärmen går på enkel grafik, AI långsam | NVIDIA-drivrutinen är osignerad och laddas inte med Secure Boot på | Stäng av Secure Boot för GPU-AI, annars körs AI på CPU |
-| "Data inte upplåst" | Fel lösenfras vid boot | Starta om och ange rätt lösenfras |
+| "ODEN: lagringen är låst" (eller notisen "Data inte upplåst") | Fel lösenfras vid boot | Välj "Starta om och skriv lösenfrasen igen". Är den glömd: "Radera lagringen och börja om" (kräver att du skriver RADERA, alla data går förlorade) |
 | Lösenfras glömd | | Data kan inte återfås. Skapa ny stick |
 | Första-start-dialogen visar "Oväntat innehåll på lagringspartitionen" | Persistens-partitionen har ett filsystem | Stickan är felskriven eller manipulerad; skriv om den med `make-stick.sh` |
 | TLS-fel i Signal/TAK | Fel klocka | Anslut till nät och vänta på NTP (systemd-timesyncd); kontrollera datum |

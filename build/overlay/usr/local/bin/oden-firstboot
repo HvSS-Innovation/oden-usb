@@ -22,7 +22,24 @@ map=oden-new
 
 case "$(oden-persist-state)" in
   empty) ;;                                # tom: första start
-  locked) note "Data inte upplåst" "Starta om och ange lösenfras."; exit 0 ;;
+  locked)
+    # Fel lösenfras vid boot (eller avbruten inmatning): ge två vägar, aldrig något automatiskt.
+    choice=$(zenity --list --radiolist --width=520 --height=340 --title="ODEN: lagringen är låst" \
+      --text="Den krypterade lagringen på stickan blev inte upplåst, troligen för att lösenfrasen var fel.\nTills den är upplåst sparas inget du gör och dina data syns inte." \
+      --column="" --column="val" --column="Vad händer" --hide-column=2 --print-column=2 \
+      TRUE retry "Starta om och skriv lösenfrasen igen" \
+      FALSE wipe "Radera lagringen och börja om med ny lösenfras (data går förlorade)" \
+      FALSE later "Inte nu") || exit 0
+    case "$choice" in
+      retry) zenity --info --width=420 --text="Datorn startar om. Välj stickan i startmenyn igen och skriv lösenfrasen när den efterfrågas." && systemctl reboot; exit 0 ;;
+      wipe)
+        ok=$(zenity --entry --width=520 --title="ODEN: radera lagringen" \
+          --text="<b>Allt som sparats på stickan raderas och går inte att få tillbaka.</b>\n\nSkriv RADERA (med versaler) för att fortsätta.") || exit 0
+        [[ "$ok" == RADERA ]] || { note "Ingenting raderades" "Lagringen är orörd."; exit 0; }
+        $S cryptsetup luksErase --batch-mode "$part" 2>/dev/null || true
+        $S wipefs -a "$part" >/dev/null ;;           # därefter som första start: ny lösenfras och ny lagring
+      *) note "Data inte upplåst" "Starta om och ange lösenfras."; exit 0 ;;
+    esac ;;
   pending)
     # Tidigare installation avbröts (strömavbrott, utdragen stick, utloggning) eller nyckeln raderades med oden-wipe.
     # Inget användbart data finns: etiketten oden-pending byts till oden först när allt är skrivet.

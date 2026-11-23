@@ -48,7 +48,7 @@
 <li>Väljer du <em>Nej</em> på frågan om krypterad lagring sparas inget, och allt är borta när datorn stängs av.</li>
 <li>Skapandet tar en stund och datorn startar sedan om. <strong>Håll ner Alt (Mac) eller tryck F12 (PC, ibland F2, F10, F11 eller Esc)</strong> tills startmenyn visas, och välj stickan igen (ofta "EFI Boot").</li>
 <li><strong>Bara Minimal:</strong> efter omstarten frågar ODEN om kartorna ska hämtas. Välj <em>Hämta nu</em> och låt datorn vara på och ansluten tills det är klart. Avbryts hämtningen fortsätter den där den slutade nästa gång du loggar in. Kartorna fungerar först när hämtningen är klar.</li>
-<li>Vid varje start frågar systemet efter lösenfrasen. Visas "Data inte upplåst" ska du starta om och försöka igen. Oden och Obsidian startar inte förrän lagringen är upplåst.</li>
+<li>Vid varje start frågar systemet efter lösenfrasen. Blir lagringen inte upplåst (fel lösenfras) frågar ODEN om du vill starta om och skriva lösenfrasen igen, eller radera lagringen och börja om med ny lösenfras. Oden och Obsidian startar inte förrän lagringen är upplåst.</li>
 </ol>
 <figure class="skarm"><img src="img/skarm/01-losenfras.webp" width="1280" height="800" loading="lazy" alt="Dialogen ODEN: välj lösenfras"><figcaption>Första start: välj lösenfras.</figcaption></figure>
 <figure class="skarm"><img src="img/skarm/03-upprepa-losenfras.webp" width="1280" height="800" loading="lazy" alt="Dialogen ODEN: upprepa lösenfrasen"><figcaption>Upprepa lösenfrasen.</figcaption></figure>
@@ -94,7 +94,7 @@
 <tr><td>Stickan syns inte i startmenyn</td><td>Aktivera UEFI-boot från USB och prova en annan USB-port.</td></tr>
 <tr><td>Startar inte med Secure Boot på</td><td>Stickan använder Debians signerade shim/grub. Prova med Secure Boot av för att utesluta det.</td></tr>
 <tr><td>Enkel grafik, AI långsam</td><td>NVIDIA-drivrutinen är osignerad och laddas inte med Secure Boot på. Stäng av Secure Boot för GPU-AI, annars körs AI på CPU.</td></tr>
-<tr><td>"Data inte upplåst"</td><td>Fel lösenfras. Starta om och ange rätt.</td></tr>
+<tr><td>"ODEN: lagringen är låst"</td><td>Fel lösenfras. Välj att starta om och skriva den igen. Är den glömd kan du radera lagringen och börja om; då försvinner sparade data.</td></tr>
 <tr><td>Lösenfrasen avvisas</td><td>Den innehåller å/ä/ö eller symboler. Använd a–z, 0–9 och mellanslag.</td></tr>
 <tr><td>"Ingen persistens … för lite ledigt utrymme"</td><td>Stickan har för lite plats kvar efter ISO-filen. Använd en större sticka.</td></tr>
 <tr><td>"En tidigare installation … blev aldrig klar"</td><td>Strömavbrott eller utdragen stick. Svara <em>Gör om</em>. Inget data hade sparats.</td></tr>

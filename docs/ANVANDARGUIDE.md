@@ -32,7 +32,7 @@
    Avbryts det (nätfel, utdragen sladd) fortsätter hämtningen där den slutade nästa gång du loggar in. Välj du *Senare* frågar den igen vid nästa inloggning.
    Kartorna fungerar först när hämtningen är klar. Därefter behövs inget nät för kartorna.
 5. Vid varje start frågar systemet efter lösenfrasen. Skriver du fel och systemet ändå startar visas
-   "Data inte upplåst": starta om och försök igen. Oden och Obsidian startar inte förrän lagringen är upplåst.
+   Blir lagringen inte upplåst (fel lösenfras) visas dialogen "ODEN: lagringen är låst" med två val: starta om och skriv lösenfrasen igen, eller radera lagringen och börja om med ny lösenfras (alla sparade data försvinner, och du måste skriva RADERA för att bekräfta). Oden och Obsidian startar inte förrän lagringen är upplåst.
 
 ## Koppla Signal
 1. Anslut till wifi eller kabel (nätverksikonen uppe till höger).
