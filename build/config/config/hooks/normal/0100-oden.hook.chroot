@@ -13,7 +13,7 @@ done
 dpkg -s user-setup >/dev/null 2>&1 || { echo "FEL: user-setup saknas (live-config kan inte skapa användaren)" >&2; exit 1; }
 
 # Brandvägg och tidssynk på
-systemctl enable nftables.service systemd-timesyncd.service oden-assets.service
+systemctl enable nftables.service systemd-timesyncd.service oden-assets.service oden-wifi-prep.service
 
 # Användartjänster (oden/pmtiles/ollama) startas för alla användare; villkor i unit-filerna
 systemctl --global enable oden.service pmtiles.service ollama.service

@@ -35,7 +35,7 @@
    Blir lagringen inte upplåst (fel lösenfras) visas dialogen "ODEN: lagringen är låst" med två val: starta om och skriv lösenfrasen igen, eller radera lagringen och börja om med ny lösenfras (alla sparade data försvinner, och du måste skriva RADERA för att bekräfta). Oden och Obsidian startar inte förrän lagringen är upplåst.
 
 ## Koppla Signal
-1. Anslut till wifi eller kabel (nätverksikonen uppe till höger).
+1. Anslut till wifi eller kabel (nätverksikonen uppe till höger, eller ikonen *ODEN Wifi* på skrivbordet som guidar steg för steg).
 2. Öppna Oden-gränssnittet (startar automatiskt i webbläsaren, adress `http://127.0.0.1:8080`).
 3. Följ länkningen med QR-kod och skanna den i Signal-appen på telefonen. Kräver internet en gång.
 4. Signal tar bort länkade enheter som varit inaktiva i ca 30 dagar. Då måste stickan länkas om.

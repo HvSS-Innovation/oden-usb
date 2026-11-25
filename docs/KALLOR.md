@@ -8,7 +8,7 @@ Var varje artefakt hämtas ifrån står i [`build/sources.conf`](../build/source
 
 | Projekt | Används till | Källa | Version | Licens |
 |---|---|---|---|---|
-| **Oden** (Bin 1) | Tar emot Signal-meddelanden och skriver Markdown. Webbgränssnitt på `127.0.0.1:8080`, TAK-stöd | [NicklasAndersson/oden](https://github.com/NicklasAndersson/oden) | 4.2.2+ac2ebc3 | MIT |
+| **Oden** (Bin 1) | Tar emot Signal-meddelanden och skriver Markdown. Webbgränssnitt på `127.0.0.1:8080`, TAK-stöd | [NicklasAndersson/oden](https://github.com/NicklasAndersson/oden) | 4.3.0 (kommande bygge; publicerade ISO:er har 4.2.2+ac2ebc3) | MIT |
 | **ODEN-analys** (Bin 2) | Obsidian-valv och plugin för analys. Innehåller Map View och AI-pluginet | [larsnor/ODEN-analys](https://github.com/larsnor/ODEN-analys) | v1.6.3 | MIT |
 
 - Upstream släpper bara Oden för Windows och macOS. Linux-binären byggs av [`build/scripts/build-oden.sh`](../build/scripts/build-oden.sh) från källkoden med Odens egen `s7_watcher.spec` (PyInstaller), och versionen stämplas ur låset.

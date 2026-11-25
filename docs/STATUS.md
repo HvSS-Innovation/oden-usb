@@ -8,6 +8,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
   Resultaten är inte dokumenterade i detalj; maskinvarumatrisen (`HW-MATRIS.md`) är ännu tom.
 - Kartan är klar: rasterkartan `sverige-raster-20261120.pmtiles` (zoom 0–14, 1 914 774 924 byte, OSM 2026-11-20) är renderad och uppladdad till R2 (`oden/maps/`). Adress: <https://publik.hv-sog.se/oden/maps/sverige-raster-20261120.pmtiles> (sätts som `ODEN_MAPS_URL` i `.env`). Lokalt och på ISO:n heter filen `sverige.pmtiles` (Map View och kartservern förutsätter namnet).
   `MAP_MAXZOOM=14` i `build/map.conf`.
+- Nästa omgång är byggd lokalt 2026-11-25 (från f1f80df+, ej committad vid bygget, filnamn `*-a70f633-dirty.iso`) men **inte publicerad eller provstartad**: Oden 4.3.0 (onedir), `wpasupplicant` med i bilden (saknades tidigare: `--apt-recommends false` gjorde att NetworkManager inte kunde ansluta till wifi; upptäckt av en testare), `oden-wifi` (guide, dolda nät, `oden-wifi fil` från USB, uppstartstjänst `oden-wifi-prep`) och menyval 11 i `oden-admin`. `karta-ai` byggdes för hand med samma xorriso-steg som `build.sh` på samma `oden.iso`. Kvar: provstarta (wifi på riktig maskin), bygg om från committad källa, publicera, bumpa `site/status.html` och `releases.json`.
 - ISO-varianterna: `minimal`, `karta` och `karta-ai` är byggda från samma commit (f1f80df) med Oden 4.2.2+ac2ebc3 (onedir) och publicerade på `https://publik.hv-sog.se/oden/f1f80df/` 2026-11-23, med kontrollsumma och SBOM (kontrollerade mot de lokala filerna efter uppladdning). De innehåller Broadcom-drivrutinen (`broadcom-sta-dkms`) och `oden-admin`. Lokalt och på ISO:n heter kartfilen `sverige.pmtiles` (Map View och kartservern förutsätter namnet) och `build.sh` avbryter om namnet är fel. Kartan är provad i Obsidian på en tidigare `karta`; `minimal` är inte provstartad.
   - **karta**: `oden-karta-f1f80df.iso`, 5 609 619 456 byte, SHA256 `b25279bf…ae08`.
   - **minimal**: `oden-minimal-f1f80df.iso`, 3 694 854 144 byte, SHA256 `6c5d83ee…d8f1`. Hämtar kartan vid första start från adressen i `assets.lock` i ISO-filen.
@@ -31,7 +32,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 ## Artefakter (`build/artifacts.lock`)
 | Artefakt | Version | Status |
 |---|---|---|
-| Oden (byggd, onedir) | 4.2.2+ac2ebc3, commit ac2ebc38 (snapshot-ac2ebc3) | Byggd lokalt, ej bit-för-bit reproducerbar (pip `>=`) |
+| Oden (byggd, onedir) | 4.3.0, commit cfc6b4a6 (nästa omgång, opublicerad); publicerade ISO:er: 4.2.2+ac2ebc3 | Byggd lokalt, ej bit-för-bit reproducerbar (pip `>=`) |
 | signal-cli | 0.14.5 | Låst, inbyggd i Oden |
 | Temurin JRE | 25.0.5.1+2 | Låst, inbyggd i Oden |
 | ODEN-valv | 1.6.3 | Låst |

@@ -41,6 +41,14 @@ wireplumber
 # Nät
 network-manager
 network-manager-gnome
+# Wifi: bygget kör med --apt-recommends false, så wpasupplicant (som NetworkManager bara rekommenderar) måste stå här
+# annars kan NetworkManager inte ansluta till wifi alls. Resten används av oden-wifi och oden-admin.
+wpasupplicant
+iw
+rfkill
+wireless-regdb
+usbutils
+pciutils
 nftables
 systemd-timesyncd
 ca-certificates

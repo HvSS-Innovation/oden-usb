@@ -1,0 +1,11 @@
+[Unit]
+Description=Förbered wifi (lås upp rfkill, landskod SE)
+After=NetworkManager.service
+Wants=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/oden-wifi prep
+
+[Install]
+WantedBy=multi-user.target

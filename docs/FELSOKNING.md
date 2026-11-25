@@ -12,6 +12,7 @@
 | Lösenfras glömd | | Data kan inte återfås. Skapa ny stick |
 | Första-start-dialogen visar "Oväntat innehåll på lagringspartitionen" | Persistens-partitionen har ett filsystem | Stickan är felskriven eller manipulerad; skriv om den med `make-stick.sh` |
 | TLS-fel i Signal/TAK | Fel klocka | Anslut till nät och vänta på NTP (systemd-timesyncd); kontrollera datum |
+| Wifi vill inte ansluta | Fel landskod, rfkill eller drivrutin | Dubbelklicka *ODEN Wifi* (eller `oden-wifi`): den låser upp radion, listar nät och ansluter. Utan skärm/tangentbord: lägg `oden-wifi.txt` (en rad `nätverk;lösenord`, eller `nätverk;lösenord;dolt` för dolt nät) på ett USB-minne och kör `oden-wifi fil` |
 | Wifi saknas | Wifi-kort utan firmware i bilden | Använd kabel; notera modellen i `HW-MATRIS.md` |
 | Kartan visas inte | Kartfilen saknas på p3 eller p3 inte monterad | Kontrollera `ls /srv/oden-assets/maps` och `findmnt /srv/oden-assets`. Minimal: kartorna är inte hämtade än (logga in igen). Annars skriv om stickan med `make-stick.sh` eller använd en ISO med karta |
 | AI startar inte | Under 16 GB RAM, eller stickan byggd utan `--with-ai` | Förväntat beteende |

@@ -112,6 +112,13 @@ printf '0\n' | "$oa" | grep -q "ODEN ADMIN" && ok "oden-admin: meny och avsluta"
 rc=0; "$oa" okandkommando >/dev/null 2>&1 || rc=$?; [[ $rc -eq 2 ]] && ok "oden-admin: okänt kommando ger 2" || bad "oden-admin: okänt kommando"
 [[ -x overlay/etc/skel/Desktop/oden-admin.desktop ]] && ok "oden-admin: skrivbordsgenväg är körbar" || bad "oden-admin: skrivbordsgenväg saknar körrättighet"
 "$oa" wifi >/dev/null 2>&1 && ok "oden-admin: wifi-felsökning" || bad "oden-admin: wifi"
+ow=overlay/usr/local/bin/oden-wifi
+bash -n "$ow" && "$ow" --help | grep -q "oden-wifi fil" && ok "oden-wifi: syntax och hjälp" || bad "oden-wifi: syntax/hjälp"
+rc=0; "$ow" okand >/dev/null 2>&1 || rc=$?; [[ $rc -eq 2 ]] && ok "oden-wifi: okänt kommando ger 2" || bad "oden-wifi: okänt kommando"
+grep -q "hidden yes" "$ow" && grep -q "d = dolt" "$ow" && ok "oden-wifi: dolda nät" || bad "oden-wifi: dolda nät"
+for pk in wpasupplicant iw rfkill wireless-regdb; do grep -qx "$pk" config/config/package-lists/base.list.chroot || { bad "paketlista saknar $pk (apt-recommends är av)"; continue; }; done; ok "paketlista: wifi-paket (wpasupplicant m.fl.)"
+"$ow" status >/dev/null 2>&1 && ok "oden-wifi: status" || bad "oden-wifi: status"
+[[ -x overlay/etc/skel/Desktop/oden-wifi.desktop && -f overlay/etc/systemd/system/oden-wifi-prep.service ]] && grep -q oden-wifi-prep config/config/hooks/normal/0100-oden.hook.chroot && ok "oden-wifi: genväg och uppstartstjänst" || bad "oden-wifi: genväg/tjänst"
 (HOME="$t" "$oa" rapport >/dev/null 2>&1; ls "$t"/oden-felsok-*.txt >/dev/null 2>&1) && ok "oden-admin: rapport skrivs" || bad "oden-admin: rapport"
 
 if command -v sgdisk >/dev/null; then

@@ -2,6 +2,6 @@
 *.mbtiles
 *.pmtiles
 build/out
-build/cache/
+build/cache
 .env
 build/maps.lock

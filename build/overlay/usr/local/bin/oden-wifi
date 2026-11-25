@@ -1,0 +1,131 @@
+#!/bin/bash
+# oden-wifi: få wifi att fungera, steg för steg.
+#   oden-wifi            guide: förbereder radion, listar nät, du väljer och anger lösenord
+#   oden-wifi fil [fil]  ansluter med uppgifter ur en textfil (standard: oden-wifi.txt på ett anslutet USB-minne)
+#   oden-wifi prep       låser upp rfkill och sätter landskod SE (körs vid uppstart; kräver root)
+#   oden-wifi status     kort lägesbild
+# Filformat (en rad per nät, # är kommentar):  nätverksnamn;lösenord[;dolt]
+#   lösenord utelämnas för öppet nät; skriv dolt som tredje fält för ett dolt nät (som inte syns i listan)
+# Inget lämnar datorn: uppgifterna går bara till NetworkManager.
+set -u
+
+S=sudo; [[ $EUID -eq 0 ]] && S=""
+have() { command -v "$1" >/dev/null 2>&1; }
+ifc()  { iw dev 2>/dev/null | awk '$1=="Interface"{print $2; exit}'; }
+
+prep() {
+  have rfkill && $S rfkill unblock wifi 2>/dev/null
+  have iw && $S iw reg set SE 2>/dev/null
+  have nmcli && $S nmcli radio wifi on 2>/dev/null
+  return 0
+}
+
+# Samma steg som "Försök laga wifi" i oden-admin, men utan frågor; körs bara när inget gränssnitt finns.
+repair() {
+  echo "Inget wifi-gränssnitt hittades. Försöker laga..."
+  prep
+  if lsmod 2>/dev/null | grep -q -E '^(wl|b43|bcma|brcmsmac) '; then
+    $S modprobe -r wl b43 brcmsmac bcma ssb 2>/dev/null; $S modprobe cfg80211 2>/dev/null; $S modprobe wl 2>/dev/null
+  fi
+  sleep 3
+  [[ -n "$(ifc)" ]]
+}
+
+ensure_radio() {
+  have nmcli || { echo "nmcli saknas, kan inte hantera wifi här."; return 1; }
+  prep
+  if [[ -z "$(ifc)" ]] && ! repair; then
+    echo "Fortfarande inget wifi-gränssnitt."
+    if have lspci; then lspci -nn 2>/dev/null | grep -i -E 'network controller|wireless|802\.11' || echo "Inget wifi-kort syns som PCI-enhet (USB-wifi? prova: lsusb)."; fi
+    echo "Kör 'oden-admin' och välj Nätverk -> Wifi-felsökning, eller använd kabel/USB-nätkort."
+    return 1
+  fi
+  return 0
+}
+
+connect() { # connect ssid [lösenord] [dolt]
+  local ssid=$1 pw=${2:-} hid=()
+  [[ "${3:-}" == dolt ]] && hid=(hidden yes)
+  echo "Ansluter till \"$ssid\"${hid:+ (dolt nät)}..."
+  if [[ -n "$pw" ]]; then nmcli device wifi connect "$ssid" password "$pw" "${hid[@]}" 2>&1
+  else nmcli device wifi connect "$ssid" "${hid[@]}" 2>&1; fi
+}
+
+verify() {
+  sleep 2
+  local st; st=$(nmcli -t -f STATE general 2>/dev/null)
+  echo "Läge: ${st:-okänt}"
+  if curl -fsS -m 6 -o /dev/null https://deb.debian.org 2>/dev/null; then echo "Internet: fungerar."
+  else echo "Internet: ingen kontakt (anslutningen kan ändå vara lokal, t.ex. för TAK eller Signal-länkning senare)."; fi
+}
+
+guide() {
+  ensure_radio || return 1
+  while :; do
+    echo; echo "Söker nät..."
+    nmcli device wifi rescan 2>/dev/null; sleep 4
+    mapfile -t nets < <(nmcli -t -f SSID,SIGNAL,SECURITY device wifi list 2>/dev/null | awk -F: 'NF && $1!="" && !s[$1]++' | head -15)
+    if ((${#nets[@]}==0)); then echo "Inga nät hittades."; read -rp "Försöka igen? [J/n] " a; [[ "$a" == [nN]* ]] && return 1; continue; fi
+    local i=1 line
+    for line in "${nets[@]}"; do
+      IFS=: read -r s sig sec <<<"$line"
+      printf '%2d) %-32s signal %3s  %s\n' "$i" "$s" "$sig" "${sec:-öppet}"; i=$((i+1))
+    done
+    read -rp "Välj nummer (d = dolt nät, r = sök igen, q = avsluta): " n
+    case "$n" in
+      q) return 0 ;;
+      r|"") continue ;;
+      d|D) read -rp "Nätverksnamn (SSID, exakt som det stavas): " ssid; [[ -n "$ssid" ]] || continue
+           read -rsp "Lösenord (tomt för öppet nät): " pw; echo
+           if connect "$ssid" "$pw" dolt; then unset pw; verify; return 0; fi
+           unset pw; echo "Det gick inte. Kontrollera stavning (versaler räknas) och lösenord."; continue ;;
+    esac
+    [[ "$n" =~ ^[0-9]+$ ]] && ((n>=1 && n<=${#nets[@]})) || { echo "Ogiltigt val."; continue; }
+    IFS=: read -r ssid _ sec <<<"${nets[n-1]}"
+    pw=""
+    [[ -n "$sec" ]] && { read -rsp "Lösenord för \"$ssid\": " pw; echo; }
+    if connect "$ssid" "$pw"; then unset pw; verify; return 0; fi
+    unset pw
+    echo "Det gick inte. Fel lösenord är vanligast; försök igen."
+  done
+}
+
+from_file() {
+  local f=${1:-} d
+  if [[ -z "$f" ]]; then
+    for d in /media/*/* /run/media/*/* /mnt/*; do [[ -f "$d/oden-wifi.txt" ]] && { f="$d/oden-wifi.txt"; break; }; done
+  fi
+  [[ -n "$f" && -f "$f" ]] || { echo "Hittar ingen oden-wifi.txt. Lägg filen på ett USB-minne och sätt i det, eller ange sökväg."; return 1; }
+  ensure_radio || return 1
+  echo "Läser $f"
+  nmcli device wifi rescan 2>/dev/null; sleep 4
+  local ssid pw
+  local flag
+  while IFS=';' read -r ssid pw flag; do
+    ssid=${ssid%$'\r'}; pw=${pw%$'\r'}; flag=${flag%$'\r'}
+    [[ -z "${ssid// }" || "$ssid" == \#* ]] && continue
+    if [[ "$flag" == dolt ]]; then
+      connect "$ssid" "$pw" dolt && { verify; return 0; }
+    elif nmcli -t -f SSID device wifi list 2>/dev/null | grep -qxF "$ssid"; then
+      connect "$ssid" "$pw" && { verify; return 0; }
+    else echo "\"$ssid\" syns inte, hoppar över."; fi
+  done <"$f"
+  echo "Inget av näten i filen gick att ansluta till."; return 1
+}
+
+status() {
+  have rfkill && rfkill list wifi 2>/dev/null
+  echo "Gränssnitt: $(ifc || true)"
+  have nmcli && nmcli -f DEVICE,TYPE,STATE,CONNECTION device status 2>/dev/null | grep -E 'DEVICE|wifi'
+  have iw && iw reg get 2>/dev/null | grep country | head -1
+  return 0
+}
+
+case "${1:-}" in
+  ""|guide) guide ;;
+  fil) from_file "${2:-}" ;;
+  prep) prep ;;
+  status) status ;;
+  -h|--help|hjalp) sed -n 2,9p "$0" | sed 's/^# \{0,1\}//' ;;
+  *) echo "Okänt kommando: $1 (se oden-wifi --help)" >&2; exit 2 ;;
+esac

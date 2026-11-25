@@ -187,6 +187,7 @@ NÄTVERK
   8) Visa brandväggen
   9) Wifi-felsökning (kort, drivrutin, rfkill, skanning)
   10) Försök laga wifi (rfkill, drivrutin, landskod)
+  11) Wifi-guide (välj nät steg för steg, eller läs oden-wifi.txt från USB)
   0) Tillbaka
 E
     read -rp "Val: " c || return
@@ -212,6 +213,7 @@ E
       8) $S nft list ruleset 2>&1 || true; pause ;;
       9) sec_wifi; pause ;;
       10) wifi_fix; pause ;;
+      11) have oden-wifi && oden-wifi || echo "oden-wifi saknas"; pause ;;
       0|q) return ;;
       *) echo "Ogiltigt val." ;;
     esac

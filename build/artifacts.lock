@@ -5,7 +5,7 @@
 # oden-linux byggs av scripts/build-oden.sh från oden-source + jre-x64 + signal-cli (url/sha = BUILD: inte nedladdad, ej reproducerbar;
 # dess SHA256 skrivs i SBOM.txt). Upstream har ingen Linux-release.
 oden-linux          BUILD  BUILD
-oden-source         https://github.com/NicklasAndersson/oden/archive/ac2ebc38cf8889f320a00deab5a2e94f7d3615bc.tar.gz  7343539b93bfcf3070082c470fbc03687e918562ee89081a4b5d56cd7e167a1c  # version=4.2.2+ac2ebc3 commit ac2ebc38 (snapshot-ac2ebc3, med Linux onedir, PR #304)
+oden-source         https://github.com/NicklasAndersson/oden/archive/refs/tags/v4.3.0.tar.gz  93f4702e84896e922928eaa3bdbec457a6a187a3f950bcb8c5ca76d9f2ddca0f  # v4.3.0 commit cfc6b4a6c7e6654e65753186d5998252907bbdf2
 jre-x64             https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jre_x64_linux_hotspot_25.0.5.1_2.tar.gz  2edef9e4f81ec5ee426d023336d4cfbd7b4644e99884e7a73a6a867b70b17acf  # jdk-25.0.5.1+2
 oden-valv           https://github.com/larsnor/ODEN-analys/releases/download/v1.6.3/ODEN-valv-1.6.3.zip  5c7628dd8a90e168bc75ae246a9f102862a53ae6b02242de0706d324280346d4  # v1.6.3
 signal-cli          https://github.com/AsamK/signal-cli/releases/download/v0.14.5/signal-cli-0.14.5.tar.gz  62d38ebfef3988d78f437e7328183b75ee549d111382e66c1af70d3ebd3cd7a7  # v0.14.5
