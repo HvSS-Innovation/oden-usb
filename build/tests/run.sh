@@ -63,7 +63,9 @@ fx "3840 x 2160" "HDMI-1 connected 3840x2160+0+0 (normal left inverted right x a
 [[ "$(PATH="$t/xb:$PATH" ODEN_SCALE=2 "$hi" scale)" == 2 ]] && ok "hidpi: ODEN_SCALE överstyr" || bad "hidpi: ODEN_SCALE överstyr"
 echo "boot=live oden.scale=2 quiet" > "$t/cmdline"
 [[ "$(PATH="$t/xb:$PATH" ODEN_CMDLINE="$t/cmdline" "$hi" scale)" == 2 ]] && ok "hidpi: oden.scale på kärnraden överstyr" || bad "hidpi: oden.scale på kärnraden"
-PATH="/usr/bin:/bin" ODEN_CMDLINE=/dev/null "$hi" scale 2>/dev/null | grep -qx 1 && ok "hidpi: utan xrandr blir skala 1" || bad "hidpi: utan xrandr"
+# Egen PATH med bara det skriptet behöver: /usr/bin har xrandr på en dator med skrivbord.
+mkdir -p "$t/noxr"; for c in cat awk; do ln -s "$(command -v $c)" "$t/noxr/$c"; done
+PATH="$t/noxr" ODEN_SCALEFILE=/dev/null ODEN_CMDLINE=/dev/null "$hi" scale 2>/dev/null | grep -qx 1 && ok "hidpi: utan xrandr blir skala 1" || bad "hidpi: utan xrandr"
 
 # oden-keyboard: Mac-layout bara på Apple
 printf '#!/bin/sh\necho "$@" > "%s/xkb"\n' "$t" > "$t/fakexkb"; chmod +x "$t/fakexkb"
