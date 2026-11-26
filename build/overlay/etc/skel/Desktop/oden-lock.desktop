@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Lås skärmen
+Comment=Lås skärmen nu eller välj efter hur lång tid den låses
+Exec=oden-lock menu
+Icon=oden-lock
+Terminal=false
+Categories=System;

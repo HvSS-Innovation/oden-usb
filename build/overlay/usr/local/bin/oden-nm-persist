@@ -1,0 +1,23 @@
+#!/bin/bash
+# oden-nm-persist: sparar wifi-nät (NetworkManager) mellan omstarter.
+# Bara /home ligger på den krypterade lagringen; /etc ligger i RAM. Därför bind-monteras en mapp på lagringen
+# (/home/.oden/nm-connections, endast root) över /etc/NetworkManager/system-connections innan NetworkManager startar.
+# Utan lagring är /home också RAM, så det gör ingen skada (nätet försvinner då som förut).
+#   oden-nm-persist         wifi-nät
+#   oden-nm-persist cups    skrivare (hela /etc/cups, första gången kopierad från bilden)
+# Testvariabler: ODEN_NM_SRC, ODEN_NM_DST, ODEN_NM_NOMOUNT=1.
+set -u
+case "${1:-nm}" in
+  cups) src="${ODEN_NM_SRC:-/home/.oden/cups}"; dst="${ODEN_NM_DST:-/etc/cups}" ;;
+  *)    src="${ODEN_NM_SRC:-/home/.oden/nm-connections}"; dst="${ODEN_NM_DST:-/etc/NetworkManager/system-connections}" ;;
+esac
+
+mkdir -p "$src" "$dst" || exit 0
+chmod 700 "$src"
+# Sparade nät som redan ligger i RAM (skapade före monteringen) flyttas med, men skriver aldrig över något sparat
+# (cups: dessutom kataloger som ppd/ och ssl/, via cp -a)
+for f in "$dst"/* "$dst"/.[!.]*; do [[ -e "$f" && ! -e "$src/${f##*/}" ]] && cp -a "$f" "$src/" ; done
+if [[ -z "${ODEN_NM_NOMOUNT:-}" ]]; then
+  mountpoint -q "$dst" || mount --bind "$src" "$dst" || { echo "oden-nm-persist: kunde inte montera" >&2; exit 0; }
+fi
+exit 0

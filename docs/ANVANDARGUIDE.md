@@ -53,8 +53,13 @@
 ## Felsökning och inställningar
 Ikonen *ODEN Admin* på skrivbordet (eller `oden-admin` i en terminal) öppnar en meny för nätverk (anslut wifi, testa nätet), tjänster (starta om Oden), versioner och maskinvara. Välj *Spara felsökningsrapport* om du behöver hjälp.
 
+## Skrivare
+Ikonen *Skrivare* på skrivbordet (eller `oden-admin`, val 8) lägger till skrivare via **USB** eller med **IP-adress** (till exempel `192.168.1.50`); de flesta nyare skrivare behöver ingen drivrutin, för övriga söker du modell i en lista. Skrivaren söks medvetet inte upp automatiskt i nätet, så att datorn inte annonserar sig. Tillagda skrivare sparas på den krypterade lagringen och finns kvar efter omstart.
+
 ## Låsa skärmen
-Knappen uppe till höger (användarnamnet) har *Lås skärm*, *Starta om* och *Stäng av*; det finns ingen *Logga ut* (efter utloggning kräver inloggningsrutan ett lösenord som inte är känt). `Ctrl+Alt+L` låser också. Ikonen *ODEN Skärmlås* i programmenyn (eller `oden-lock menu`) låter dig slå på **lås vid inaktivitet**: skärmsläckaren startar efter tio minuter och skärmen är då låst.
+Knappen uppe till höger (användarnamnet) har *Lås skärm*, *Starta om* och *Stäng av*; det finns ingen *Logga ut* (efter utloggning kräver inloggningsrutan ett lösenord som inte är känt). `Ctrl+Alt+L` låser också. Ikonen *Lås skärmen* på skrivbordet (eller `oden-lock menu`) låser direkt och låter dig slå på **lås vid inaktivitet** och välja efter hur lång tid (1 minut till 1 timme; `oden-lock tid 10`).
+
+Sparas mellan omstarter (när lagringen finns): wifi-nät, skrivare, skärmskala och inställningar i hemkatalogen. Batterinivån visas i panelen på laptops.
 
 Låset öppnas med **krypteringslösenordet**, alltså lösenfrasen till den krypterade lagringen på stickan. Så länge lagringen finns fungerar ingenting annat, inte heller standardlösenordet `live`. Finns ingen krypterad lagring (stickan utan persistens) öppnas låset av `live`, och *Lås skärm* varnar för det innan det låser. Glömmer du lösenfrasen hjälper bara en omstart, och det du inte sparat går då förlorat.
 

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Skärmskala
+Comment=Gör allt större eller mindre på högupplösta skärmar
+Exec=oden-scale
+Icon=oden-scale
+Terminal=false
+Categories=Settings;

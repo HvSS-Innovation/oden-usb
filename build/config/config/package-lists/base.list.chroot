@@ -27,6 +27,20 @@ xfce4-terminal
 # Skärmlås/skärmsläckare (PAM-tjänsten xfce4-screensaver styrs av overlayn, se oden-lock). Utan den gör Lås skärm ingenting.
 xfce4-screensaver
 xfce4-notifyd
+# Batterinivå i panelen (laptop)
+xfce4-power-manager
+xfce4-power-manager-plugins
+upower
+# Skrivare: CUPS med USB och nätverk via IP-adress (ipp://), drivrutinslöst (cups-filters, IPP Everywhere) och vanliga drivrutiner.
+# Ingen automatisk sökning i nätet (avahi och cups-browsed är avstängda): skrivaren läggs till för hand med dess adress eller via USB.
+cups
+cups-client
+cups-filters
+cups-ipp-utils
+system-config-printer
+printer-driver-gutenprint
+printer-driver-brlaser
+hplip
 libnotify-bin
 lightdm
 thunar
@@ -35,6 +49,7 @@ udisks2
 polkitd
 pkexec
 zenity
+librsvg2-common
 firefox-esr
 fonts-dejavu
 fonts-noto-color-emoji

@@ -1,0 +1,6 @@
+#!/bin/bash
+# oden-scale: välj skärmskala (normal eller dubbel storlek) med ett fönster. Sätter samma inställningar som oden-hidpi apply.
+c=$(zenity --list --title="ODEN skärmskala" --width=360 --height=240 --column=v --column="Storlek på allt" --hide-column=1 --print-column=1 \
+      1 "Normal (liten skärm)" 2 "Dubbel (högupplöst skärm, t.ex. MacBook)" auto "Välj automatiskt" 2>/dev/null) || exit 0
+oden-hidpi save "$c"   # minns valet till nästa start
+oden-hidpi apply

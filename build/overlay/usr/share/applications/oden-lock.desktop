@@ -3,6 +3,6 @@ Type=Application
 Name=ODEN Skärmlås
 Comment=Lås skärmen och ställ in lås vid inaktivitet
 Exec=oden-lock menu
-Icon=system-lock-screen
+Icon=oden-lock
 Terminal=false
 Categories=System;Settings;

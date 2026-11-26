@@ -6,7 +6,9 @@
 # Överstyrning för felsökning: kärnparametern oden.scale=1|2, eller variabeln ODEN_SCALE.
 scale() {
   [[ "${ODEN_SCALE:-}" =~ ^[12]$ ]] && { echo "$ODEN_SCALE"; return; }
-  local a
+  # Val som användaren gjort med oden-scale (sparas i hemkatalogen, alltså kvar efter omstart)
+  local a v; v=$(cat "${ODEN_SCALEFILE:-$HOME/.config/oden/scale}" 2>/dev/null || true)
+  [[ "$v" =~ ^[12]$ ]] && { echo "$v"; return; }
   for a in $(cat "${ODEN_CMDLINE:-/proc/cmdline}" 2>/dev/null); do
     [[ "$a" =~ ^oden\.scale=([12])$ ]] && { echo "${BASH_REMATCH[1]}"; return; }
   done
@@ -31,5 +33,8 @@ apply() {
 case "${1:-scale}" in
   scale) scale ;;
   apply) shift; apply "$@" ;;
-  *) echo "användning: oden-hidpi scale|apply [1|2]" >&2; exit 2 ;;
+  # save 1|2 minns valet till nästa start; save auto tar bort det (då väljs skalan efter skärmen)
+  save) f="${ODEN_SCALEFILE:-$HOME/.config/oden/scale}"
+        case "${2:-}" in 1|2) mkdir -p "${f%/*}"; echo "$2" > "$f" ;; auto) rm -f "$f" ;; *) echo "användning: oden-hidpi save 1|2|auto" >&2; exit 2 ;; esac ;;
+  *) echo "användning: oden-hidpi scale|apply [1|2]|save 1|2|auto" >&2; exit 2 ;;
 esac

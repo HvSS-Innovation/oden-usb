@@ -3,6 +3,6 @@ Type=Application
 Name=ODEN Admin
 Comment=Felsökning och administration: nätverk, tjänster, versioner
 Exec=xfce4-terminal --title="ODEN Admin" -e oden-admin
-Icon=preferences-system
+Icon=oden-admin
 Terminal=false
 Categories=System;Settings;

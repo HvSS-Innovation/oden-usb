@@ -5,7 +5,7 @@ set -e
 # Tjänster som ska vara av
 for u in hibernate.target hybrid-sleep.target suspend-then-hibernate.target \
          apt-daily.timer apt-daily-upgrade.timer man-db.timer \
-         avahi-daemon.service cups.service cups-browsed.service bluetooth.service; do
+         avahi-daemon.service cups-browsed.service bluetooth.service; do
   systemctl mask "$u" 2>/dev/null || true
 done
 
@@ -19,6 +19,9 @@ dpkg -s user-setup >/dev/null 2>&1 || { echo "FEL: user-setup saknas (live-confi
 panel=/etc/xdg/xfce4/panel/default.xml
 perl -0pi -e 's{<property name="plugin-10" type="string" value="actions"/>}{<property name="plugin-10" type="string" value="actions">\n      <property name="items" type="array">\n        <value type="string" value="+lock-screen"/>\n        <value type="string" value="-switch-user"/>\n        <value type="string" value="-separator"/>\n        <value type="string" value="-suspend"/>\n        <value type="string" value="-hibernate"/>\n        <value type="string" value="-hybrid-sleep"/>\n        <value type="string" value="+separator"/>\n        <value type="string" value="+shutdown"/>\n        <value type="string" value="+restart"/>\n        <value type="string" value="-separator"/>\n        <value type="string" value="-logout"/>\n        <value type="string" value="-logout-dialog"/>\n      </property>\n    </property>}' "$panel"
 grep -q 'value="-logout-dialog"' "$panel" || { echo "FEL: åtgärdsknappen i $panel gick inte att ändra (plugin-10 saknas?)" >&2; exit 1; }
+# Batterinivå (laptop): panelplugin strax före klockan; visar inget på datorer utan batteri
+perl -0pi -e 's{(<value type="int" value=")8("/>)}{${1}19"/>\n        ${1}8${2}}; s{(    <property name="plugin-8" type="string" value="clock"/>)}{    <property name="plugin-19" type="string" value="power-manager-plugin"/>\n$1}' "$panel"
+grep -q 'value="power-manager-plugin"' "$panel" && grep -q '<value type="int" value="19"/>' "$panel" || { echo "FEL: batteriplugin gick inte att lägga i $panel" >&2; exit 1; }
 sk=/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml
 sed -i '/xfce4-session-logout/d' "$sk"
 ! grep -q 'xfce4-session-logout' "$sk" || { echo "FEL: genvägen till utloggning finns kvar i $sk" >&2; exit 1; }
@@ -30,7 +33,7 @@ grep -q 'value="+lock-screen"' "$panel" || { echo "FEL: Lås skärm är inte på
 [ -f /etc/pam.d/xfce4-screensaver ] && grep -q 'oden-lock pam-check' /etc/pam.d/xfce4-screensaver || { echo "FEL: PAM-tjänsten xfce4-screensaver saknar oden-lock (overlayn skriver över paketets fil)" >&2; exit 1; }
 
 # Brandvägg och tidssynk på
-systemctl enable nftables.service systemd-timesyncd.service oden-assets.service oden-wifi-prep.service oden-usb-watch.service oden-ramcache.service
+systemctl enable cups.socket cups.path cups.service oden-cups-persist.service nftables.service systemd-timesyncd.service oden-assets.service oden-wifi-prep.service oden-nm-persist.service oden-usb-watch.service oden-ramcache.service
 
 # Användartjänster (oden/pmtiles/ollama) startas för alla användare; villkor i unit-filerna
 systemctl --global enable oden.service pmtiles.service ollama.service

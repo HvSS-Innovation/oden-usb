@@ -3,6 +3,6 @@ Type=Application
 Name=ODEN Wifi
 Comment=Anslut till wifi steg för steg
 Exec=xfce4-terminal --title="ODEN Wifi" -e oden-wifi
-Icon=network-wireless
+Icon=oden-wifi
 Terminal=false
 Categories=Network;

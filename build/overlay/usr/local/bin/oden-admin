@@ -1,7 +1,7 @@
 #!/bin/bash
 # oden-admin: interaktiv felsökning och administration på ODEN-stickan (nätverk, tjänster, versioner, maskinvara).
 #   oden-admin                 meny
-#   oden-admin status|nat|tjanster|versioner|hw|rapport|hjalp     (utan meny, för skript och fjärrhjälp)
+#   oden-admin status|nat|skrivare|tjanster|versioner|hw|rapport|hjalp     (utan meny, för skript och fjärrhjälp)
 # Ändrar bara det du ber om: starta om tjänster, ansluta wifi, starta om eller stänga av datorn. Kräver inga extra paket.
 set -u
 
@@ -161,7 +161,7 @@ wifi_fix() {
   have nmcli && { echo "- nmcli radio wifi on"; $S nmcli radio wifi on 2>&1 || true; sleep 2; nmcli device wifi rescan 2>&1 || true; sleep 4; run nmcli device status; nmcli -f SSID,SIGNAL,CHAN device wifi list 2>&1 | head -15 || true; }
   echo "Hjälpte det inte: välj 'Wifi-felsökning' och skicka resultatet, eller spara en rapport."
 }
-sec_report_all() { sec_status; sec_net; sec_wifi; sec_services; sec_versions; sec_hw; }
+sec_report_all() { sec_status; sec_net; sec_wifi; sec_printers; sec_services; sec_versions; sec_hw; }
 
 make_report() {
   local f="$HOME/oden-felsok-$(date +%Y%m%d-%H%M%S).txt"
@@ -169,6 +169,92 @@ make_report() {
   echo "Rapport sparad: $f"
   echo "Den innehåller maskinuppgifter och namn på wifi-nät i närheten, men inga lösenord. Läs igenom den innan du delar den."
   echo "Utan upplåst lagring försvinner filen när datorn stängs av: kopiera den till ett USB-minne."
+}
+
+# ---------- Skrivare (CUPS) ----------
+sec_printers() {
+  hdr "Skrivare"
+  if ! have lpstat; then echo "CUPS saknas"; return; fi
+  printf 'cups: %s\n' "$(svc_state system cups)"
+  run lpstat -d
+  run lpstat -p -l
+  run lpstat -o
+  hdr "Skrivare som hittas via USB"
+  have lpinfo && { $SN lpinfo -v 2>&1 | grep -E 'usb:|hp:' || echo "(ingen USB-skrivare hittad)"; }
+}
+
+# lista valbara skrivarnamn (en per rad)
+printer_names() { lpstat -e 2>/dev/null; }
+
+pick_printer() { # skriver valt namn på stdout, tom rad om inget valt
+  local n=() i=1 c p
+  while IFS= read -r p; do n+=("$p"); done < <(printer_names)
+  (( ${#n[@]} )) || { echo "Inga skrivare är tillagda." >&2; return 1; }
+  for p in "${n[@]}"; do echo "  $i) $p" >&2; i=$((i+1)); done
+  read -rp "Skrivare (0 = avbryt): " c || return 1
+  [[ "$c" =~ ^[0-9]+$ ]] && (( c >= 1 && c <= ${#n[@]} )) || return 1
+  echo "${n[c-1]}"
+}
+
+add_printer() { # add_printer <namn> <uri>: försöker drivrutinslöst (IPP Everywhere), annars låter dig söka drivrutin
+  local name=$1 uri=$2 q m i=1 ms=() line
+  if $S lpadmin -p "$name" -E -v "$uri" -m everywhere 2>/dev/null; then
+    echo "Klart: $name är tillagd (drivrutinslöst)."; return 0
+  fi
+  echo "Skrivaren stöder inte drivrutinslös utskrift. Sök en drivrutin på märke eller modell (t.ex. brother, hp, canon)."
+  read -rp "Sök: " q || return 1
+  [[ -n "$q" ]] || { echo "Avbrutet."; return 1; }
+  while IFS= read -r line; do ms+=("$line"); done < <(lpinfo -m 2>/dev/null | grep -i -- "$q" | head -20)
+  (( ${#ms[@]} )) || { echo "Ingen drivrutin hittades för \"$q\"."; return 1; }
+  for line in "${ms[@]}"; do printf '  %s) %s\n' "$i" "${line#* }"; i=$((i+1)); done
+  read -rp "Drivrutin (0 = avbryt): " m || return 1
+  [[ "$m" =~ ^[0-9]+$ ]] && (( m >= 1 && m <= ${#ms[@]} )) || { echo "Avbrutet."; return 1; }
+  $S lpadmin -p "$name" -E -v "$uri" -m "${ms[m-1]%% *}" && echo "Klart: $name är tillagd." || echo "Misslyckades."
+}
+
+menu_printers() {
+  have lpstat || { echo "CUPS saknas på den här bilden."; pause; return; }
+  local c n ip i=1 u us=() name
+  while :; do
+    cat <<'E'
+
+SKRIVARE
+  1) Visa skrivare och utskriftskö
+  2) Lägg till nätverksskrivare (IP-adress)
+  3) Lägg till USB-skrivare
+  4) Välj standardskrivare
+  5) Skriv ut testsida
+  6) Avbryt alla utskrifter
+  7) Ta bort skrivare
+  8) Starta om utskriftstjänsten
+  0) Tillbaka
+E
+    read -rp "Val: " c || return
+    case "$c" in
+      1) sec_printers; pause ;;
+      2) read -rp "Skrivarens IP-adress eller namn (t.ex. 192.168.1.50): " ip || continue
+         [[ -n "$ip" ]] || continue
+         read -rp "Namn på skrivaren i listan (utan mellanslag, t.ex. kontoret): " name || continue
+         name=${name// /-}; [[ -n "$name" ]] || continue
+         if [[ "$ip" == *://* ]]; then add_printer "$name" "$ip"; else add_printer "$name" "ipp://$ip/ipp/print"; fi; pause ;;
+      3) us=(); i=1
+         while IFS= read -r u; do us+=("$u"); done < <($S lpinfo -v 2>/dev/null | awk '$1=="direct" && $2 ~ /^(usb|hp):/ {print $2}')
+         if (( ${#us[@]} == 0 )); then echo "Ingen USB-skrivare hittades. Kontrollera sladden och att skrivaren är påslagen."; pause; continue; fi
+         for u in "${us[@]}"; do echo "  $i) $u"; i=$((i+1)); done
+         read -rp "Skrivare (0 = avbryt): " n || continue
+         [[ "$n" =~ ^[0-9]+$ ]] && (( n >= 1 && n <= ${#us[@]} )) || continue
+         read -rp "Namn på skrivaren i listan (utan mellanslag): " name || continue
+         name=${name// /-}; [[ -n "$name" ]] || continue
+         add_printer "$name" "${us[n-1]}"; pause ;;
+      4) n=$(pick_printer) && $S lpadmin -d "$n" && echo "Standardskrivare: $n"; pause ;;
+      5) n=$(pick_printer) && { lp -d "$n" /usr/share/cups/data/testprint && echo "Testsidan är skickad till $n."; }; pause ;;
+      6) ask "Avbryta alla utskrifter?" && { $S cancel -a && echo "Klart."; }; pause ;;
+      7) n=$(pick_printer) && ask "Ta bort $n?" && { $S lpadmin -x "$n" && echo "Borttagen."; }; pause ;;
+      8) ask "Starta om utskriftstjänsten?" && { $S systemctl restart cups && echo "Klart." || echo "Misslyckades."; }; pause ;;
+      0|q) return ;;
+      *) echo "Ogiltigt val." ;;
+    esac
+  done
 }
 
 # ---------- Menyer ----------
@@ -283,6 +369,7 @@ ODEN ADMIN
   5) Maskinvara
   6) Spara felsökningsrapport
   7) Starta om / stäng av datorn
+  8) Skrivare
   0) Avsluta
 E
     read -rp "Val: " c || { echo; return 0; }
@@ -294,6 +381,7 @@ E
       5) sec_hw; pause ;;
       6) make_report; pause ;;
       7) menu_power ;;
+      8) menu_printers ;;
       0|q) return 0 ;;
       *) echo "Ogiltigt val." ;;
     esac
@@ -309,6 +397,7 @@ oden-admin: felsökning och administration på ODEN-stickan.
   oden-admin wifi       wifi-felsökning (kort, drivrutin, rfkill, skanning)
   oden-admin wififix    försök laga vanliga wifi-fel
   oden-admin nattest    testa nätet (ping och DNS)
+  oden-admin skrivare   skrivare, standardskrivare, utskriftskö och USB-skrivare som hittas
   oden-admin tjanster   tjänsternas status
   oden-admin versioner  versioner av system och inbyggd programvara
   oden-admin hw         maskinvara
@@ -323,6 +412,7 @@ case "${1:-}" in
   nattest)   sec_net_test ;;
   wifi)      sec_wifi ;;
   wififix)   wifi_fix ;;
+  skrivare)  sec_printers ;;
   tjanster)  sec_services ;;
   versioner) sec_versions ;;
   hw)        sec_hw ;;

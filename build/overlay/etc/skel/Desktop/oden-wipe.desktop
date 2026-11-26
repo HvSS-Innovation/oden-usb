@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Nödradering
+Comment=Gör den krypterade lagringen oåtkomlig (frågar först)
+Exec=xfce4-terminal --title="ODEN Nödradering" -e oden-wipe
+Icon=oden-wipe
+Terminal=false
+Categories=System;

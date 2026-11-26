@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Skrivare
+Comment=Lägg till och hantera skrivare (USB eller via IP-adress)
+Exec=system-config-printer
+Icon=oden-printer
+Terminal=false
+Categories=Settings;

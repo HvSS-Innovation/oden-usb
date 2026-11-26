@@ -152,6 +152,61 @@ lk pam-unconfigured && ! printf 'gott losen\0' | lk pam-check && ok "oden-lock: 
 touch "$LUKSFLAG"
 ! lk pam-unconfigured && printf 'gott losen\0' | lk pam-check && ! printf 'live\0' | lk pam-check && ! printf '\0' | lk pam-check && ok "oden-lock: med krypterad lagring: bara lösenfrasen öppnar" || bad "oden-lock: med lagring"
 rc=0; lk okand >/dev/null 2>&1 || rc=$?; [[ $rc -eq 2 ]] && ok "oden-lock: okänt kommando ger 2" || bad "oden-lock: okänt kommando"
+# oden-hidpi: valet från oden-scale minns; 78oden-desktop: nya genvägar kommer, borttagna återuppstår inte
+hs="$t/hidpi"; mkdir -p "$hs"; export ODEN_SCALEFILE="$hs/scale"
+overlay/usr/local/bin/oden-hidpi save 1; [[ "$(ODEN_CMDLINE=/dev/null overlay/usr/local/bin/oden-hidpi scale)" == 1 ]] && overlay/usr/local/bin/oden-hidpi save 2 && [[ "$(ODEN_CMDLINE=/dev/null overlay/usr/local/bin/oden-hidpi scale)" == 2 ]] && overlay/usr/local/bin/oden-hidpi save auto && [[ ! -e "$hs/scale" ]] && ok "oden-hidpi: sparat skalval kvarstår, auto tar bort det" || bad "oden-hidpi: save"
+unset ODEN_SCALEFILE
+dk="$t/deskhome"; sk="$t/deskskel"; mkdir -p "$dk/Desktop" "$sk/Desktop"; echo a > "$sk/Desktop/a.desktop"; echo b > "$sk/Desktop/b.desktop"; echo gammal > "$dk/Desktop/a.desktop"
+sed "s#/etc/skel#$sk#g" overlay/etc/X11/Xsession.d/78oden-desktop > "$t/78d"
+HOME="$dk" sh "$t/78d"; [[ "$(cat "$dk/Desktop/a.desktop")" == gammal && -e "$dk/Desktop/b.desktop" ]] || bad "78oden-desktop: första körning"
+rm "$dk/Desktop/b.desktop"; echo c > "$sk/Desktop/c.desktop"; HOME="$dk" sh "$t/78d"
+[[ ! -e "$dk/Desktop/b.desktop" && -e "$dk/Desktop/c.desktop" ]] && ok "78oden-desktop: ny genväg läggs till, borttagen återkommer inte" || bad "78oden-desktop: ny/borttagen"
+# oden-nm-persist: wifi-nät sparas på lagringen och finns kvar efter omstart (ny RAM-mapp), skrivs aldrig över
+nm="$t/nm"; mkdir -p "$nm/src" "$nm/dst"; echo ssid1 > "$nm/dst/a.nmconnection"; echo gammal > "$nm/dst/b.nmconnection"; echo sparad > "$nm/src/b.nmconnection"
+ODEN_NM_SRC="$nm/src" ODEN_NM_DST="$nm/dst" ODEN_NM_NOMOUNT=1 overlay/usr/local/bin/oden-nm-persist
+[[ "$(cat "$nm/src/a.nmconnection")" == ssid1 && "$(cat "$nm/src/b.nmconnection")" == sparad && "$(stat -c %a "$nm/src")" == 700 ]] && ok "oden-nm-persist: kopierar nät, skriver inte över sparat, mappen är privat" || bad "oden-nm-persist"
+grep -q 'oden-nm-persist.service' config/config/hooks/normal/0100-oden.hook.chroot && grep -q 'Before=NetworkManager' overlay/etc/systemd/system/oden-nm-persist.service && grep -q '^librsvg2-common' config/config/package-lists/base.list.chroot && ok "oden-nm-persist: tjänst före NetworkManager, påslagen; SVG-läsare i paketlistan" || bad "oden-nm-persist: tjänst/paket"
+for i in wifi lock admin terminal wipe scale; do [[ -s overlay/usr/share/icons/hicolor/scalable/apps/oden-$i.svg ]] && python3 -c "import sys,xml.dom.minidom as m;m.parse(sys.argv[1])" overlay/usr/share/icons/hicolor/scalable/apps/oden-$i.svg || bad "ikon oden-$i.svg"; done; ok "ikoner: SVG giltiga"
+# varje skrivbordsgenväg är körbar, har en ikon som finns och pekar på ett program som finns
+for f in overlay/etc/skel/Desktop/*.desktop; do ic=$(sed -n 's/^Icon=//p' "$f"); [[ -x "$f" ]] || bad "genväg ej körbar: $f"; case "$ic" in oden) i=overlay/usr/share/icons/hicolor/256x256/apps/oden.png;; /*) i=;; *) i=overlay/usr/share/icons/hicolor/scalable/apps/$ic.svg;; esac; [[ -z "$i" || -s "$i" || "$ic" == utilities-terminal ]] || bad "ikon saknas för $f ($ic)"; done; ok "skrivbordsgenvägar: körbara, ikoner finns"
+# oden-admin skrivare: lägga till via IP (drivrutinslöst), drivrutinssökning som reserv, USB, standardskrivare, ta bort
+ps="$t/prstub"; mkdir -p "$ps"; PL="$t/pr.log"; : > "$PL"; export PL
+printf '#!/bin/bash\nexec "$@"\n' > "$ps/sudo"
+cat > "$ps/lpadmin" <<'STUB'
+#!/bin/bash
+echo "lpadmin $*" >> "$PL"
+if [[ "$*" == *"-m everywhere"* && -n "${NOEVERY:-}" ]]; then exit 1; fi
+exit 0
+STUB
+printf '#!/bin/bash\ncase "$1" in -v) echo "network ipp"; echo "direct usb://HP/LaserJet?serial=1";; -m) echo "drv:///foo.ppd Brother HL-1110"; echo "everywhere IPP Everywhere";; esac\n' > "$ps/lpinfo"
+printf '#!/bin/bash\n[[ "$1" == -e ]] && { echo kontoret; echo hemma; exit 0; }\necho "lpstat $*"\n' > "$ps/lpstat"
+printf '#!/bin/bash\necho "lp $*" >> "$PL"\n' > "$ps/lp"
+printf '#!/bin/bash\necho "cancel $*" >> "$PL"\n' > "$ps/cancel"
+chmod +x "$ps"/*
+pa() { PATH="$ps:$PATH" "$oa"; }
+printf '8\n2\n192.168.1.50\nkontoret\n\n0\n0\n' | pa >/dev/null 2>&1; grep -q 'lpadmin -p kontoret -E -v ipp://192.168.1.50/ipp/print -m everywhere' "$PL" && ok "oden-admin skrivare: lägg till via IP (drivrutinslöst)" || bad "oden-admin skrivare: IP ($(cat "$PL"))"
+: > "$PL"; printf '8\n2\n10.0.0.9\nbrother\nbrother\n1\n\n0\n0\n' | NOEVERY=1 pa >/dev/null 2>&1; grep -q 'lpadmin -p brother -E -v ipp://10.0.0.9/ipp/print -m drv:///foo.ppd' "$PL" && ok "oden-admin skrivare: drivrutinssökning när drivrutinslöst saknas" || bad "oden-admin skrivare: drivrutinssökning ($(cat "$PL"))"
+: > "$PL"; printf '8\n3\n1\nusbskr\n\n0\n0\n' | pa >/dev/null 2>&1; grep -q 'lpadmin -p usbskr -E -v usb://HP/LaserJet?serial=1 -m everywhere' "$PL" && ok "oden-admin skrivare: lägg till USB-skrivare" || bad "oden-admin skrivare: USB ($(cat "$PL"))"
+: > "$PL"; printf '8\n4\n2\n\n5\n1\n\n7\n1\nj\n\n0\n0\n' | pa >/dev/null 2>&1; grep -q 'lpadmin -d hemma' "$PL" && grep -q 'lp -d kontoret' "$PL" && grep -q 'lpadmin -x kontoret' "$PL" && ok "oden-admin skrivare: standard, testsida, ta bort" || bad "oden-admin skrivare: hantera ($(cat "$PL"))"
+PATH="$ps:$PATH" "$oa" skrivare >/dev/null 2>&1 && "$oa" hjalp | grep -q 'oden-admin skrivare' && ok "oden-admin skrivare: delkommando och hjälp" || bad "oden-admin skrivare: delkommando"
+# Skrivare: paket, tjänster (cups på, browsed/avahi kvar av), sparade skrivare och lpadmin
+for pk in cups cups-filters system-config-printer printer-driver-gutenprint; do grep -qx "$pk" config/config/package-lists/base.list.chroot || bad "skrivare: paket $pk saknas"; done
+h=config/config/hooks/normal/0100-oden.hook.chroot
+grep -q 'enable cups.socket' $h && grep -q 'oden-cups-persist.service' $h && grep -q 'cups-browsed.service' $h && ! grep -E '^ *avahi-daemon.service cups\.service' $h >/dev/null && ! grep -q 'cups.service cups-browsed' $h && grep -q 'lpadmin' overlay/etc/live/config.conf.d/oden.conf && ok "skrivare: cups påslagen (browsed/avahi av), lpadmin, sparas" || bad "skrivare: hook/grupper"
+cp="$t/cups"; mkdir -p "$cp/src" "$cp/dst/ppd"; echo 'cupsd' > "$cp/dst/cupsd.conf"; echo x > "$cp/dst/ppd/a.ppd"; echo y > "$cp/dst/.hidden"; echo '<P>sparad' > "$cp/src/printers.conf"
+ODEN_NM_SRC="$cp/src" ODEN_NM_DST="$cp/dst" ODEN_NM_NOMOUNT=1 overlay/usr/local/bin/oden-nm-persist cups
+[[ -f "$cp/src/ppd/a.ppd" && -f "$cp/src/cupsd.conf" && -f "$cp/src/.hidden" && "$(cat "$cp/src/printers.conf")" == '<P>sparad' ]] && ok "oden-nm-persist cups: kopierar /etc/cups (även ppd/ och dolda filer), skriver inte över" || bad "oden-nm-persist cups"
+[[ -x overlay/etc/skel/Desktop/oden-printer.desktop && -s overlay/usr/share/icons/hicolor/scalable/apps/oden-printer.svg ]] && ok "skrivare: skrivbordsgenväg och ikon" || bad "skrivare: genväg/ikon"
+# oden-lock: "Lås nu" slår på /lock/enabled (annars gör --lock ingenting); tid väljer minuter
+XL="$t/xfconf.log"; : > "$XL"
+printf '#!/bin/bash\nwhile [[ $# -gt 0 ]]; do case "$1" in -p) p=$2; shift;; -s) v=$2; shift;; esac; shift; done\n[[ -n "${v:-}" ]] && echo "$p=$v" >> "$XL"\nexit 1\n' > "$ls/xfconf-query"
+printf '#!/bin/bash\necho "cmd $*" >> "$XL"\n' > "$ls/xfce4-screensaver-command"; chmod +x "$ls"/*
+export XL; touch "$LUKSFLAG"
+lk lock >/dev/null 2>&1 || true; grep -q '^/lock/enabled=true' "$XL" && grep -q '^/lock/saver-activation/enabled=false' "$XL" && grep -q 'cmd --lock' "$XL" && ok "oden-lock: lås nu slår på /lock/enabled utan inaktivitetslås" || bad "oden-lock: lås nu"
+: > "$XL"; lk tid 7 >/dev/null 2>&1 || true; grep -q '^/saver/idle-activation/delay=7' "$XL" && grep -q '^/lock/saver-activation/enabled=true' "$XL" && ok "oden-lock: tid 7 sätter 7 minuter och slår på lås" || bad "oden-lock: tid"
+rc=0; lk tid 0 >/dev/null 2>&1 || rc=$?; [[ $rc -eq 2 ]] && ok "oden-lock: ogiltig tid avvisas" || bad "oden-lock: ogiltig tid"
+rm -f "$LUKSFLAG"
+[[ -x overlay/etc/skel/Desktop/oden-lock.desktop ]] && grep -q 'oden-lock menu' overlay/etc/skel/Desktop/oden-lock.desktop && ok "oden-lock: skrivbordsgenväg" || bad "oden-lock: skrivbordsgenväg"
 grep -q 'oden-lock pam-check' overlay/etc/pam.d/xfce4-screensaver && grep -q '^xfce4-screensaver$' config/config/package-lists/base.list.chroot && grep -q 'value="+lock-screen"' config/config/hooks/normal/0100-oden.hook.chroot && grep -q 'oden-lock lock' config/config/hooks/normal/0100-oden.hook.chroot && ok "oden-lock: PAM, paket, panelknapp och LockCommand på plats" || bad "oden-lock: inkoppling saknas"
 # oden-usb-watch: stänger av (skriver o till sysrq) när startdisken försvinner, men inte vid en kort hickup; riktiga /proc rörs inte
 uw=overlay/usr/local/bin/oden-usb-watch; sb="$t/sysblock"; mkdir -p "$sb/sdx"

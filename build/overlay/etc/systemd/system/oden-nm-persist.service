@@ -1,0 +1,12 @@
+[Unit]
+Description=Spara wifi-nät på den krypterade lagringen (bind-montering för NetworkManager)
+After=local-fs.target
+Before=NetworkManager.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/oden-nm-persist
+
+[Install]
+WantedBy=multi-user.target

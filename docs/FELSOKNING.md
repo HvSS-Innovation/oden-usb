@@ -48,3 +48,11 @@ Orsak (verifierad med felsökningsbild 2026-11-20): paketet `user-setup` saknade
 live-config-loggen, "could not identify user (from getpwnam(oden))" i journalen). Paketet är bara rekommenderat och
 bygget använder `--apt-recommends false`. Åtgärd: `user-setup` i paketlistan, och bygghooken avbryter om det saknas.
 Felsökning: bygg med `ODEN_DEBUG=1`; rapporten visas på tty1 efter ca 60 s (Ctrl+Alt+F1).
+
+## Skrivare, sparade wifi-nät och skärmlås (2026-11-26)
+| Symptom | Orsak och åtgärd |
+|---|---|
+| Wifi-nätet är borta efter omstart | NetworkManagers filer ligger i RAM. `oden-nm-persist` (tjänst före NetworkManager) bind-monterar `/home/.oden/nm-connections` från lagringen; utan krypterad lagring sparas inget. Kontrollera `systemctl status oden-nm-persist` och `findmnt /etc/NetworkManager/system-connections`. |
+| Skrivaren försvinner / hittas inte | Ingen automatisk sökning (avahi och cups-browsed är av): lägg till med IP eller USB i `oden-admin` (8). Sparas via `oden-nm-persist cups` (bind-montering av `/etc/cups`). Se `oden-admin skrivare`. |
+| *Lås nu* gör inget | xfce4-screensaver ignorerar `--lock` när `/lock/enabled` är av. `oden-lock lock` slår på det först. |
+| Nya skrivbordsikoner saknas på äldre stick | `78oden-desktop` lägger till nya genvägar vid inloggning. Panelen (batteriikon, åtgärdsknapp) kopieras bara första gången: ta bort `~/.config/xfce4/panel` för att få den nya. |

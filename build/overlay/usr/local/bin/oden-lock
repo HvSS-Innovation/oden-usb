@@ -2,6 +2,7 @@
 # oden-lock: skärmlås som öppnas med krypteringslösenordet (lösenfrasen till den krypterade lagringen på stickan).
 #   oden-lock [lock]   lås skärmen nu
 #   oden-lock on|off   slå på/av lås när skärmsläckaren startat (inaktivitet)
+#   oden-lock tid [N]  lås efter N minuters inaktivitet (slår på låset); utan N visas en lista
 #   oden-lock status   visa vad som gäller
 #   oden-lock menu     liten meny (för skrivbordsgenvägen)
 # Finns den krypterade lagringen öppnar bara lösenfrasen låset; inte heller standardlösenordet "live" fungerar då.
@@ -30,6 +31,13 @@ idle_lock() { # idle_lock true|false
   xset /lock/enabled bool "$1"; xset /lock/saver-activation/enabled bool "$1"; xset /lock/saver-activation/delay int 0
   if [[ "$1" == true ]]; then xset /saver/enabled bool true; xset /saver/idle-activation/enabled bool true; fi
 }
+idle_get() { xfconf-query -c xfce4-screensaver -p "$1" 2>/dev/null; }
+idle_on() { [[ "$(idle_get /lock/enabled)" == true && "$(idle_get /lock/saver-activation/enabled)" == true ]]; }
+idle_minutes() { local m; m=$(idle_get /saver/idle-activation/delay); [[ "$m" =~ ^[0-9]+$ ]] && echo "$m" || echo 10; }
+set_minutes() { # set_minutes N: slår på lås vid inaktivitet efter N minuter
+  [[ "${1:-}" =~ ^[0-9]+$ && "$1" -ge 1 && "$1" -le 240 ]] || { echo "Ange minuter mellan 1 och 240." >&2; return 2; }
+  idle_lock true; xset /saver/idle-activation/delay int "$1"
+}
 
 lock_now() {
   if ! has_luks; then
@@ -37,6 +45,8 @@ lock_now() {
       zenity --question --title="ODEN skärmlås" --ok-label="Lås ändå" --cancel-label="Avbryt" --text="$NOLUKS" 2>/dev/null || return 0
     else echo "Ingen krypterad lagring: låset öppnas med lösenordet \"live\"."; fi
   fi
+  # --lock gör ingenting om /lock/enabled är av (standard hos oss): slå på det, men låt inaktivitet inte låsa
+  idle_on || { xset /lock/enabled bool true; xset /lock/saver-activation/enabled bool false; }
   xfce4-screensaver-command --lock 2>/dev/null && return 0
   (xfce4-screensaver >/dev/null 2>&1 &); sleep 2
   xfce4-screensaver-command --lock
@@ -45,25 +55,37 @@ lock_now() {
 status() {
   if has_luks; then echo "Låset öppnas med krypteringslösenordet (lösenfrasen till lagringen på stickan)."
   else echo "Ingen krypterad lagring: låset öppnas med lösenordet \"live\"."; fi
-  have xfconf-query && echo "Lås vid inaktivitet: $(xfconf-query -c xfce4-screensaver -p /lock/enabled 2>/dev/null || echo false)"
+  if have xfconf-query; then
+    if idle_on; then echo "Lås vid inaktivitet: på, efter $(idle_minutes) min."; else echo "Lås vid inaktivitet: av."; fi
+  fi
+}
+
+pick_time() {
+  local m
+  m=$(zenity --list --title="ODEN skärmlås" --width=360 --height=380 --column=min --column="Lås efter inaktivitet i" --hide-column=1 --print-column=1 \
+        1 "1 minut" 2 "2 minuter" 5 "5 minuter" 10 "10 minuter" 15 "15 minuter" 30 "30 minuter" 60 "1 timme" 2>/dev/null) || return 0
+  has_luks || { zenity --question --title="ODEN skärmlås" --ok-label="Slå på ändå" --cancel-label="Avbryt" --text="$NOLUKS" 2>/dev/null || return 0; }
+  set_minutes "$m" && msg "Skärmen låses efter $m min utan aktivitet."
 }
 
 menu() {
   gui || { echo "Behöver ett skrivbord (zenity)."; return 1; }
   local c
   c=$(zenity --list --title="ODEN skärmlås" --width=420 --height=280 --column=val --column="Vad vill du göra?" --hide-column=1 --print-column=1 \
-        lock "Lås skärmen nu" on "Slå på lås vid inaktivitet" off "Slå av lås vid inaktivitet" status "Visa inställningar" 2>/dev/null) || return 0
+        lock "Lås skärmen nu" tid "Välj efter hur lång tid skärmen låses" on "Slå på lås vid inaktivitet" off "Slå av lås vid inaktivitet" status "Visa inställningar" 2>/dev/null) || return 0
   case "$c" in
     lock) lock_now ;;
     on) has_luks || { zenity --question --title="ODEN skärmlås" --ok-label="Slå på ändå" --cancel-label="Avbryt" --text="$NOLUKS" 2>/dev/null || return 0; }
         idle_lock true; msg "Lås vid inaktivitet är på." ;;
     off) idle_lock false; msg "Lås vid inaktivitet är av." ;;
+    tid) pick_time ;;
     status) msg "$(status)" ;;
   esac
 }
 
 case "${1:-lock}" in
   lock) lock_now ;;
+  tid) if [[ -n "${2:-}" ]]; then set_minutes "$2"; elif gui; then pick_time; else echo "Ange minuter: oden-lock tid 10"; exit 2; fi ;;
   on) idle_lock true ;;
   off) idle_lock false ;;
   status) status ;;

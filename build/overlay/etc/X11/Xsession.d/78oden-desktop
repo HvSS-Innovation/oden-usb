@@ -1,0 +1,12 @@
+# Nya ODEN-genvägar från /etc/skel/Desktop kommer till skrivbordet även på sticka som redan har en hemkatalog (skel kopieras bara första gången).
+# Genvägar som användaren tagit bort läggs inte tillbaka: vilka som redan erbjudits minns ~/.config/oden/desktop-seen.
+if [ -d /etc/skel/Desktop ] && [ -n "$HOME" ]; then
+  mkdir -p "$HOME/Desktop" "$HOME/.config/oden" 2>/dev/null
+  ODEN_SEEN="$HOME/.config/oden/desktop-seen"; touch "$ODEN_SEEN" 2>/dev/null
+  for f in /etc/skel/Desktop/*.desktop; do
+    n=${f##*/}
+    grep -qxF "$n" "$ODEN_SEEN" 2>/dev/null && continue
+    [ -e "$HOME/Desktop/$n" ] || cp -p "$f" "$HOME/Desktop/$n" 2>/dev/null
+    echo "$n" >> "$ODEN_SEEN"
+  done
+fi

@@ -1,0 +1,12 @@
+[Unit]
+Description=Spara skrivare på den krypterade lagringen (bind-montering av /etc/cups)
+After=local-fs.target
+Before=cups.service cups.socket cups.path
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/oden-nm-persist cups
+
+[Install]
+WantedBy=multi-user.target
