@@ -1,0 +1,5 @@
+# Upplåsning av skärmlåset (xfce4-screensaver): krypteringslösenordet (lösenfrasen till lagringen på stickan) öppnar direkt.
+# Finns den krypterade lagringen får inget annat öppna låset (inte heller lösenordet live); finns den inte gäller vanliga lösenordet.
+auth [success=done default=ignore] pam_exec.so quiet expose_authtok /usr/local/bin/oden-lock pam-check
+auth requisite pam_exec.so quiet /usr/local/bin/oden-lock pam-unconfigured
+auth include common-auth

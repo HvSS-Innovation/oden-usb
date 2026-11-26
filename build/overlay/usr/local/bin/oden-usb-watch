@@ -1,0 +1,47 @@
+#!/bin/bash
+# oden-usb-watch: stänger av datorn direkt om USB-stickan som systemet startade från dras ut.
+# Systemet ligger på stickan, så ett vanligt "poweroff" går inte (systemd kan inte längre läsa sina egna filer, jfr "Failed to
+# execute shutdown binary"). Därför skriver tjänsten "o" till /proc/sysrq-trigger: kärnan stänger av utan att röra disken.
+# Medan den bevakar körs bara inbyggda bash-kommandon (inga nya program): ett program som inte redan ligger i minnet går inte att
+# starta efter uttaget. Inget hinner skrivas till stickan efter uttaget; det som skrivits innan klarar ext4 vid nästa start.
+#   Av: lägg oden.usbwatch=off på kärnraden i startmenyn (tryck e), eller: sudo systemctl stop oden-usb-watch
+# Bevakar bara när startdisken är en USB-enhet (inte DVD, virtuell media eller toram).
+# Testvariabler: ODEN_BOOTDISK, ODEN_SYSBLOCK, ODEN_SYSRQ, ODEN_SYSRQ_ENABLE, ODEN_FIFO, ODEN_USBWATCH_GRACE, ODEN_USBWATCH_TEST=1.
+set -u
+
+SYSBLOCK=${ODEN_SYSBLOCK:-/sys/block}
+SYSRQ=${ODEN_SYSRQ:-/proc/sysrq-trigger}
+SYSRQ_EN=${ODEN_SYSRQ_ENABLE:-/proc/sys/kernel/sysrq}
+FIFO=${ODEN_FIFO:-/run/oden-usb-watch.fifo}
+GRACE=${ODEN_USBWATCH_GRACE:-2}     # antal halvsekundsvarv stickan får saknas (korta USB-hickups ska inte stänga av)
+
+disk=${ODEN_BOOTDISK:-}
+if [[ -z "$disk" ]]; then
+  if grep -qw 'oden.usbwatch=off' /proc/cmdline; then echo "oden-usb-watch: av (oden.usbwatch=off)"; exit 0; fi
+  src=$(findmnt -no SOURCE /run/live/medium 2>/dev/null || true)
+  disk=$([[ -n "$src" ]] && lsblk -no PKNAME "$src" 2>/dev/null | head -1)
+  [[ -n "$disk" ]] || { echo "oden-usb-watch: hittar inte startdisken (toram eller virtuell media?), bevakar inte"; exit 0; }
+  [[ "$(readlink -f "/sys/block/$disk")" == */usb* ]] || { echo "oden-usb-watch: $disk är inte en USB-enhet, bevakar inte"; exit 0; }
+fi
+
+[[ -e "$SYSBLOCK/$disk" ]] || { echo "oden-usb-watch: $disk finns inte, bevakar inte" >&2; exit 1; }
+rm -f "$FIFO"; mkfifo "$FIFO" && exec 3<>"$FIFO" || exit 1   # en kanal som aldrig får data: "read -t" blir en sömn utan nytt program
+echo 1 > "$SYSRQ_EN" 2>/dev/null
+echo "oden-usb-watch: bevakar $disk (stänger av om den dras ut)"
+
+miss=0
+while :; do
+  if [[ -e "$SYSBLOCK/$disk" ]]; then miss=0
+  else
+    miss=$((miss+1))
+    if ((miss >= GRACE)); then
+      echo "oden-usb-watch: $disk borta, stänger av"
+      echo o > "$SYSRQ"
+      [[ "${ODEN_USBWATCH_TEST:-}" == 1 ]] && exit 0
+      read -t 3 -u 3 _ || true
+      echo b > "$SYSRQ"             # om avstängning inte stöds: starta om i stället för att ligga kvar påslagen
+      read -t 30 -u 3 _ || true
+    fi
+  fi
+  read -t 0.5 -u 3 _ || true
+done

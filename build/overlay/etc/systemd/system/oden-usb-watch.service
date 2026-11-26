@@ -1,0 +1,16 @@
+[Unit]
+Description=Stäng av om startstickan dras ut
+After=local-fs.target
+Before=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/oden-usb-watch
+Restart=no
+# Ska överleva minnesbrist och ligga kvar i minnet
+OOMScoreAdjust=-1000
+LimitMEMLOCK=infinity
+Nice=-5
+
+[Install]
+WantedBy=multi-user.target

@@ -117,6 +117,55 @@ bash -n "$ow" && "$ow" --help | grep -q "oden-wifi fil" && ok "oden-wifi: syntax
 rc=0; "$ow" okand >/dev/null 2>&1 || rc=$?; [[ $rc -eq 2 ]] && ok "oden-wifi: okänt kommando ger 2" || bad "oden-wifi: okänt kommando"
 grep -q "hidden yes" "$ow" && grep -q "d = dolt" "$ow" && ok "oden-wifi: dolda nät" || bad "oden-wifi: dolda nät"
 for pk in wpasupplicant iw rfkill wireless-regdb; do grep -qx "$pk" config/config/package-lists/base.list.chroot || { bad "paketlista saknar $pk (apt-recommends är av)"; continue; }; done; ok "paketlista: wifi-paket (wpasupplicant m.fl.)"
+grep -q '^NoDisplay=true' overlay/usr/local/share/applications/xfce4-session-logout.desktop && grep -q 'value="-logout"' config/config/hooks/normal/0100-oden.hook.chroot && grep -q 'xfce4-session-logout' config/config/hooks/normal/0100-oden.hook.chroot && ok "ingen Logga ut: menyval dolt, panelknapp och Ctrl+Alt+Delete borta" || bad "Logga ut är inte borttaget"
+# oden-wifi mot en redan ansluten wifi får inte ändra något (landskod, radio, rfkill, skanning, anslutning): det kan koppla ned fungerande wifi
+stub="$t/wifistub"; mkdir -p "$stub"
+printf '#!/bin/bash\necho "sudo $*" >> "$LOG"; exec "$@"\n' > "$stub/sudo"
+printf '#!/bin/bash\necho "rfkill $*" >> "$LOG"\n' > "$stub/rfkill"
+printf '#!/bin/bash\necho "iw $*" >> "$LOG"\ncase "$*" in "reg get") echo "country 00: DFS-UNSET" ;; dev) printf "phy#0\\n\\tInterface wlan0\\n" ;; esac\n' > "$stub/iw"
+cat > "$stub/nmcli" <<'STUB'
+#!/bin/bash
+echo "nmcli $*" >> "$LOG"
+case "$*" in
+ "-t -f DEVICE,TYPE,STATE device") echo "wlan0:wifi:connected" ;;
+ "-t -f DEVICE,TYPE,STATE,CONNECTION device") echo "wlan0:wifi:connected:HemmaNat" ;;
+ "-t -f ACTIVE,SSID device wifi list --rescan no") echo "yes:HemmaNat" ;;
+ "radio wifi") echo disabled ;;
+esac
+STUB
+chmod +x "$stub"/*; : > "$t/wifi.log"
+printf 'n\n' | LOG="$t/wifi.log" PATH="$stub:$PATH" "$ow" >/dev/null 2>&1; LOG="$t/wifi.log" PATH="$stub:$PATH" "$ow" prep >/dev/null 2>&1 </dev/null
+! grep -E 'rfkill unblock|reg set|wifi rescan|wifi connect|radio wifi on' "$t/wifi.log" >/dev/null && grep -q 'ACTIVE,SSID' "$t/wifi.log" && ok "oden-wifi: rör inte en ansluten wifi" || bad "oden-wifi: ändrar en ansluten wifi ($(grep -E 'rfkill unblock|reg set|wifi rescan|wifi connect|radio wifi on' "$t/wifi.log" | tr '\n' ';'))"
+# oden-lock: bara krypteringslösenordet öppnar när lagringen finns; "live" (ingen kontroll här) bara när den saknas
+ol=overlay/usr/local/bin/oden-lock; ls="$t/lockstub"; mkdir -p "$ls"
+printf '#!/bin/bash\n[[ "$1" == -n ]] && shift\nexec "$@"\n' > "$ls/sudo"
+printf '#!/bin/sh\necho /dev/fake\n' > "$ls/oden-persist-dev"
+cat > "$ls/cryptsetup" <<'STUB'
+#!/bin/bash
+[ -f "$LUKSFLAG" ] || exit 1
+case "$1" in isLuks) exit 0 ;; open) read -r -d '' k; [ "$k" = "gott losen" ] ;; esac
+STUB
+chmod +x "$ls"/*; export LUKSFLAG="$t/hasluks"; rm -f "$LUKSFLAG"
+lk() { PATH="$ls:$PATH" "$ol" "$@"; }
+bash -n "$ol" && lk --help | grep -q "krypteringslösenordet" && ok "oden-lock: syntax och hjälp" || bad "oden-lock: syntax/hjälp"
+lk pam-unconfigured && ! printf 'gott losen\0' | lk pam-check && ok "oden-lock: utan krypterad lagring: ingen kontroll, live får gälla" || bad "oden-lock: utan lagring"
+touch "$LUKSFLAG"
+! lk pam-unconfigured && printf 'gott losen\0' | lk pam-check && ! printf 'live\0' | lk pam-check && ! printf '\0' | lk pam-check && ok "oden-lock: med krypterad lagring: bara lösenfrasen öppnar" || bad "oden-lock: med lagring"
+rc=0; lk okand >/dev/null 2>&1 || rc=$?; [[ $rc -eq 2 ]] && ok "oden-lock: okänt kommando ger 2" || bad "oden-lock: okänt kommando"
+grep -q 'oden-lock pam-check' overlay/etc/pam.d/xfce4-screensaver && grep -q '^xfce4-screensaver$' config/config/package-lists/base.list.chroot && grep -q 'value="+lock-screen"' config/config/hooks/normal/0100-oden.hook.chroot && grep -q 'oden-lock lock' config/config/hooks/normal/0100-oden.hook.chroot && ok "oden-lock: PAM, paket, panelknapp och LockCommand på plats" || bad "oden-lock: inkoppling saknas"
+# oden-usb-watch: stänger av (skriver o till sysrq) när startdisken försvinner, men inte vid en kort hickup; riktiga /proc rörs inte
+uw=overlay/usr/local/bin/oden-usb-watch; sb="$t/sysblock"; mkdir -p "$sb/sdx"
+uwrun() { ODEN_BOOTDISK=sdx ODEN_SYSBLOCK="$sb" ODEN_SYSRQ="$t/sysrq" ODEN_SYSRQ_ENABLE="$t/sysrqen" ODEN_FIFO="$t/uwfifo" ODEN_USBWATCH_GRACE=3 ODEN_USBWATCH_TEST=1 "$uw" >/dev/null 2>&1 & uwpid=$!; }
+bash -n "$uw" && ok "oden-usb-watch: syntax" || bad "oden-usb-watch: syntax"
+: > "$t/sysrq"; uwrun; sleep 1.2; [[ ! -s "$t/sysrq" && "$(cat "$t/sysrqen")" == 1 ]] && ok "oden-usb-watch: tyst och sysrq påslaget medan stickan finns" || bad "oden-usb-watch: agerar utan anledning"
+rmdir "$sb/sdx"; sleep 0.5; mkdir "$sb/sdx"; sleep 2; [[ ! -s "$t/sysrq" ]] && ok "oden-usb-watch: kort hickup stänger inte av" || bad "oden-usb-watch: hickup gav avstängning"
+rmdir "$sb/sdx"; sleep 3; [[ "$(cat "$t/sysrq")" == o ]] && ok "oden-usb-watch: uttag ger sysrq o" || bad "oden-usb-watch: uttag gav inte avstängning ($(cat "$t/sysrq"))"
+kill "$uwpid" 2>/dev/null || true; wait "$uwpid" 2>/dev/null || true
+rc=0; ODEN_BOOTDISK=saknas ODEN_SYSBLOCK="$sb" ODEN_FIFO="$t/uwfifo" "$uw" >/dev/null 2>&1 || rc=$?; [[ $rc -eq 1 ]] && ok "oden-usb-watch: avbryter om disken inte finns" || bad "oden-usb-watch: saknad disk"
+# oden-ramcache: tar med kataloger inom gränsen, hoppar över vid för lite RAM
+rc_out=$(ODEN_RAMCACHE_DRYRUN=1 ODEN_RAMCACHE_MAX=$((4*1024**3)) overlay/usr/local/bin/oden-ramcache 2>&1); echo "$rc_out" | grep -q 'totalt högst' && ok "oden-ramcache: väljer kataloger inom gränsen" || bad "oden-ramcache: urval"
+ODEN_RAMCACHE_MAX=1000 overlay/usr/local/bin/oden-ramcache 2>&1 | grep -q 'för lite RAM' && ok "oden-ramcache: hoppar över vid för liten gräns" || bad "oden-ramcache: liten gräns"
+grep -q oden-usb-watch config/config/hooks/normal/0100-oden.hook.chroot && grep -q oden-ramcache config/config/hooks/normal/0100-oden.hook.chroot && grep -qx vmtouch config/config/package-lists/base.list.chroot && ok "oden-usb-watch/ramcache: tjänster aktiverade och vmtouch i paketlistan" || bad "oden-usb-watch/ramcache: inkoppling saknas"
 "$ow" status >/dev/null 2>&1 && ok "oden-wifi: status" || bad "oden-wifi: status"
 [[ -x overlay/etc/skel/Desktop/oden-wifi.desktop && -f overlay/etc/systemd/system/oden-wifi-prep.service ]] && grep -q oden-wifi-prep config/config/hooks/normal/0100-oden.hook.chroot && ok "oden-wifi: genväg och uppstartstjänst" || bad "oden-wifi: genväg/tjänst"
 (HOME="$t" "$oa" rapport >/dev/null 2>&1; ls "$t"/oden-felsok-*.txt >/dev/null 2>&1) && ok "oden-admin: rapport skrivs" || bad "oden-admin: rapport"

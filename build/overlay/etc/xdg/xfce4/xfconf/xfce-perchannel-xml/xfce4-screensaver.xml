@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<channel name="xfce4-screensaver" version="1.0">
+  <property name="lock" type="empty">
+    <!-- Av tills man slår på det (oden-lock on): inget lås som kommer som en överraskning -->
+    <property name="enabled" type="bool" value="false"/>
+    <!-- Byt användare och utloggning leder till inloggningsrutan (kräver lösenord); inte i låsrutan -->
+    <property name="user-switching" type="empty">
+      <property name="enabled" type="bool" value="false"/>
+    </property>
+    <property name="logout" type="empty">
+      <property name="enabled" type="bool" value="false"/>
+    </property>
+  </property>
+</channel>

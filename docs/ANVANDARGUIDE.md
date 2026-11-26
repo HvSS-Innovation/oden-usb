@@ -53,6 +53,14 @@
 ## Felsökning och inställningar
 Ikonen *ODEN Admin* på skrivbordet (eller `oden-admin` i en terminal) öppnar en meny för nätverk (anslut wifi, testa nätet), tjänster (starta om Oden), versioner och maskinvara. Välj *Spara felsökningsrapport* om du behöver hjälp.
 
+## Låsa skärmen
+Knappen uppe till höger (användarnamnet) har *Lås skärm*, *Starta om* och *Stäng av*; det finns ingen *Logga ut* (efter utloggning kräver inloggningsrutan ett lösenord som inte är känt). `Ctrl+Alt+L` låser också. Ikonen *ODEN Skärmlås* i programmenyn (eller `oden-lock menu`) låter dig slå på **lås vid inaktivitet**: skärmsläckaren startar efter tio minuter och skärmen är då låst.
+
+Låset öppnas med **krypteringslösenordet**, alltså lösenfrasen till den krypterade lagringen på stickan. Så länge lagringen finns fungerar ingenting annat, inte heller standardlösenordet `live`. Finns ingen krypterad lagring (stickan utan persistens) öppnas låset av `live`, och *Lås skärm* varnar för det innan det låser. Glömmer du lösenfrasen hjälper bara en omstart, och det du inte sparat går då förlorat.
+
+## Dra ur stickan
+Om du drar ur USB-stickan som systemet startade från **stängs datorn av direkt** (efter ca en sekund), eftersom systemet ligger på stickan och inte kan fortsätta utan den. Det du sparat innan finns kvar, men de sista sekundernas arbete kan saknas. Starta om med stickan isatt och skriv lösenfrasen som vanligt. Vill du stänga av funktionen (till exempel vid felsökning) tryck `e` i startmenyn och lägg till `oden.usbwatch=off` på `linux`-raden. Programfiler som används mest läses dessutom in och låses i RAM (en fjärdedel av minnet, högst 4 GiB; inget på datorer med under 3 GB RAM), vilket gör att det går snabbare och tål korta USB-avbrott.
+
 ## Avsluta
 Stäng av datorn via menyn och dra ur stickan först när datorn är avstängd.
 

@@ -13,12 +13,19 @@ S=sudo; [[ $EUID -eq 0 ]] && S=""
 have() { command -v "$1" >/dev/null 2>&1; }
 ifc()  { iw dev 2>/dev/null | awk '$1=="Interface"{print $2; exit}'; }
 
+# Rör bara det som är fel. Ändrad landskod och omslagen av radion kan få drivrutiner att koppla ned en fungerande anslutning,
+# så inget av detta körs när wifi redan är anslutet (se ensure_radio).
 prep() {
-  have rfkill && $S rfkill unblock wifi 2>/dev/null
-  have iw && $S iw reg set SE 2>/dev/null
-  have nmcli && $S nmcli radio wifi on 2>/dev/null
+  [[ -n "$(connected_dev)" ]] && return 0
+  have rfkill && rfkill list wifi 2>/dev/null | grep -q 'blocked: yes' && $S rfkill unblock wifi 2>/dev/null
+  have iw && iw reg get 2>/dev/null | grep -m1 '^country' | grep -q '^country 00' && $S iw reg set SE 2>/dev/null
+  have nmcli && [[ "$(nmcli radio wifi 2>/dev/null)" == disabled ]] && $S nmcli radio wifi on 2>/dev/null
   return 0
 }
+
+# Gränssnittet som är anslutet just nu (tomt om inget) och nätets namn
+connected_dev()  { nmcli -t -f DEVICE,TYPE,STATE device 2>/dev/null | awk -F: '$2=="wifi" && $3=="connected" {print $1; exit}'; }
+connected_ssid() { nmcli -t -f ACTIVE,SSID device wifi list --rescan no 2>/dev/null | awk -F: '$1=="yes" {print $2; exit}'; }
 
 # Samma steg som "Försök laga wifi" i oden-admin, men utan frågor; körs bara när inget gränssnitt finns.
 repair() {
@@ -33,6 +40,7 @@ repair() {
 
 ensure_radio() {
   have nmcli || { echo "nmcli saknas, kan inte hantera wifi här."; return 1; }
+  [[ -n "$(connected_dev)" ]] && return 0   # fungerar redan: rör ingenting
   prep
   if [[ -z "$(ifc)" ]] && ! repair; then
     echo "Fortfarande inget wifi-gränssnitt."
@@ -60,12 +68,20 @@ verify() {
 }
 
 guide() {
+  have nmcli || { echo "nmcli saknas, kan inte hantera wifi här."; return 1; }
+  local cur rescan=1; cur=$(connected_ssid)
+  if [[ -n "$cur" ]]; then
+    echo "Du är redan ansluten till \"$cur\"."
+    nmcli -t -f DEVICE,TYPE,STATE,CONNECTION device 2>/dev/null | awk -F: '$2=="wifi" {print "Gränssnitt: " $1 "  (" $3 ")"}'
+    read -rp "Byta nät? Anslutningen kopplas då ned en stund. [j/N] " a; [[ "$a" == [jJyY]* ]] || return 0
+    rescan=0   # visa nätlistan ur minnet; ny skanning bara på begäran
+  fi
   ensure_radio || return 1
   while :; do
-    echo; echo "Söker nät..."
-    nmcli device wifi rescan 2>/dev/null; sleep 4
-    mapfile -t nets < <(nmcli -t -f SSID,SIGNAL,SECURITY device wifi list 2>/dev/null | awk -F: 'NF && $1!="" && !s[$1]++' | head -15)
-    if ((${#nets[@]}==0)); then echo "Inga nät hittades."; read -rp "Försöka igen? [J/n] " a; [[ "$a" == [nN]* ]] && return 1; continue; fi
+    if ((rescan)); then echo; echo "Söker nät..."; nmcli device wifi rescan 2>/dev/null; sleep 4; fi
+    rescan=0
+    mapfile -t nets < <(nmcli -t -f SSID,SIGNAL,SECURITY device wifi list --rescan no 2>/dev/null | awk -F: 'NF && $1!="" && !s[$1]++' | head -15)
+    if ((${#nets[@]}==0)); then echo "Inga nät hittades."; read -rp "Söka igen? [J/n] " a; [[ "$a" == [nN]* ]] && return 1; rescan=1; continue; fi
     local i=1 line
     for line in "${nets[@]}"; do
       IFS=: read -r s sig sec <<<"$line"
@@ -74,7 +90,7 @@ guide() {
     read -rp "Välj nummer (d = dolt nät, r = sök igen, q = avsluta): " n
     case "$n" in
       q) return 0 ;;
-      r|"") continue ;;
+      r|"") rescan=1; continue ;;
       d|D) read -rp "Nätverksnamn (SSID, exakt som det stavas): " ssid; [[ -n "$ssid" ]] || continue
            read -rsp "Lösenord (tomt för öppet nät): " pw; echo
            if connect "$ssid" "$pw" dolt; then unset pw; verify; return 0; fi
@@ -82,6 +98,7 @@ guide() {
     esac
     [[ "$n" =~ ^[0-9]+$ ]] && ((n>=1 && n<=${#nets[@]})) || { echo "Ogiltigt val."; continue; }
     IFS=: read -r ssid _ sec <<<"${nets[n-1]}"
+    [[ -n "$cur" && "$ssid" == "$cur" ]] && { echo "Du är redan ansluten till \"$ssid\"."; continue; }
     pw=""
     [[ -n "$sec" ]] && { read -rsp "Lösenord för \"$ssid\": " pw; echo; }
     if connect "$ssid" "$pw"; then unset pw; verify; return 0; fi
@@ -97,14 +114,16 @@ from_file() {
   fi
   [[ -n "$f" && -f "$f" ]] || { echo "Hittar ingen oden-wifi.txt. Lägg filen på ett USB-minne och sätt i det, eller ange sökväg."; return 1; }
   ensure_radio || return 1
+  local cur; cur=$(connected_ssid)
   echo "Läser $f"
-  nmcli device wifi rescan 2>/dev/null; sleep 4
+  [[ -n "$cur" ]] || { nmcli device wifi rescan 2>/dev/null; sleep 4; }
   local ssid pw
   local flag
   while IFS=';' read -r ssid pw flag; do
     ssid=${ssid%$'\r'}; pw=${pw%$'\r'}; flag=${flag%$'\r'}
     [[ -z "${ssid// }" || "$ssid" == \#* ]] && continue
-    if [[ "$flag" == dolt ]]; then
+    if [[ -n "$cur" && "$ssid" == "$cur" ]]; then echo "Redan ansluten till \"$ssid\"."; return 0
+    elif [[ "$flag" == dolt ]]; then
       connect "$ssid" "$pw" dolt && { verify; return 0; }
     elif nmcli -t -f SSID device wifi list 2>/dev/null | grep -qxF "$ssid"; then
       connect "$ssid" "$pw" && { verify; return 0; }
@@ -121,9 +140,11 @@ status() {
   return 0
 }
 
+pause() { [[ -t 0 ]] && { printf '\nTryck Enter för att stänga... '; read -r _; }; return 0; }
+
 case "${1:-}" in
-  ""|guide) guide ;;
-  fil) from_file "${2:-}" ;;
+  ""|guide) guide; rc=$?; pause; exit $rc ;;
+  fil) from_file "${2:-}"; rc=$?; pause; exit $rc ;;
   prep) prep ;;
   status) status ;;
   -h|--help|hjalp) sed -n 2,9p "$0" | sed 's/^# \{0,1\}//' ;;

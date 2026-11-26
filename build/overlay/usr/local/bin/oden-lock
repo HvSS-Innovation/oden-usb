@@ -1,0 +1,77 @@
+#!/bin/bash
+# oden-lock: skärmlås som öppnas med krypteringslösenordet (lösenfrasen till den krypterade lagringen på stickan).
+#   oden-lock [lock]   lås skärmen nu
+#   oden-lock on|off   slå på/av lås när skärmsläckaren startat (inaktivitet)
+#   oden-lock status   visa vad som gäller
+#   oden-lock menu     liten meny (för skrivbordsgenvägen)
+# Finns den krypterade lagringen öppnar bara lösenfrasen låset; inte heller standardlösenordet "live" fungerar då.
+# Finns ingen krypterad lagring (stickan utan persistens) öppnas låset av "live", och oden-lock varnar för det.
+# PAM (skärmläsaren xfce4-screensaver) anropar pam-check och pam-unconfigured. Lösenfrasen provas mot LUKS-nyckelplatsen med
+# cryptsetup --test-passphrase och lagras ingenstans.
+set -u
+
+have() { command -v "$1" >/dev/null 2>&1; }
+SN="sudo -n"; [[ $EUID -eq 0 ]] && SN=""   # aldrig lösenordsfråga (körs av PAM)
+
+gui() { [[ -n "${DISPLAY:-}" ]] && have zenity; }
+msg() { if gui; then zenity --info --no-wrap --title="ODEN skärmlås" --text="$1" 2>/dev/null; else echo "$1"; fi; }
+
+luks_dev() { local d; d=$(oden-persist-dev 2>/dev/null) || return 1; $SN cryptsetup isLuks "$d" 2>/dev/null && echo "$d"; }
+has_luks() { luks_dev >/dev/null; }
+luks_ok() { # luks_ok <lösenfras>
+  local d; [[ -n "$1" ]] || return 1; d=$(luks_dev) || return 1
+  printf '%s' "$1" | $SN cryptsetup open --test-passphrase --key-file=- "$d" 2>/dev/null
+}
+
+NOLUKS='Det finns ingen krypterad lagring på stickan, så skärmlåset öppnas med lösenordet <b>live</b>.\n\nSkapa lagringen vid första start (den frågar efter en lösenfras) för att få ett eget lösenord.'
+
+xset() { have xfconf-query && xfconf-query -c xfce4-screensaver -n -p "$1" -t "$2" -s "$3" 2>/dev/null; }
+idle_lock() { # idle_lock true|false
+  xset /lock/enabled bool "$1"; xset /lock/saver-activation/enabled bool "$1"; xset /lock/saver-activation/delay int 0
+  if [[ "$1" == true ]]; then xset /saver/enabled bool true; xset /saver/idle-activation/enabled bool true; fi
+}
+
+lock_now() {
+  if ! has_luks; then
+    if gui; then
+      zenity --question --title="ODEN skärmlås" --ok-label="Lås ändå" --cancel-label="Avbryt" --text="$NOLUKS" 2>/dev/null || return 0
+    else echo "Ingen krypterad lagring: låset öppnas med lösenordet \"live\"."; fi
+  fi
+  xfce4-screensaver-command --lock 2>/dev/null && return 0
+  (xfce4-screensaver >/dev/null 2>&1 &); sleep 2
+  xfce4-screensaver-command --lock
+}
+
+status() {
+  if has_luks; then echo "Låset öppnas med krypteringslösenordet (lösenfrasen till lagringen på stickan)."
+  else echo "Ingen krypterad lagring: låset öppnas med lösenordet \"live\"."; fi
+  have xfconf-query && echo "Lås vid inaktivitet: $(xfconf-query -c xfce4-screensaver -p /lock/enabled 2>/dev/null || echo false)"
+}
+
+menu() {
+  gui || { echo "Behöver ett skrivbord (zenity)."; return 1; }
+  local c
+  c=$(zenity --list --title="ODEN skärmlås" --width=420 --height=280 --column=val --column="Vad vill du göra?" --hide-column=1 --print-column=1 \
+        lock "Lås skärmen nu" on "Slå på lås vid inaktivitet" off "Slå av lås vid inaktivitet" status "Visa inställningar" 2>/dev/null) || return 0
+  case "$c" in
+    lock) lock_now ;;
+    on) has_luks || { zenity --question --title="ODEN skärmlås" --ok-label="Slå på ändå" --cancel-label="Avbryt" --text="$NOLUKS" 2>/dev/null || return 0; }
+        idle_lock true; msg "Lås vid inaktivitet är på." ;;
+    off) idle_lock false; msg "Lås vid inaktivitet är av." ;;
+    status) msg "$(status)" ;;
+  esac
+}
+
+case "${1:-lock}" in
+  lock) lock_now ;;
+  on) idle_lock true ;;
+  off) idle_lock false ;;
+  status) status ;;
+  menu) menu ;;
+  # Anropas av PAM (pam_exec, lösenordet på stdin). 0 = rätt krypteringslösenord.
+  pam-check) IFS= read -r -d '' pw || true; luks_ok "$pw" ;;
+  # 0 = ingen krypterad lagring (då får vanliga lösenordet gälla), annars 1.
+  pam-unconfigured) ! has_luks ;;
+  -h|--help|hjalp) sed -n 2,8p "$0" | sed 's/^# \{0,1\}//' ;;
+  *) echo "Okänt kommando: $1 (se oden-lock --help)" >&2; exit 2 ;;
+esac

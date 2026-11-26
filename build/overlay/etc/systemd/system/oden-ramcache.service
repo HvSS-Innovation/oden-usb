@@ -1,0 +1,15 @@
+[Unit]
+Description=Läs in och lås de viktigaste programfilerna i RAM (upp till en gräns)
+After=multi-user.target oden-assets.service
+
+[Service]
+Type=simple
+# Vänta tills skrivbordet startat så att inläsningen från stickan inte bromsar det; ta bara ledig diskkapacitet
+ExecStartPre=/bin/sleep 45
+ExecStart=/usr/local/bin/oden-ramcache
+LimitMEMLOCK=infinity
+Nice=19
+IOSchedulingClass=idle
+
+[Install]
+WantedBy=multi-user.target

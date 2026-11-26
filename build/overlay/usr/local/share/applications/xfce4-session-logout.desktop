@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Logga ut
+Exec=xfce4-session-logout
+Icon=xfsm-logout
+Terminal=false
+# Dold i menyerna (se hooken 0100-oden): efter utloggning visar LightDM en inloggningsruta som kräver lösenord, och autologin
+# körs bara vid uppstart. Stäng av eller starta om i stället.
+NoDisplay=true

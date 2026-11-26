@@ -1,0 +1,28 @@
+#!/bin/bash
+# oden-ramcache: läser in de viktigaste programfilerna från stickan till RAM och låser dem där (mlock via vmtouch), upp till en gräns.
+# Då fungerar det som redan ligger i minnet även om stickan hickar, och det går snabbare. Det är inte "toram" (allt eller inget):
+# bara utvalda kataloger tas med, i prioritetsordning, så länge de ryms. Låst minne kan inte användas av andra program.
+# Gräns: en fjärdedel av RAM, högst 4 GiB; under 768 MiB hoppas det över (för lite RAM att avvara).
+#   ODEN_RAMCACHE_MAX=<byte> sätter gränsen; ODEN_RAMCACHE_DRYRUN=1 visar bara vad som skulle läsas in.
+set -u
+MiB=$((1024*1024)); GiB=$((1024*MiB))
+total=$(( $(awk '/^MemTotal:/ {print $2}' /proc/meminfo) * 1024 ))
+budget=${ODEN_RAMCACHE_MAX:-$(( total / 4 ))}
+if [[ -z "${ODEN_RAMCACHE_MAX:-}" ]] && (( budget > 4*GiB )); then budget=$((4*GiB)); fi
+if (( budget < 768*MiB )); then echo "oden-ramcache: för lite RAM (${total} byte), hoppar över"; exit 0; fi
+
+# Prioritetsordning: grunden först, sedan Oden och skrivbordet, sist det som är trevligt att ha snabbt.
+dirs=(/usr/bin /usr/sbin /usr/lib/x86_64-linux-gnu /usr/lib/xorg /opt/oden /usr/lib/python3 /usr/lib/firefox-esr \
+      /usr/share/xfce4 /usr/share/glib-2.0 /usr/share/themes /usr/share/icons)
+used=0; pick=()
+for d in "${dirs[@]}"; do
+  [[ -d "$d" ]] || continue
+  sz=$(du -sbx "$d" 2>/dev/null | cut -f1); sz=${sz:-0}
+  if (( used + sz > budget )); then echo "oden-ramcache: $d ($((sz/MiB)) MiB) ryms inte, hoppar över"; continue; fi
+  used=$((used+sz)); pick+=("$d"); echo "oden-ramcache: tar med $d ($((sz/MiB)) MiB)"
+done
+(( ${#pick[@]} )) || { echo "oden-ramcache: inget att läsa in"; exit 0; }
+echo "oden-ramcache: totalt högst $((used/MiB)) MiB av gränsen $((budget/MiB)) MiB"
+[[ "${ODEN_RAMCACHE_DRYRUN:-}" == 1 ]] && exit 0
+# -m: stora enstaka filer hoppas över; NVIDIA-biblioteken behövs bara med kortet. vmtouch blir kvar och håller låsen.
+exec vmtouch -q -t -l -m 128M -i 'nvidia*' -i '*.a' "${pick[@]}"

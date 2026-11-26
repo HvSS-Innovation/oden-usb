@@ -24,6 +24,8 @@ plymouth-themes
 xorg
 xfce4
 xfce4-terminal
+# Skärmlås/skärmsläckare (PAM-tjänsten xfce4-screensaver styrs av overlayn, se oden-lock). Utan den gör Lås skärm ingenting.
+xfce4-screensaver
 xfce4-notifyd
 libnotify-bin
 lightdm
@@ -63,6 +65,8 @@ libasound2t64
 libgbm1
 libxshmfence1
 # Verktyg
+# vmtouch: oden-ramcache läser in och låser programfiler i RAM
+vmtouch
 tcpdump
 less
 nano
