@@ -1,6 +1,6 @@
 # Status: ODEN-stick
 
-Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är sammanslagen). Vad som hämtas in och varifrån: se [`KALLOR.md`](KALLOR.md).
+Uppdaterad 2026-11-26. Allt ligger på `main` (grenen `feature/stick-bygge` är sammanslagen). Vad som hämtas in och varifrån: se [`KALLOR.md`](KALLOR.md).
 
 ## Läge i korthet
 - Bygg-pipelinen är klar: artefakterna är låsta, Oden för Linux byggs i en Debian 13-container och bilden byggs med live-build (Debian 13, XFCE).
@@ -8,11 +8,10 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
   Resultaten är inte dokumenterade i detalj; maskinvarumatrisen (`HW-MATRIS.md`) är ännu tom.
 - Kartan är klar: rasterkartan `sverige-raster-20261120.pmtiles` (zoom 0–14, 1 914 774 924 byte, OSM 2026-11-20) är renderad och uppladdad till R2 (`oden/maps/`). Adress: <https://publik.hv-sog.se/oden/maps/sverige-raster-20261120.pmtiles> (sätts som `ODEN_MAPS_URL` i `.env`). Lokalt och på ISO:n heter filen `sverige.pmtiles` (Map View och kartservern förutsätter namnet).
   `MAP_MAXZOOM=14` i `build/map.conf`.
-- ISO-varianterna är publicerade 2026-11-25 på `https://publik.hv-sog.se/oden/a7a6a2a/` (byggda från a70f633 plus ändringarna i a7a6a2a, bygget gjordes före committen, filerna omdöpta till a7a6a2a; SHA256 för alla tre kontrollerade mot publika adressen efter uppladdning). **Inte provstartade på riktig maskin** (utloggningen provad i VM; *Logga ut* är kvar i dessa, tas bort i nästa bygge): Oden 4.3.0 (onedir), `wpasupplicant` med i bilden (saknades tidigare: `--apt-recommends false` gjorde att NetworkManager inte kunde ansluta till wifi; upptäckt av en testare), `oden-wifi` (guide, dolda nät, `oden-wifi fil` från USB, uppstartstjänst `oden-wifi-prep`) och menyval 11 i `oden-admin`. `karta-ai` byggdes för hand med samma xorriso-steg som `build.sh` på samma `oden.iso`. Kvar: provstarta på riktig maskin (wifi), bygg om från committad källa med *Logga ut* borttaget.
-- ISO-varianterna: `minimal`, `karta` och `karta-ai` är byggda från samma commit (f1f80df) med Oden 4.2.2+ac2ebc3 (onedir) och publicerade på `https://publik.hv-sog.se/oden/f1f80df/` 2026-11-23, med kontrollsumma och SBOM (kontrollerade mot de lokala filerna efter uppladdning). De innehåller Broadcom-drivrutinen (`broadcom-sta-dkms`) och `oden-admin`. Lokalt och på ISO:n heter kartfilen `sverige.pmtiles` (Map View och kartservern förutsätter namnet) och `build.sh` avbryter om namnet är fel. Kartan är provad i Obsidian på en tidigare `karta`; `minimal` är inte provstartad.
-  - **karta**: `oden-karta-f1f80df.iso`, 5 609 619 456 byte, SHA256 `b25279bf…ae08`.
-  - **minimal**: `oden-minimal-f1f80df.iso`, 3 694 854 144 byte, SHA256 `6c5d83ee…d8f1`. Hämtar kartan vid första start från adressen i `assets.lock` i ISO-filen.
-  - **karta-ai**: `oden-karta-ai-f1f80df.iso`, 14 171 701 248 byte, SHA256 `8fe81559…f3b1`. Rudimentärt provad.
+- ISO-varianterna är publicerade 2026-11-26 på `https://publik.hv-sog.se/oden/4bcf96a/` (alla tre byggda från committen 4bcf96a; `minimal` och `karta-ai` med samma xorriso-steg som `build.sh` på samma `oden.iso`). Äldre omgångar (a7a6a2a, f1f80df) är raderade från R2. **Inte provstartade på riktig maskin** (usb-watch provad i VM; skärmlåset, wifi-persistens, skrivare och batteriplugin har bara stubb- och containertest). Innehåll: Oden 4.3.0 (onedir), `wpasupplicant`, `oden-wifi` (guide, dolda nät, `oden-wifi fil`), wifi-nät sparas på lagringen (`oden-nm-persist`), skrivare (CUPS, `system-config-printer`, IP/USB via `oden-admin` 8, sparas), ingen *Logga ut*, skärmlås som öppnas med krypteringslösenordet (*Lås nu*, tid 1 min–1 h), avstängning när stickan dras ur och RAM-förladdning (`oden-usb-watch`, `oden-ramcache`), skrivbordsgenvägar och egna ikoner, batteriplugin i panelen, skärmskala (`oden-scale`). SHA256 kontrollerad mot publika adressen.
+  - **karta**: `oden-karta-4bcf96a.iso`, 5 666 242 560 byte, SHA256 `b26b9cfa…63b0`.
+  - **minimal**: `oden-minimal-4bcf96a.iso`, 3 751 477 248 byte, SHA256 `fe8ac78e…09a3`. Hämtar kartan vid första start från adressen i `assets.lock` i ISO-filen.
+  - **karta-ai**: `oden-karta-ai-4bcf96a.iso`, 14 228 324 352 byte, SHA256 `dfc2746f…efe4`.
 - Sajten (GitHub Pages, https://hvss-innovation.github.io/oden-usb/) publiceras från `site/` vid push till `main`. Pages-jobbet kan ibland falla på ett tillfälligt artefaktfel; kör då om jobbet.
 
 ## Per steg (se `plan/arkiv/`)
@@ -32,7 +31,7 @@ Uppdaterad 2026-11-22. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 ## Artefakter (`build/artifacts.lock`)
 | Artefakt | Version | Status |
 |---|---|---|
-| Oden (byggd, onedir) | 4.3.0, commit cfc6b4a6 (publicerad i a7a6a2a) | Byggd lokalt, ej bit-för-bit reproducerbar (pip `>=`) |
+| Oden (byggd, onedir) | 4.3.0, commit cfc6b4a6 (publicerad i 4bcf96a) | Byggd lokalt, ej bit-för-bit reproducerbar (pip `>=`) |
 | signal-cli | 0.14.5 | Låst, inbyggd i Oden |
 | Temurin JRE | 25.0.5.1+2 | Låst, inbyggd i Oden |
 | ODEN-valv | 1.6.3 | Låst |

@@ -2,30 +2,30 @@
   "isos": [
     {
       "variant": "karta",
-      "version": "a7a6a2a",
-      "file": "oden-karta-a7a6a2a.iso",
-      "published": "2026-11-25",
-      "url": "https://publik.hv-sog.se/oden/a7a6a2a/oden-karta-a7a6a2a.iso",
-      "bytes": 5611716608,
-      "sha256": "f8bbd7f13718831295262fb9143bc3e8bb5d92f713d293b69d24cb9926665f87"
+      "version": "4bcf96a",
+      "file": "oden-karta-4bcf96a.iso",
+      "published": "2026-11-26",
+      "url": "https://publik.hv-sog.se/oden/4bcf96a/oden-karta-4bcf96a.iso",
+      "bytes": 5666242560,
+      "sha256": "b26b9cfa0eb8670e72e88cae5dda284d69bb4706eb4cc6869f2891fb503363b0"
     },
     {
       "variant": "karta-ai",
-      "version": "a7a6a2a",
-      "file": "oden-karta-ai-a7a6a2a.iso",
-      "published": "2026-11-25",
-      "url": "https://publik.hv-sog.se/oden/a7a6a2a/oden-karta-ai-a7a6a2a.iso",
-      "bytes": 14173798400,
-      "sha256": "9eec0bf4d45cb94dc7bed7a3bb625ba3a8a17e0fc02c3028ed84587e71f32261"
+      "version": "4bcf96a",
+      "file": "oden-karta-ai-4bcf96a.iso",
+      "published": "2026-11-26",
+      "url": "https://publik.hv-sog.se/oden/4bcf96a/oden-karta-ai-4bcf96a.iso",
+      "bytes": 14228324352,
+      "sha256": "dfc2746f1253af848b14c6aeac78b7fe43ed41a134bfc3a284929d57847fefe4"
     },
     {
       "variant": "minimal",
-      "version": "a7a6a2a",
-      "file": "oden-minimal-a7a6a2a.iso",
-      "published": "2026-11-25",
-      "url": "https://publik.hv-sog.se/oden/a7a6a2a/oden-minimal-a7a6a2a.iso",
-      "bytes": 3696951296,
-      "sha256": "693638f945f3aa1929e87f819754f65d29873421947c9fb4a9025e501a68c9c3"
+      "version": "4bcf96a",
+      "file": "oden-minimal-4bcf96a.iso",
+      "published": "2026-11-26",
+      "url": "https://publik.hv-sog.se/oden/4bcf96a/oden-minimal-4bcf96a.iso",
+      "bytes": 3751477248,
+      "sha256": "fe8ac78e912cfbe1bba3cd8866c11c600a7d659880c1aefae95db55b432209a3"
     }
   ]
 }
