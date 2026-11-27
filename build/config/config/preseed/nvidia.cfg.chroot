@@ -1,0 +1,2 @@
+# Byggdatorns grafikkort ska inte påverka bygget: utan detta avbryter nvidia-legacy-check om värden har ett äldre NVIDIA-kort.
+nvidia-driver nvidia-driver/check-for-unsupported-gpu boolean false
