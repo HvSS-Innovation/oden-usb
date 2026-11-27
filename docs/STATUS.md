@@ -1,6 +1,6 @@
 # Status: ODEN-stick
 
-Uppdaterad 2026-11-26. Allt ligger på `main` (grenen `feature/stick-bygge` är sammanslagen). Vad som hämtas in och varifrån: se [`KALLOR.md`](KALLOR.md).
+Uppdaterad 2026-11-27. Allt ligger på `main` (grenen `feature/stick-bygge` är sammanslagen). Vad som hämtas in och varifrån: se [`KALLOR.md`](KALLOR.md).
 
 ## Läge i korthet
 - Bygg-pipelinen är klar: artefakterna är låsta, Oden för Linux byggs i en Debian 13-container och bilden byggs med live-build (Debian 13, XFCE).
@@ -8,10 +8,10 @@ Uppdaterad 2026-11-26. Allt ligger på `main` (grenen `feature/stick-bygge` är 
   Resultaten är inte dokumenterade i detalj; maskinvarumatrisen (`HW-MATRIS.md`) är ännu tom.
 - Kartan är klar: rasterkartan `sverige-raster-20261120.pmtiles` (zoom 0–14, 1 914 774 924 byte, OSM 2026-11-20) är renderad och uppladdad till R2 (`oden/maps/`). Adress: <https://publik.hv-sog.se/oden/maps/sverige-raster-20261120.pmtiles> (sätts som `ODEN_MAPS_URL` i `.env`). Lokalt och på ISO:n heter filen `sverige.pmtiles` (Map View och kartservern förutsätter namnet).
   `MAP_MAXZOOM=14` i `build/map.conf`.
-- ISO-varianterna är publicerade 2026-11-26 på `https://publik.hv-sog.se/oden/4bcf96a/` (alla tre byggda från committen 4bcf96a; `minimal` och `karta-ai` med samma xorriso-steg som `build.sh` på samma `oden.iso`). Äldre omgångar (a7a6a2a, f1f80df) är raderade från R2. **Inte provstartade på riktig maskin** (usb-watch provad i VM; skärmlåset, wifi-persistens, skrivare och batteriplugin har bara stubb- och containertest). Innehåll: Oden 4.3.0 (onedir), `wpasupplicant`, `oden-wifi` (guide, dolda nät, `oden-wifi fil`), wifi-nät sparas på lagringen (`oden-nm-persist`), skrivare (CUPS, `system-config-printer`, IP/USB via `oden-admin` 8, sparas), ingen *Logga ut*, skärmlås som öppnas med krypteringslösenordet (*Lås nu*, tid 1 min–1 h), avstängning när stickan dras ur och RAM-förladdning (`oden-usb-watch`, `oden-ramcache`), skrivbordsgenvägar och egna ikoner, batteriplugin i panelen, skärmskala (`oden-scale`). SHA256 kontrollerad mot publika adressen.
-  - **karta**: `oden-karta-4bcf96a.iso`, 5 666 242 560 byte, SHA256 `b26b9cfa…63b0`.
-  - **minimal**: `oden-minimal-4bcf96a.iso`, 3 751 477 248 byte, SHA256 `fe8ac78e…09a3`. Hämtar kartan vid första start från adressen i `assets.lock` i ISO-filen.
-  - **karta-ai**: `oden-karta-ai-4bcf96a.iso`, 14 228 324 352 byte, SHA256 `dfc2746f…efe4`.
+- ISO-varianterna är publicerade 2026-11-27 på `https://publik.hv-sog.se/oden/8426e40/` (alla tre byggda från committen 8426e40 med `build.sh`). Den förra omgången (4bcf96a) ligger kvar i R2. **Inte provstartade**, varken i VM eller på riktig maskin. Nytt jämfört med 4bcf96a: ODEN visas i stället för "Debian Live user", och bygget går på en dator med äldre NVIDIA-kort. Debian-paketen är hämtade på nytt (se `SBOM.txt`). Övrigt innehåll: Oden 4.3.0 (onedir), `wpasupplicant`, `oden-wifi`, sparade wifi-nät, skrivare (CUPS), skärmlås, avstängning när stickan dras ur, RAM-förladdning, egna ikoner, batteriplugin och skärmskala. SHA256 kontrollerad mot publika adressen.
+  - **karta**: `oden-karta-8426e40.iso`, 5 666 242 560 byte, SHA256 `06780dcd…54f2`.
+  - **minimal**: `oden-minimal-8426e40.iso`, 3 751 477 248 byte, SHA256 `b8b5d0d1…c93a`. Hämtar kartan vid första start från adressen i `assets.lock` i ISO-filen.
+  - **karta-ai**: `oden-karta-ai-8426e40.iso`, 14 228 324 352 byte, SHA256 `a9a5cd5e…6056`.
 - Sajten (GitHub Pages, https://hvss-innovation.github.io/oden-usb/) publiceras från `site/` vid push till `main`. Pages-jobbet kan ibland falla på ett tillfälligt artefaktfel; kör då om jobbet.
 
 ## Per steg (se `plan/arkiv/`)
@@ -21,7 +21,7 @@ Uppdaterad 2026-11-26. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 | 01 Bygg-pipeline | Klart | `build.sh`, `fetch.sh`, artefaktlås, SBOM, `bump.sh`, `make-stick.sh`, `tests/run.sh`. Förkontrollen av `maps.lock` i `build.sh` ignorerar nu kommentarsrader |
 | 02 Mjukvara i bilden | Klart | Oden (versionen stämplas ur `artifacts.lock`), signal-cli, JRE, ODEN-valv, Obsidian (valvet registrerat, community-plugins på), go-pmtiles. Det finns ingen kod för `config.ini`-förkonfiguration eller `--no-sandbox` i bygget |
 | 03 Krypterad persistens | Klart | `oden-firstboot`, `oden-wipe`, `oden-persist-dev`, `oden-persist-state`, `oden-passphrase-ok` (a-z, A-Z, 0-9 och mellanslag, ingen minsta längd), LUKS-etikett `oden-pending` → `oden` som sista steg |
-| 04 Nät, Signal, TAK | Delvis | NetworkManager, nftables, timesyncd och wifi-firmware ingår (från och med nästa bygge även `broadcom-sta-dkms` för Broadcom BCM4360 i MacBook Pro 2013/2014). Signal-länkning och TAK sköts av Odens eget gränssnitt. Tydlig statusindikator för frånkopplat läge finns inte |
+| 04 Nät, Signal, TAK | Delvis | NetworkManager, nftables, timesyncd och wifi-firmware ingår (från och med 8426e40 även `broadcom-sta-dkms` för Broadcom BCM4360 i MacBook Pro 2013/2014). Signal-länkning och TAK sköts av Odens eget gränssnitt. Tydlig statusindikator för frånkopplat läge finns inte |
 | 05 Kartor | Klart | Raster z0–14 renderat och låst. Map View använder bara den lokala kartan (`stage.sh`, `build/map.conf`) och är provad i Obsidian |
 | 06 AI / Ollama | Delvis | `ollama.service`, RAM-kontroll (16 GB) och NVIDIA-paket finns. Modellerna (`qwen3-vl:4b`, `qwen3:8b`, 8 GB) ligger i `build/cache/assets/ollama/` och ingår i `karta-ai`. Rudimentärt provad; en fullständig provkörning på en sticka återstår |
 | 07 Test, härdning, dokumentation | Delvis | Användarguide, adminguide, felsökning och HW-mall är skrivna. Kvar att dokumentera: maskinvarumatris, paketfångst, strömavbrott och `oden-wipe` |
@@ -31,7 +31,7 @@ Uppdaterad 2026-11-26. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 ## Artefakter (`build/artifacts.lock`)
 | Artefakt | Version | Status |
 |---|---|---|
-| Oden (byggd, onedir) | 4.3.0, commit cfc6b4a6 (publicerad i 4bcf96a) | Byggd lokalt, ej bit-för-bit reproducerbar (pip `>=`) |
+| Oden (byggd, onedir) | 4.3.0, commit cfc6b4a6 (publicerad i 8426e40) | Byggd lokalt, ej bit-för-bit reproducerbar (pip `>=`) |
 | signal-cli | 0.14.5 | Låst, inbyggd i Oden |
 | Temurin JRE | 25.0.5.1+2 | Låst, inbyggd i Oden |
 | ODEN-valv | 1.6.3 | Låst |
@@ -45,7 +45,7 @@ Uppdaterad 2026-11-26. Allt ligger på `main` (grenen `feature/stick-bygge` är 
 - Lösenfrasen har ingen minsta längd (beslut 2026-11-20, för test); `ODEN_MINLEN` kan sätta en. Teckenbegränsningen kvarstår. Krav på lösenfrasens styrka ligger under "Senare" i `KRAVSPEC.md`.
 - AI-modeller i `minimal` (hämtas inte från nätet än).
 - Oden byggs som onedir (`/opt/oden/oden` + `_internal/`, Oden PR #304) och packar inte upp något i `/tmp` vid start. Provad i qemu på `karta`.
-- Fel lösenfras vid boot: `oden-firstboot` frågar vid inloggning om användaren vill starta om och skriva lösenfrasen igen eller radera lagringen och börja om med ny lösenfras (RADERA måste skrivas). Finns i källan, ingår i nästa ISO-bygge.
+- Fel lösenfras vid boot: `oden-firstboot` frågar vid inloggning om användaren vill starta om och skriva lösenfrasen igen eller radera lagringen och börja om med ny lösenfras (RADERA måste skrivas). Ingår i 8426e40.
 - Obsidian-pluginernas version mot Obsidian 1.15.1.
 - GitHub tillåter högst 2 GiB per fil i en release, så ISO-filerna ligger på `publik.hv-sog.se` (Cloudflare R2, bucketen `public-hv-sog`).
 
